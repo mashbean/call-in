@@ -52,7 +52,7 @@ npm install
 npm run types
 ```
 
-編輯 [`event.config.json`](./event.config.json)，接著建立管理 token 並檢查整個專案。
+編輯 [`public/event.config.json`](./public/event.config.json)，接著建立管理 token 並檢查整個專案。
 
 ```bash
 npm run admin-token
@@ -106,7 +106,7 @@ Skill 會放在 `$CODEX_HOME/skills/live-deck-kit`。未設定 `CODEX_HOME` 時�
 
 ## 活動設定
 
-公開文字、配色、難易度標籤、四種反應、問題分類與投票題目都在 [`event.config.json`](./event.config.json)。完整欄位說明位於 [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md)。
+公開文字、配色、難易度標籤、四種反應、問題分類與投票題目都在 [`public/event.config.json`](./public/event.config.json)。完整欄位說明位於 [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md)。
 
 `eventId` 會參與 Durable Object 名稱。正式活動產生資料後不要任意修改，除非希望切換成一個全新的空白活動。
 

@@ -1,7 +1,7 @@
 import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "../difficulty.js";
 
 const apiBase = "/api";
-const config = await fetch(`${apiBase}/config`).then((response) => response.json());
+const config = await fetch("/event.config.json").then((response) => response.json());
 applyConfig(config);
 const pollsRoot = document.querySelector("#dashboard-polls");
 const questionsRoot = document.querySelector("#dashboard-questions");

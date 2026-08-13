@@ -54,7 +54,7 @@ export async function configureAdminToken(tokenInput) {
 
 export async function doctor() {
   const requiredFiles = [
-    "event.config.json",
+    "public/event.config.json",
     "wrangler.jsonc",
     "src/index.ts",
     "src/live-session.ts",
@@ -71,7 +71,7 @@ export async function doctor() {
       missing.push(file);
     }
   }
-  const config = JSON.parse(await readFile(path.join(packageRoot, "event.config.json"), "utf8"));
+  const config = JSON.parse(await readFile(path.join(packageRoot, "public", "event.config.json"), "utf8"));
   const errors = [];
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(config.eventId || "")) errors.push("eventId 必須是小寫 slug");
   if (!Array.isArray(config.polls) || config.polls.length > 8) errors.push("polls 必須是 0 到 8 題");

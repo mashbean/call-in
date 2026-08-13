@@ -18,7 +18,7 @@ Read both files before making changes
 
 1. Inspect the target deck, its framework, its presentation root, mobile behavior, existing animation, and deployment setup. Preserve slide content and navigation unless the user explicitly requests changes.
 2. Obtain Live Deck Kit from `https://github.com/mashbean/live-deck-kit`. Work in a standalone checkout. Do not nest a Git repository inside the target deck repository.
-3. Edit `event.config.json` for the event. Keep `eventId` stable after production data exists.
+3. Edit `public/event.config.json` for the event. Keep `eventId` stable after production data exists.
 4. Run `npm install`, `npm run types`, `npm run doctor`, and `npm run check`.
 5. Run `npm run admin-token` before a production deployment. Keep `.live-deck-admin-token` out of Git and user-visible output.
 6. Authenticate Wrangler and deploy. Capture the final HTTPS service URL from Wrangler output.

@@ -1,6 +1,6 @@
 # Configuration
 
-`event.config.json` is the public event contract. It contains no secrets.
+`public/event.config.json` is the public event contract. It contains no secrets.
 
 ## Fields
 

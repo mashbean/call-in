@@ -1,4 +1,4 @@
-import rawConfig from "../event.config.json";
+import rawConfig from "../public/event.config.json";
 import type { PublicEventConfig, QuestionLens, ReactionKind } from "./types";
 
 const questionLenses = new Set<QuestionLens>(["clarify", "chorus", "bridge", "keeper"]);
@@ -9,7 +9,7 @@ export const QUESTION_LENSES = questionLenses;
 export const REACTION_KINDS = reactionKinds;
 
 function validateEventConfig(value: unknown): PublicEventConfig {
-  if (!isRecord(value)) throw new Error("event.config.json must contain an object");
+  if (!isRecord(value)) throw new Error("public/event.config.json must contain an object");
   const config = value as PublicEventConfig;
   if (!isSlug(config.eventId)) throw new Error("eventId must be a lowercase URL-safe slug");
   if (!Array.isArray(config.polls) || config.polls.length > 8) {
