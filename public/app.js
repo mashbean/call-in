@@ -1,0 +1,297 @@
+import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "./difficulty.js";
+
+const apiBase = "/api";
+const config = await fetch(`${apiBase}/config`).then((response) => response.json());
+applyConfig(config);
+const voterKey = `${config.eventId}:live-deck-voter`;
+const voterId = localStorage.getItem(voterKey) || crypto.randomUUID();
+localStorage.setItem(voterKey, voterId);
+
+const pollsRoot = document.querySelector("#polls");
+const questionsRoot = document.querySelector("#questions");
+const form = document.querySelector("#question-form");
+const statusEl = document.querySelector("[data-status]");
+const messageEl = document.querySelector("[data-form-message]");
+const difficultyInput = document.querySelector("#difficulty");
+const difficultyValueEl = document.querySelector("[data-difficulty-value]");
+const difficultyLabelEl = document.querySelector("[data-difficulty-label]");
+const difficultyMessageEl = document.querySelector("[data-difficulty-message]");
+const reactionMessageEl = document.querySelector("[data-reaction-message]");
+let state = {
+  polls: [],
+  difficulty: { counts: [0, 0, 0, 0, 0], total: 0, average: null },
+  questions: [],
+};
+let socket;
+let difficultyTimer;
+const savedDifficulty = Number(localStorage.getItem("difficulty:current"));
+let currentDifficulty =
+  Number.isInteger(savedDifficulty) && savedDifficulty >= 1 && savedDifficulty <= 5
+    ? savedDifficulty
+    : 3;
+difficultyInput.value = String(currentDifficulty);
+const lensLabels = Object.fromEntries(config.question.lenses.map((lens) => [lens.id, lens.label]));
+
+updateDifficultySelection(currentDifficulty);
+difficultyInput.addEventListener("input", () => {
+  currentDifficulty = Number(difficultyInput.value);
+  localStorage.setItem("difficulty:current", String(currentDifficulty));
+  updateDifficultySelection(currentDifficulty);
+  difficultyMessageEl.textContent = "更新中";
+  clearTimeout(difficultyTimer);
+  difficultyTimer = setTimeout(() => {
+    post("/api/difficulty", { score: currentDifficulty, voterId })
+      .then((nextState) => {
+        state = nextState;
+        difficultyMessageEl.textContent = "已同步給講者";
+        render();
+      })
+      .catch(() => {
+        difficultyMessageEl.textContent = "同步失敗，請再調整一次";
+      });
+  }, 220);
+});
+
+document.querySelectorAll("[data-tab]").forEach((button) => {
+  button.addEventListener("click", () => {
+    document
+      .querySelectorAll("[data-tab]")
+      .forEach((item) => item.classList.toggle("active", item === button));
+    document
+      .querySelectorAll("[data-panel]")
+      .forEach((panel) =>
+        panel.classList.toggle("active", panel.dataset.panel === button.dataset.tab),
+      );
+  });
+});
+
+document.querySelectorAll("[data-reaction]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const kind = button.dataset.reaction;
+    button.disabled = true;
+    try {
+      await post("/api/reaction", { kind, voterId });
+      reactionMessageEl.textContent = `${button.firstChild.textContent.trim()} 已送到現場`;
+      button.classList.remove("sent");
+      void button.offsetWidth;
+      button.classList.add("sent");
+      setTimeout(() => button.classList.remove("sent"), 700);
+    } catch {
+      reactionMessageEl.textContent = "反應沒有送出去，請再試一次";
+    } finally {
+      setTimeout(() => {
+        button.disabled = false;
+      }, 350);
+    }
+  });
+});
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(form);
+  const button = form.querySelector("button[type=submit]");
+  button.disabled = true;
+  messageEl.textContent = "送出中";
+  try {
+    state = await post("/api/question", {
+      text: String(data.get("question") || ""),
+      nickname: String(data.get("nickname") || "匿名"),
+      lens: String(data.get("lens") || "clarify"),
+      difficulty: currentDifficulty,
+      voterId,
+    });
+    form.querySelector("textarea").value = "";
+    messageEl.textContent = "已收進提問池";
+    render();
+  } catch (error) {
+    messageEl.textContent = humanError(error);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+async function vote(pollId, optionIndex) {
+  state = await post("/api/vote", { pollId, optionIndex, voterId });
+  localStorage.setItem(`vote:${pollId}`, String(optionIndex));
+  render();
+}
+
+async function upvote(questionId) {
+  state = await post("/api/upvote", { questionId, voterId });
+  localStorage.setItem(`upvote:${questionId}`, "1");
+  render();
+}
+
+async function post(path, body) {
+  const response = await fetch(`${apiBase}${path.slice(4)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "request failed");
+  return data;
+}
+
+function render() {
+  renderDifficultyChart(document.querySelector(".difficulty-card"), state.difficulty);
+  pollsRoot.innerHTML = state.polls
+    .map((poll, index) => {
+      const selected = Number(localStorage.getItem(`vote:${poll.id}`));
+      const hasVote = Number.isInteger(selected) && selected >= 0;
+      return `
+      <article class="poll-card">
+        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${poll.total} 票</span></div>
+        <h2><span>${String(index + 1).padStart(2, "0")}</span>${escapeHtml(poll.question)}</h2>
+        <div class="options">
+          ${poll.options
+            .map((option, optionIndex) => {
+              const percent = poll.total
+                ? Math.round((poll.counts[optionIndex] / poll.total) * 100)
+                : 0;
+              return `<button class="option ${hasVote && selected === optionIndex ? "selected" : ""}" data-poll="${poll.id}" data-option="${optionIndex}">
+              <span class="bar" style="--pct:${percent}%"></span>
+              <span class="option-copy"><b>${String.fromCharCode(65 + optionIndex)}</b>${escapeHtml(option)}</span>
+              <span class="percent">${poll.counts[optionIndex]} 票</span>
+            </button>`;
+            })
+            .join("")}
+        </div>
+      </article>`;
+    })
+    .join("");
+
+  pollsRoot.querySelectorAll("[data-poll]").forEach((button) => {
+    button.addEventListener("click", () =>
+      vote(button.dataset.poll, Number(button.dataset.option)).catch((error) =>
+        alert(humanError(error)),
+      ),
+    );
+  });
+
+  document.querySelectorAll("[data-question-count]").forEach((el) => {
+    el.textContent = `${state.questions.length} 題`;
+  });
+  questionsRoot.innerHTML = state.questions.length
+    ? state.questions
+        .map(
+          (question, index) => `
+    <article class="question-card">
+      <div class="question-rank">${String(index + 1).padStart(2, "0")}</div>
+      <div><div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
+      <button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="我也想問這題">我也想問 <b>${question.upvotes}</b></button>
+    </article>`,
+        )
+        .join("")
+    : `<div class="empty">第一題會改變後面的 Q&A 路線</div>`;
+  questionsRoot.querySelectorAll("[data-upvote]").forEach((button) => {
+    button.addEventListener("click", () =>
+      upvote(button.dataset.upvote).catch((error) => alert(humanError(error))),
+    );
+  });
+}
+
+function updateDifficultySelection(score) {
+  difficultyValueEl.textContent = String(score);
+  difficultyLabelEl.textContent = difficultyLabels[score - 1];
+  difficultyInput.style.setProperty("--difficulty-position", `${((score - 1) / 4) * 100}%`);
+}
+
+function connect() {
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  socket = new WebSocket(`${protocol}//${location.host}${apiBase}/live`);
+  socket.addEventListener("open", () => setStatus(true));
+  socket.addEventListener("message", (event) => {
+    const message = JSON.parse(event.data);
+    if (message.type === "snapshot") {
+      state = message.data;
+      render();
+    }
+  });
+  socket.addEventListener("close", () => {
+    setStatus(false);
+    setTimeout(connect, 1500);
+  });
+}
+
+function setStatus(online) {
+  statusEl.classList.toggle("online", online);
+  statusEl.lastChild.textContent = online ? "即時連線" : "重新連線中";
+}
+
+function humanError(error) {
+  const message = String(error?.message || error);
+  if (message.includes("limit")) return "目前無法再送出，請先整理現有問題";
+  return "送出失敗，請稍後再試";
+}
+
+function escapeHtml(value) {
+  return String(value).replace(
+    /[&<>"']/g,
+    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char],
+  );
+}
+
+fetch(`${apiBase}/state`)
+  .then((response) => response.json())
+  .then((data) => {
+    state = data;
+    render();
+  })
+  .catch(() => {});
+post("/api/difficulty", { score: currentDifficulty, voterId })
+  .then((data) => {
+    state = data;
+    difficultyMessageEl.textContent = "已同步給講者";
+    render();
+  })
+  .catch(() => {
+    difficultyMessageEl.textContent = "拖動後會自動更新";
+  });
+connect();
+
+function applyConfig(nextConfig) {
+  document.title = nextConfig.title;
+  setDifficultyLabels(nextConfig.difficulty.labels);
+  const values = {
+    eyebrow: nextConfig.eyebrow,
+    title: nextConfig.title,
+    description: nextConfig.description,
+    dashboardTitle: nextConfig.dashboardTitle,
+    "difficulty.title": nextConfig.difficulty.title,
+    "question.title": nextConfig.question.title,
+  };
+  document.querySelectorAll("[data-config]").forEach((element) => {
+    const value = values[element.dataset.config];
+    if (typeof value === "string") element.textContent = value;
+  });
+  document.querySelectorAll("[data-config-placeholder]").forEach((element) => {
+    const value = nextConfig.question.placeholder;
+    if (typeof value === "string") element.setAttribute("placeholder", value);
+  });
+  document.querySelectorAll("[data-config-href='deckUrl']").forEach((element) => {
+    element.href = nextConfig.deckUrl;
+  });
+  document.documentElement.style.setProperty("--forest", nextConfig.theme.background);
+  document.documentElement.style.setProperty("--clay", nextConfig.theme.highlight);
+  document.documentElement.style.setProperty("--sage", nextConfig.theme.accent);
+  document.documentElement.style.setProperty("--panel", nextConfig.theme.panel);
+  document.documentElement.style.setProperty("--positive", nextConfig.theme.positive);
+  document.querySelector("[data-difficulty-scale]").innerHTML = nextConfig.difficulty.labels
+    .map((label) => `<span>${escapeHtml(label)}</span>`)
+    .join("");
+  document.querySelector("[data-reactions]").innerHTML = nextConfig.reactions
+    .map(
+      (reaction) =>
+        `<button type="button" data-reaction="${escapeHtml(reaction.id)}" aria-label="${escapeHtml(reaction.label)}">${escapeHtml(reaction.emoji)}<span>${escapeHtml(reaction.label)}</span></button>`,
+    )
+    .join("");
+  document.querySelector("[data-lenses]").innerHTML = nextConfig.question.lenses
+    .map(
+      (lens, index) => `<label class="intent-option">
+        <input type="radio" name="lens" value="${escapeHtml(lens.id)}" ${index === 0 ? "checked" : ""} />
+        <span><b>${escapeHtml(lens.label)}</b><small>${escapeHtml(lens.description)}</small></span>
+      </label>`,
+    )
+    .join("");
+}

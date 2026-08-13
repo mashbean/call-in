@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Live Deck Kit 範例簡報</title>
+    <style>
+      :root { font-family: Inter, "Noto Sans TC", system-ui, sans-serif; color: #f6f8ff; background: #07101f; }
+      * { box-sizing: border-box; }
+      body { margin: 0; overflow: hidden; }
+      .stage { position: fixed; inset: 0; display: grid; place-items: center; padding: clamp(32px, 8vw, 110px); background: radial-gradient(circle at 80% 20%, #ff4f9a44, transparent 35%), linear-gradient(#132249 1px, transparent 1px), linear-gradient(90deg, #132249 1px, transparent 1px), #07101f; background-size: auto, 48px 48px, 48px 48px, auto; transition: right .26s ease; }
+      .slide { max-width: 980px; }
+      .eyebrow { color: #ff4f9a; font: 800 16px/1 ui-monospace, monospace; letter-spacing: .16em; }
+      h1 { margin: 24px 0; font-size: clamp(58px, 9vw, 130px); line-height: .94; letter-spacing: -.055em; }
+      p { max-width: 760px; color: #b7c4df; font-size: clamp(20px, 2.4vw, 34px); line-height: 1.55; }
+    </style>
+  </head>
+  <body>
+    <main class="stage">
+      <section class="slide">
+        <div class="eyebrow">LIVE DECK KIT</div>
+        <h1>簡報旁邊，<br />就是現場。</h1>
+        <p>右側 dashboard 會即時顯示難易度、提問、投票與 emoji。手機上會自動改成可開合的抽屜。</p>
+      </section>
+    </main>
+    <script type="module" src="/embed/live-deck-panel.js"></script>
+    <live-deck-panel service-url="/" mode="split" target-selector=".stage"></live-deck-panel>
+  </body>
+</html>

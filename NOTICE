@@ -1,0 +1,12 @@
+Live Deck Kit
+Copyright 2026 Mashbean
+
+The realtime interaction flow and Cloudflare Durable Objects routing were informed by
+htlin222/kahoot-cf, available under the MIT License
+https://github.com/htlin222/kahoot-cf
+
+The question-lens design was informed by audreyt/uncommon-ground, available under CC0-1.0
+https://github.com/audreyt/uncommon-ground
+
+Live Deck Kit was independently rewritten for audience difficulty feedback, questions,
+emoji reactions, quick polls, and web slide-deck embedding.

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#081225" />
+    <title>Live Deck Dashboard</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/dashboard/dashboard.css" />
+  </head>
+  <body class="dashboard-page">
+    <header class="dashboard-header">
+      <div class="dashboard-brand">
+        <div class="eyebrow" data-config="eyebrow">LIVE DECK</div>
+        <h1 data-config="dashboardTitle">現場互動</h1>
+      </div>
+      <a class="dashboard-join" href="/" target="_blank" rel="noreferrer">
+        <img src="/api/qr.svg" alt="掃碼進入現場互動" />
+        <span><b>掃碼互動</b><small>難易度 · 提問 · emoji</small></span>
+      </a>
+      <div class="live-status dashboard-connection" data-status><span></span>連線中</div>
+      <nav class="dashboard-tabs" role="tablist" aria-label="儀表板內容">
+        <button class="active" type="button" role="tab" aria-selected="true" data-dashboard-tab="live">現場</button>
+        <button type="button" role="tab" aria-selected="false" data-dashboard-tab="polls">投票結果 <span data-poll-total>0</span></button>
+      </nav>
+    </header>
+    <main class="dashboard-main">
+      <div class="dashboard-panel" role="tabpanel" data-dashboard-panel="live">
+        <section class="dashboard-section dashboard-difficulty difficulty-card">
+          <div class="dashboard-section-head"><div><div class="eyebrow">DIFFICULTY</div><h2>即時難易度</h2></div><span data-difficulty-total>等待回報</span></div>
+          <div class="difficulty-chart" aria-label="現場難易度分布" role="img">
+            <svg viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <path class="difficulty-grid-line" d="M30 172 H570" />
+              <path data-difficulty-area class="difficulty-area" />
+              <path data-difficulty-line class="difficulty-line" />
+              <g data-difficulty-points></g>
+            </svg>
+            <div class="difficulty-counts" data-difficulty-counts></div>
+          </div>
+          <div class="dashboard-reaction-hint"><span>即時反應</span><div data-reaction-legend aria-hidden="true"></div></div>
+        </section>
+        <section class="dashboard-section">
+          <div class="dashboard-section-head"><div><div class="eyebrow">Q&A POOL</div><h2 data-config="question.title">隨時提問</h2></div><span data-question-count>0 題</span></div>
+          <div id="dashboard-questions" class="dashboard-questions"></div>
+        </section>
+      </div>
+      <div class="dashboard-panel" role="tabpanel" data-dashboard-panel="polls" hidden>
+        <section class="dashboard-section">
+          <div class="dashboard-section-head"><div><div class="eyebrow">POLL</div><h2>投票結果</h2></div></div>
+          <div id="dashboard-polls" class="dashboard-polls"></div>
+        </section>
+      </div>
+    </main>
+    <a class="dashboard-open" href="/" target="_blank" rel="noreferrer">開啟參與頁 ↗</a>
+    <div class="reaction-stage" data-reaction-stage aria-live="polite"></div>
+    <script type="module" src="/dashboard/dashboard.js"></script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "eventId": "my-live-deck",
+  "eyebrow": "LIVE DECK",
+  "title": "來都來了，歡迎提問",
+  "description": "請掃 QR Code，回報難易度、提問，或給講者一個即時反應。",
+  "dashboardTitle": "現場互動",
+  "deckUrl": "https://example.com/slides/",
+  "locale": "zh-Hant-TW",
+  "theme": {
+    "background": "#081225",
+    "panel": "#101d3d",
+    "accent": "#35dcff",
+    "highlight": "#ff4f9a",
+    "positive": "#b9f24a"
+  },
+  "difficulty": {
+    "title": "現在聽起來有多難？",
+    "labels": ["太簡單", "簡單", "OK", "困難", "聽不懂"]
+  },
+  "question": {
+    "title": "隨時提問",
+    "placeholder": "寫下卡住、想追問或值得繼續討論的地方",
+    "maxPerDevice": 20,
+    "lenses": [
+      { "id": "clarify", "label": "幫我釐清", "description": "想先把概念或做法弄懂" },
+      { "id": "chorus", "label": "我也遇到了", "description": "想知道現場是否有人有相同困擾" },
+      { "id": "bridge", "label": "一起拆兩難", "description": "想把兩個方向的取捨攤開" },
+      { "id": "keeper", "label": "別漏掉這點", "description": "有一個條件、風險或限制要補上" }
+    ]
+  },
+  "reactions": [
+    { "id": "applause", "emoji": "👏", "label": "說得好" },
+    { "id": "insight", "emoji": "💡", "label": "有啟發" },
+    { "id": "resonate", "emoji": "❤️", "label": "有共鳴" },
+    { "id": "pause", "emoji": "🤔", "label": "想一下" }
+  ],
+  "polls": [
+    {
+      "id": "starting-point",
+      "prompt": "開場暖身",
+      "question": "你目前怎麼使用 AI？",
+      "options": ["偶爾聊天", "搜尋與整理", "交付完整任務", "已有固定工作流"]
+    },
+    {
+      "id": "time-sink",
+      "prompt": "時間分配",
+      "question": "哪一類工作最耗你的時間？",
+      "options": ["行政服務", "教學", "研究", "公關與溝通"]
+    }
+  ]
+}

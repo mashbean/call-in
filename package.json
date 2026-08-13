@@ -1,0 +1,56 @@
+{
+  "name": "@mashbean/live-deck-kit",
+  "version": "0.1.0",
+  "description": "Prompt-ready realtime audience interaction for web slide decks",
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mashbean/live-deck-kit.git"
+  },
+  "homepage": "https://github.com/mashbean/live-deck-kit#readme",
+  "bugs": "https://github.com/mashbean/live-deck-kit/issues",
+  "bin": {
+    "live-deck-kit": "./scripts/cli.mjs"
+  },
+  "files": [
+    "public",
+    "scripts",
+    "skills",
+    "src",
+    "event.config.json",
+    "wrangler.jsonc",
+    "tsconfig.json",
+    "worker-configuration.d.ts",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dry": "wrangler deploy --dry-run",
+    "typecheck": "tsc --noEmit",
+    "types": "wrangler types",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test && npm run deploy:dry",
+    "integrate": "node scripts/cli.mjs integrate",
+    "doctor": "node scripts/cli.mjs doctor",
+    "admin-token": "node scripts/cli.mjs admin-token",
+    "install-skill": "node scripts/cli.mjs install-skill"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.21.3",
+    "@types/qrcode": "^1.5.5",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.123.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

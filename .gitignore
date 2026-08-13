@@ -1,0 +1,9 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+.live-deck-admin-token
+dist/
+coverage/
+.DS_Store
+
