@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { createHash, randomBytes } from "node:crypto";
-import { cp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -165,7 +165,11 @@ function escapeAttribute(value) {
   return String(value).replace(/[&"<>]/g, (character) => ({ "&": "&amp;", '"': "&quot;", "<": "&lt;", ">": "&gt;" })[character]);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+const invokedPath = process.argv[1]
+  ? await realpath(process.argv[1]).catch(() => path.resolve(process.argv[1]))
+  : "";
+
+if (invokedPath && fileURLToPath(import.meta.url) === invokedPath) {
   main(process.argv).catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
