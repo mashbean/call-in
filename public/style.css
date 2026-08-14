@@ -705,7 +705,7 @@ footer a {
   box-shadow: inset 0 0 0 1px var(--sage);
 }
 .intent-option input:checked + span::before {
-  content: "已選";
+  content: "Selected";
   float: right;
   color: var(--sage);
   font:

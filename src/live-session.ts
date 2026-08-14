@@ -186,7 +186,7 @@ export class LiveSession extends DurableObject<Env> {
     voterId: string,
   ): Promise<SessionSnapshot> {
     const cleanedText = cleanText(text, 280);
-    const cleanedNickname = cleanText(nickname || "匿名", 24);
+    const cleanedNickname = cleanText(nickname || "Anonymous", 24);
     assertVoterId(voterId);
     if (cleanedText.length < 4) throw new Error("question too short");
     if (!QUESTION_LENSES.has(lens)) throw new Error("invalid question lens");

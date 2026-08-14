@@ -10,14 +10,14 @@
   <body>
     <header class="hero">
       <div class="eyebrow" data-config="eyebrow">LIVE DECK</div>
-      <h1 data-config="title">現場互動</h1>
-      <p data-config="description">掃碼後即可回報難易度、提問與送出即時反應。</p>
-      <div class="live-status" data-status><span></span>連線中</div>
+      <h1 data-config="title">Live audience</h1>
+      <p data-config="description">Share the difficulty, ask a question, or send a live reaction.</p>
+      <div class="live-status" data-status><span></span>Connecting</div>
     </header>
     <main>
-      <nav class="tabs" aria-label="互動功能">
-        <button class="active" data-tab="questions">隨時提問</button>
-        <button data-tab="polls">快速投票</button>
+      <nav class="tabs" aria-label="Audience interaction">
+        <button class="active" data-tab="questions">Ask anytime</button>
+        <button data-tab="polls">Quick polls</button>
       </nav>
       <section data-panel="polls" class="panel">
         <div id="polls" class="poll-grid" aria-live="polite"></div>
@@ -27,17 +27,17 @@
           <div class="difficulty-heading">
             <div>
               <div class="eyebrow">LIVE DIFFICULTY</div>
-              <h2 id="difficulty-title" data-config="difficulty.title">現在聽起來有多難？</h2>
+              <h2 id="difficulty-title" data-config="difficulty.title">How difficult does this feel right now?</h2>
             </div>
             <div class="difficulty-current">
               <b data-difficulty-value>3</b>
               <span data-difficulty-label>OK</span>
             </div>
           </div>
-          <label class="sr-only" for="difficulty">目前的聽講難易度</label>
+          <label class="sr-only" for="difficulty">Current difficulty</label>
           <input id="difficulty" name="difficulty" type="range" min="1" max="5" step="1" value="3" />
           <div class="difficulty-scale" data-difficulty-scale aria-hidden="true"></div>
-          <div class="difficulty-chart" aria-label="現場難易度分布" role="img">
+          <div class="difficulty-chart" aria-label="Live difficulty distribution" role="img">
             <svg viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
               <path class="difficulty-grid-line" d="M20 170 H580" />
               <path data-difficulty-area class="difficulty-area" />
@@ -47,13 +47,13 @@
             <div class="difficulty-counts" data-difficulty-counts></div>
           </div>
           <div class="difficulty-note">
-            <span data-difficulty-total>等待第一個回報</span>
-            <span data-difficulty-message>拖動後會自動更新</span>
+            <span data-difficulty-total>Waiting for the first response</span>
+            <span data-difficulty-message>Drag to update automatically</span>
           </div>
           <div class="reaction-picker" aria-labelledby="reaction-title">
             <div>
-              <b id="reaction-title">送一個即時反應</b>
-              <small>會立刻出現在講者的 dashboard</small>
+              <b id="reaction-title">Send a live reaction</b>
+              <small>It appears on the presenter dashboard immediately</small>
             </div>
             <div class="reaction-buttons" data-reactions></div>
             <span class="reaction-message" data-reaction-message aria-live="polite"></span>
@@ -61,28 +61,28 @@
         </section>
 
         <form id="question-form" class="ask-card">
-          <div class="form-step"><span>01</span><div><b>先調整上方難易度</b><small>最新分數會和問題一起留下</small></div></div>
-          <div class="form-step"><span>02</span><div><b>寫下卡住或想追問的地方</b><small>太難、太簡單或想深入，都可以直接問</small></div></div>
-          <label class="sr-only" for="question">你的問題</label>
+          <div class="form-step"><span>01</span><div><b>Set the difficulty above</b><small>Your latest score is saved with the question</small></div></div>
+          <div class="form-step"><span>02</span><div><b>Write what feels unclear or worth following up</b><small>Ask when it feels too hard, too easy, or worth exploring</small></div></div>
+          <label class="sr-only" for="question">Your question</label>
           <textarea id="question" name="question" minlength="4" maxlength="280" required data-config-placeholder="question.placeholder"></textarea>
           <fieldset class="intent-fieldset">
-            <legend class="form-step"><span>03</span><div><b>你希望大家怎麼接這一題？</b><small>選最接近的用途，方便 Q&A 整理</small></div></legend>
+            <legend class="form-step"><span>03</span><div><b>How should the room take up this question?</b><small>Choose the closest purpose to help organize Q&amp;A</small></div></legend>
             <div class="intent-grid" data-lenses></div>
           </fieldset>
-          <div class="form-step compact"><span>04</span><div><b>留下稱呼</b><small>選填，也可以保持匿名</small></div></div>
-          <label class="sr-only" for="nickname">稱呼</label>
-          <input id="nickname" name="nickname" maxlength="24" placeholder="例如：第一排、匿名" autocomplete="nickname" />
-          <button class="primary" type="submit">送出問題</button>
+          <div class="form-step compact"><span>04</span><div><b>Add a name</b><small>Optional. You can remain anonymous</small></div></div>
+          <label class="sr-only" for="nickname">Name</label>
+          <input id="nickname" name="nickname" maxlength="24" placeholder="For example: front row, anonymous" autocomplete="nickname" />
+          <button class="primary" type="submit">Send question</button>
           <div class="form-message" data-form-message aria-live="polite"></div>
         </form>
         <div class="section-head">
-          <div><div class="eyebrow">QUESTION POOL</div><h2 data-config="question.title">隨時提問</h2></div>
-          <span data-question-count>0 題</span>
+          <div><div class="eyebrow">QUESTION POOL</div><h2 data-config="question.title">Ask anytime</h2></div>
+          <span data-question-count>0 questions</span>
         </div>
         <div id="questions" class="question-list" aria-live="polite"></div>
       </section>
     </main>
-    <footer><a data-config-href="deckUrl" href="/example/">回到簡報</a><a href="/dashboard/">開啟講者 dashboard</a></footer>
+    <footer><a data-config-href="deckUrl" href="/example/">Back to slides</a><a href="/dashboard/">Open presenter dashboard</a></footer>
     <script type="module" src="/app.js"></script>
   </body>
 </html>

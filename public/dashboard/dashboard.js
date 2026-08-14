@@ -13,26 +13,26 @@ const lensLabels = Object.fromEntries(config.question.lenses.map((lens) => [lens
 
 function render(state) {
   renderDifficultyChart(document.querySelector(".dashboard-difficulty"), state.difficulty);
-  document.querySelector("[data-poll-total]").textContent = `${state.polls.length} 題`;
+  document.querySelector("[data-poll-total]").textContent = `${state.polls.length} polls`;
   pollsRoot.innerHTML = state.polls
     .map(
       (poll, index) => `
         <article class="dashboard-poll">
-          <div class="dashboard-poll-head"><b>${String(index + 1).padStart(2, "0")}</b><span>${poll.total} 票</span></div>
+          <div class="dashboard-poll-head"><b>${String(index + 1).padStart(2, "0")}</b><span>${poll.total} votes</span></div>
           <h3>${escapeHtml(poll.question)}</h3>
           ${poll.options
             .map((option, optionIndex) => {
               const percent = poll.total
                 ? Math.round((poll.counts[optionIndex] / poll.total) * 100)
                 : 0;
-              return `<div class="dashboard-result-row"><span>${escapeHtml(option)}</span><div><i style="--pct:${percent}%"></i></div><b>${poll.counts[optionIndex]} 票</b></div>`;
+              return `<div class="dashboard-result-row"><span>${escapeHtml(option)}</span><div><i style="--pct:${percent}%"></i></div><b>${poll.counts[optionIndex]} votes</b></div>`;
             })
             .join("")}
         </article>`,
     )
     .join("");
 
-  document.querySelector("[data-question-count]").textContent = `${state.questions.length} 題`;
+  document.querySelector("[data-question-count]").textContent = `${state.questions.length} questions`;
   const latestQuestions = [...state.questions].sort(
     (first, second) => Number(second.createdAt) - Number(first.createdAt),
   );
@@ -41,14 +41,14 @@ function render(state) {
         .map(
           (question, index) => `
             <article>
-              <div class="dashboard-question-head"><b>${index === 0 ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · 我也想問 ${question.upvotes}</span></div>
+              <div class="dashboard-question-head"><b>${index === 0 ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · Me too ${question.upvotes}</span></div>
               <div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div>
               <p>${escapeHtml(question.text)}</p>
               <small>${escapeHtml(question.nickname)}</small>
             </article>`,
         )
         .join("")
-    : `<div class="empty">等待第一個問題</div>`;
+    : `<div class="empty">Waiting for the first question</div>`;
 }
 
 function setDashboardTab(name) {
@@ -80,7 +80,7 @@ function formatTime(value) {
         minute: "2-digit",
         hour12: false,
       }).format(date)
-    : "剛剛";
+    : "just now";
 }
 
 function connect() {
@@ -113,7 +113,7 @@ function showReaction(reaction) {
 
 function setStatus(online) {
   statusEl.classList.toggle("online", online);
-  statusEl.lastChild.textContent = online ? "即時連線" : "重新連線中";
+  statusEl.lastChild.textContent = online ? "Live" : "Reconnecting";
 }
 
 function escapeHtml(value) {

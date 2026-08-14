@@ -40,6 +40,6 @@ Read both files before making changes
 
 When details are missing, choose reversible defaults and state them. The smallest useful prompt is
 
-> 幫這份網頁簡報加上 Live Deck Kit。活動名稱是「我的活動」，保留原本簡報與動畫，部署到我的 Cloudflare，桌面使用右側四分之一，手機使用抽屜。
+> Add Live Deck Kit to this web slide deck. The event is called “My Event.” Preserve the existing slides and animations, deploy the realtime service to my Cloudflare account, use a right-side 25% dashboard on desktop, and use a drawer on mobile.
 
 The skill should turn that prompt into a configured service, a deployed Worker, an integrated deck, and a tested handoff.

@@ -37,17 +37,17 @@ difficultyInput.addEventListener("input", () => {
   currentDifficulty = Number(difficultyInput.value);
   localStorage.setItem("difficulty:current", String(currentDifficulty));
   updateDifficultySelection(currentDifficulty);
-  difficultyMessageEl.textContent = "更新中";
+  difficultyMessageEl.textContent = "Updating";
   clearTimeout(difficultyTimer);
   difficultyTimer = setTimeout(() => {
     post("/api/difficulty", { score: currentDifficulty, voterId })
       .then((nextState) => {
         state = nextState;
-        difficultyMessageEl.textContent = "已同步給講者";
+        difficultyMessageEl.textContent = "Synced with the presenter";
         render();
       })
       .catch(() => {
-        difficultyMessageEl.textContent = "同步失敗，請再調整一次";
+        difficultyMessageEl.textContent = "Sync failed. Please adjust it again";
       });
   }, 220);
 });
@@ -71,13 +71,13 @@ document.querySelectorAll("[data-reaction]").forEach((button) => {
     button.disabled = true;
     try {
       await post("/api/reaction", { kind, voterId });
-      reactionMessageEl.textContent = `${button.firstChild.textContent.trim()} 已送到現場`;
+      reactionMessageEl.textContent = `${button.firstChild.textContent.trim()} sent`;
       button.classList.remove("sent");
       void button.offsetWidth;
       button.classList.add("sent");
       setTimeout(() => button.classList.remove("sent"), 700);
     } catch {
-      reactionMessageEl.textContent = "反應沒有送出去，請再試一次";
+      reactionMessageEl.textContent = "The reaction was not sent. Please try again";
     } finally {
       setTimeout(() => {
         button.disabled = false;
@@ -91,17 +91,17 @@ form.addEventListener("submit", async (event) => {
   const data = new FormData(form);
   const button = form.querySelector("button[type=submit]");
   button.disabled = true;
-  messageEl.textContent = "送出中";
+  messageEl.textContent = "Sending";
   try {
     state = await post("/api/question", {
       text: String(data.get("question") || ""),
-      nickname: String(data.get("nickname") || "匿名"),
+      nickname: String(data.get("nickname") || "Anonymous"),
       lens: String(data.get("lens") || "clarify"),
       difficulty: currentDifficulty,
       voterId,
     });
     form.querySelector("textarea").value = "";
-    messageEl.textContent = "已收進提問池";
+    messageEl.textContent = "Added to the question pool";
     render();
   } catch (error) {
     messageEl.textContent = humanError(error);
@@ -141,7 +141,7 @@ function render() {
       const hasVote = Number.isInteger(selected) && selected >= 0;
       return `
       <article class="poll-card">
-        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${poll.total} 票</span></div>
+        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${poll.total} votes</span></div>
         <h2><span>${String(index + 1).padStart(2, "0")}</span>${escapeHtml(poll.question)}</h2>
         <div class="options">
           ${poll.options
@@ -152,7 +152,7 @@ function render() {
               return `<button class="option ${hasVote && selected === optionIndex ? "selected" : ""}" data-poll="${poll.id}" data-option="${optionIndex}">
               <span class="bar" style="--pct:${percent}%"></span>
               <span class="option-copy"><b>${String.fromCharCode(65 + optionIndex)}</b>${escapeHtml(option)}</span>
-              <span class="percent">${poll.counts[optionIndex]} 票</span>
+              <span class="percent">${poll.counts[optionIndex]} votes</span>
             </button>`;
             })
             .join("")}
@@ -170,7 +170,7 @@ function render() {
   });
 
   document.querySelectorAll("[data-question-count]").forEach((el) => {
-    el.textContent = `${state.questions.length} 題`;
+    el.textContent = `${state.questions.length} questions`;
   });
   questionsRoot.innerHTML = state.questions.length
     ? state.questions
@@ -179,11 +179,11 @@ function render() {
     <article class="question-card">
       <div class="question-rank">${String(index + 1).padStart(2, "0")}</div>
       <div><div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
-      <button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="我也想問這題">我也想問 <b>${question.upvotes}</b></button>
+      <button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>
     </article>`,
         )
         .join("")
-    : `<div class="empty">第一題會改變後面的 Q&A 路線</div>`;
+    : `<div class="empty">The first question can change the Q&amp;A route</div>`;
   questionsRoot.querySelectorAll("[data-upvote]").forEach((button) => {
     button.addEventListener("click", () =>
       upvote(button.dataset.upvote).catch((error) => alert(humanError(error))),
@@ -216,13 +216,13 @@ function connect() {
 
 function setStatus(online) {
   statusEl.classList.toggle("online", online);
-  statusEl.lastChild.textContent = online ? "即時連線" : "重新連線中";
+  statusEl.lastChild.textContent = online ? "Live" : "Reconnecting";
 }
 
 function humanError(error) {
   const message = String(error?.message || error);
-  if (message.includes("limit")) return "目前無法再送出，請先整理現有問題";
-  return "送出失敗，請稍後再試";
+  if (message.includes("limit")) return "This device has reached the question limit";
+  return "Sending failed. Please try again later";
 }
 
 function escapeHtml(value) {
@@ -242,11 +242,11 @@ fetch(`${apiBase}/state`)
 post("/api/difficulty", { score: currentDifficulty, voterId })
   .then((data) => {
     state = data;
-    difficultyMessageEl.textContent = "已同步給講者";
+    difficultyMessageEl.textContent = "Synced with the presenter";
     render();
   })
   .catch(() => {
-    difficultyMessageEl.textContent = "拖動後會自動更新";
+    difficultyMessageEl.textContent = "Drag to update automatically";
   });
 connect();
 

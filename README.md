@@ -1,49 +1,55 @@
 # Live Deck Kit
 
-把即時難易度、隨時提問、emoji 反應、快速投票與 QR Code 放進任何網頁簡報。
+Add realtime difficulty feedback, audience questions, emoji reactions, quick polls, and a QR entry point to any web slide deck.
 
-參與者使用手機開啟互動頁。講者在簡報右側看到即時 dashboard，也可以把 dashboard 收起來。桌面可採右側分割，手機與 iPad 會改成可觸控的抽屜。
+Audience members join from their phones. The presenter sees a live dashboard beside the deck and can collapse it at any time. Desktop layouts can use a 75/25 split, while phones and tablets get a touch-friendly drawer.
 
-## 可以直接用 prompt 完成
+![Live Deck Kit presenter dashboard](./docs/demo-presenter.jpg)
 
-安裝 repo 內附的 Codex skill 後，可以用這段 prompt 開始
+<p align="center">
+  <img src="./docs/demo-audience.jpg" alt="Live Deck Kit audience page on mobile" width="360" />
+</p>
 
-> 幫這份網頁簡報加上 Live Deck Kit。活動名稱是「我的活動」，保留原本簡報與動畫，部署到我的 Cloudflare，桌面使用右側四分之一，手機使用抽屜。
+## Start with one prompt
 
-Skill 會依序設定活動、部署即時服務、嵌入簡報、測試手機與桌面版，最後交付參與頁和 dashboard 網址。
+Install the bundled Codex skill, then use a prompt like this
 
-## 功能
+> Add Live Deck Kit to this web slide deck. The event is called “My Event.” Preserve the existing slides and animations, deploy the realtime service to my Cloudflare account, use a right-side 25% dashboard on desktop, and use a drawer on mobile.
 
-- 1 到 5 分的即時難易度回報與常態分布視覺
-- 最新問題置頂、問題類型、送出當下的難易度與「我也想問」
-- 四種可自訂 emoji，講者 dashboard 會出現 popup 動畫
-- 最多八題快速投票，結果顯示票數
-- Dashboard 內建 QR Code，內容永遠指向同一個服務的參與頁
-- WebSocket Hibernation 即時同步，閒置時可讓 Durable Object 休眠
-- 每台裝置預設最多提出 20 題，可在設定檔調整
-- 管理 token 保護的匯出與清空 API
-- 可重跑、可更新的 HTML 整合 CLI
-- Overlay 與桌面 75/25 split 兩種嵌入模式
+The skill configures the event, deploys the realtime service, embeds the dashboard, tests desktop and mobile behavior, and hands back the audience and presenter URLs.
 
-## 架構
+## Features
+
+- Realtime 1–5 difficulty feedback with a distribution curve
+- Newest-first audience questions, question lenses, difficulty-at-submission, and “I have this question too” upvotes
+- Four configurable emoji reactions with presenter-side popup animations
+- Up to eight quick polls with vote counts
+- An always-available dashboard QR code that points to the audience page
+- Hibernation WebSockets so the Durable Object can sleep while idle
+- A configurable per-device question limit, defaulting to 20
+- Token-protected export and reset endpoints
+- An idempotent HTML integration CLI
+- Overlay mode and a desktop 75/25 split mode
+
+## Architecture
 
 ```text
-網頁簡報 ── live-deck-panel ── iframe ── 講者 dashboard
-                                             │
-參與者手機 ── 參與頁 ────────────────────────┤
-                                             ▼
-                              Cloudflare Worker API
-                                             │
-                              Durable Object + SQLite
-                                             │
-                              Hibernation WebSockets
+Web slide deck ── live-deck-panel ── iframe ── presenter dashboard
+                                                   │
+Audience phones ── audience page ──────────────────┤
+                                                   ▼
+                                      Cloudflare Worker API
+                                                   │
+                                      Durable Object + SQLite
+                                                   │
+                                      Hibernation WebSockets
 ```
 
-每個活動預設使用一個 Worker deployment 和一個 Durable Object。活動之間不共用資料，也不讓單一活動拖累其他活動。這個預設比較適合免費額度與現場故障隔離。
+Each event uses one Worker deployment and one Durable Object by default. Events do not share state, which keeps failures isolated and makes free-tier capacity easier to reason about.
 
-## 快速開始
+## Quick start
 
-需要 Node.js 22 以上與 Cloudflare 帳號。
+Requirements are Node.js 22 or later and a Cloudflare account.
 
 ```bash
 gh repo clone mashbean/live-deck-kit
@@ -52,7 +58,7 @@ npm install
 npm run types
 ```
 
-編輯 [`public/event.config.json`](./public/event.config.json)，接著建立管理 token 並檢查整個專案。
+Edit [`public/event.config.json`](./public/event.config.json), then create an admin token and check the project.
 
 ```bash
 npm run admin-token
@@ -61,9 +67,9 @@ npx wrangler login
 npm run deploy
 ```
 
-`npm run admin-token` 會把 SHA-256 hash 寫進 `wrangler.jsonc`，原始 token 只會留在被 Git 排除的 `.live-deck-admin-token`。
+`npm run admin-token` writes the token's SHA-256 hash to `wrangler.jsonc`. The plaintext token is stored only in the Git-ignored `.live-deck-admin-token` file.
 
-取得 Wrangler 回傳的 HTTPS 網址後，把 dashboard 加進既有簡報。
+After Wrangler returns the HTTPS service URL, add the dashboard to an existing deck.
 
 ```bash
 npm run integrate -- \
@@ -74,9 +80,9 @@ npm run integrate -- \
   --desktop-width '25vw'
 ```
 
-如果不確定簡報的主要容器，先使用 `--mode overlay`。CLI 只會維護 `live-deck-kit:start` 到 `live-deck-kit:end` 之間的區塊，重跑不會插入第二份元件。
+Use `--mode overlay` when the deck's main presentation container is unknown. The CLI only manages the block between `live-deck-kit:start` and `live-deck-kit:end`, so rerunning it updates the existing integration instead of inserting a duplicate.
 
-## 手動嵌入
+## Manual embed
 
 ```html
 <script type="module" src="https://YOUR-WORKER.workers.dev/embed/live-deck-panel.js"></script>
@@ -88,31 +94,31 @@ npm run integrate -- \
 ></live-deck-panel>
 ```
 
-## 安裝 Codex skill
+## Install the Codex skill
 
-從 GitHub 直接安裝套件並複製 skill。
+Install directly from GitHub
 
 ```bash
 npx --yes github:mashbean/live-deck-kit install-skill
 ```
 
-也可以從已 clone 的 repo 安裝。
+Or install from a local clone
 
 ```bash
 npm run install-skill
 ```
 
-Skill 會放在 `$CODEX_HOME/skills/live-deck-kit`。未設定 `CODEX_HOME` 時使用 `~/.codex/skills/live-deck-kit`。
+The skill is installed to `$CODEX_HOME/skills/live-deck-kit`. When `CODEX_HOME` is unset, it uses `~/.codex/skills/live-deck-kit`.
 
-## 活動設定
+## Event configuration
 
-公開文字、配色、難易度標籤、四種反應、問題分類與投票題目都在 [`public/event.config.json`](./public/event.config.json)。完整欄位說明位於 [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md)。
+Public copy, colors, difficulty labels, reactions, question lenses, and polls live in [`public/event.config.json`](./public/event.config.json). The complete field reference is in [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md).
 
-`eventId` 會參與 Durable Object 名稱。正式活動產生資料後不要任意修改，除非希望切換成一個全新的空白活動。
+`eventId` participates in the Durable Object name. Keep it stable after a production event begins collecting data unless you intentionally want a new, empty event.
 
-## 管理 API
+## Admin API
 
-先把 `.live-deck-admin-token` 讀進暫時的 shell 變數，完成後取消變數。
+Load `.live-deck-admin-token` into a temporary shell variable, then unset it when finished.
 
 ```bash
 LIVE_DECK_ADMIN_TOKEN="$(tr -d '\n' < .live-deck-admin-token)"
@@ -126,9 +132,9 @@ curl -X POST -H "Authorization: Bearer $LIVE_DECK_ADMIN_TOKEN" \
 unset LIVE_DECK_ADMIN_TOKEN
 ```
 
-清空資料無法從服務復原，執行前應先匯出並確認活動網址。
+Resetting state cannot be undone by the service. Export first and verify the exact event URL before resetting anything.
 
-## 測試
+## Testing
 
 ```bash
 npm run doctor
@@ -137,17 +143,17 @@ npm test
 npm run deploy:dry
 ```
 
-測試使用 Cloudflare 官方的 Vitest Workers integration，會在 Workers runtime 內操作真正的 Durable Object binding。預設測試只建立少量參與者，不包含壓力測試。
+Tests use Cloudflare's official Vitest Workers integration and exercise a real Durable Object binding inside the Workers runtime. The default suite creates only a few participants and does not include a load test.
 
-## 來源與模組
+## Inspirations and dependencies
 
-- 即時互動流程與 Durable Objects 路由受到 [`htlin222/kahoot-cf`](https://github.com/htlin222/kahoot-cf) 啟發，原專案採 MIT License
-- 問題分類與討論閉環受到 [`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground) 啟發，原專案採 CC0-1.0
-- 即時狀態使用 Cloudflare Workers、Durable Objects、SQLite 與 Hibernation WebSockets
-- QR Code 使用 [`soldair/node-qrcode`](https://github.com/soldair/node-qrcode)
+- Realtime interaction and Durable Objects routing were informed by [`htlin222/kahoot-cf`](https://github.com/htlin222/kahoot-cf), licensed under MIT
+- The four question lenses borrow vocabulary from [`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground), licensed under CC0-1.0. Live Deck Kit does not include its post-event clustering or loopback pipeline
+- Realtime state uses Cloudflare Workers, Durable Objects, SQLite, and Hibernation WebSockets
+- QR code generation uses [`soldair/node-qrcode`](https://github.com/soldair/node-qrcode)
 
-Live Deck Kit 已針對簡報旁的即時難易度、提問、反應與投票重新實作，沒有帶入 kahoot-cf 的題庫編輯器、登入、計分或遊戲週期。
+Live Deck Kit is a separate implementation designed for live feedback beside a web presentation. It does not include the quiz editor, authentication, scoring, or game lifecycle from `kahoot-cf`.
 
-## 授權
+## License
 
-[Apache License 2.0](./LICENSE)。允許修改、散布與商業使用，並包含明確的專利授權。第三方說明見 [`NOTICE`](./NOTICE) 與 [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md)。
+[Apache License 2.0](./LICENSE). Modification, distribution, and commercial use are permitted, with an explicit patent grant. See [`NOTICE`](./NOTICE) and [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md) for attribution details.

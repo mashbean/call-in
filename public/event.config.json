@@ -1,11 +1,11 @@
 {
   "eventId": "my-live-deck",
   "eyebrow": "LIVE DECK",
-  "title": "來都來了，歡迎提問",
-  "description": "請掃 QR Code，回報難易度、提問，或給講者一個即時反應。",
-  "dashboardTitle": "現場互動",
+  "title": "You are here. Ask away.",
+  "description": "Scan the QR code to share the difficulty, ask a question, or send a reaction.",
+  "dashboardTitle": "Live audience",
   "deckUrl": "https://example.com/slides/",
-  "locale": "zh-Hant-TW",
+  "locale": "en",
   "theme": {
     "background": "#081225",
     "panel": "#101d3d",
@@ -14,38 +14,38 @@
     "positive": "#b9f24a"
   },
   "difficulty": {
-    "title": "現在聽起來有多難？",
-    "labels": ["太簡單", "簡單", "OK", "困難", "聽不懂"]
+    "title": "How difficult does this feel right now?",
+    "labels": ["Too easy", "Easy", "OK", "Difficult", "Lost"]
   },
   "question": {
-    "title": "隨時提問",
-    "placeholder": "寫下卡住、想追問或值得繼續討論的地方",
+    "title": "Ask anytime",
+    "placeholder": "Share what feels unclear, worth following up, or worth discussing",
     "maxPerDevice": 20,
     "lenses": [
-      { "id": "clarify", "label": "幫我釐清", "description": "想先把概念或做法弄懂" },
-      { "id": "chorus", "label": "我也遇到了", "description": "想知道現場是否有人有相同困擾" },
-      { "id": "bridge", "label": "一起拆兩難", "description": "想把兩個方向的取捨攤開" },
-      { "id": "keeper", "label": "別漏掉這點", "description": "有一個條件、風險或限制要補上" }
+      { "id": "clarify", "label": "Clarify", "description": "Help me understand the idea or method" },
+      { "id": "chorus", "label": "Me too", "description": "I want to know who else shares this concern" },
+      { "id": "bridge", "label": "Bridge", "description": "Help us examine the tradeoff between two directions" },
+      { "id": "keeper", "label": "Keep this", "description": "A condition, risk, or constraint should stay visible" }
     ]
   },
   "reactions": [
-    { "id": "applause", "emoji": "👏", "label": "說得好" },
-    { "id": "insight", "emoji": "💡", "label": "有啟發" },
-    { "id": "resonate", "emoji": "❤️", "label": "有共鳴" },
-    { "id": "pause", "emoji": "🤔", "label": "想一下" }
+    { "id": "applause", "emoji": "👏", "label": "Well said" },
+    { "id": "insight", "emoji": "💡", "label": "Insight" },
+    { "id": "resonate", "emoji": "❤️", "label": "Resonates" },
+    { "id": "pause", "emoji": "🤔", "label": "Let me think" }
   ],
   "polls": [
     {
       "id": "starting-point",
-      "prompt": "開場暖身",
-      "question": "你目前怎麼使用 AI？",
-      "options": ["偶爾聊天", "搜尋與整理", "交付完整任務", "已有固定工作流"]
+      "prompt": "Warm-up",
+      "question": "How do you use AI today?",
+      "options": ["Occasional chat", "Search and organize", "Delegate complete tasks", "Established workflow"]
     },
     {
       "id": "time-sink",
-      "prompt": "時間分配",
-      "question": "哪一類工作最耗你的時間？",
-      "options": ["行政服務", "教學", "研究", "公關與溝通"]
+      "prompt": "Time allocation",
+      "question": "Which kind of work takes most of your time?",
+      "options": ["Operations", "Teaching", "Research", "Communication"]
     }
   ]
 }

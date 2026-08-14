@@ -10,7 +10,7 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 export async function integrateDeck(options) {
   const deckPath = path.resolve(options.deck);
   const source = await readFile(deckPath, "utf8");
-  if (!/<\/body\s*>/i.test(source)) throw new Error("找不到 </body>，請指定完整的 HTML 簡報檔");
+  if (!/<\/body\s*>/i.test(source)) throw new Error("Could not find </body>. Provide a complete HTML slide deck file");
 
   const serviceUrl = normalizeServiceUrl(options.serviceUrl);
   const scriptUrl = serviceUrl ? `${serviceUrl}/embed/live-deck-panel.js` : "/embed/live-deck-panel.js";
@@ -29,7 +29,7 @@ export async function integrateDeck(options) {
   ].join("\n");
   const marker = /<!-- live-deck-kit:start -->[\s\S]*?<!-- live-deck-kit:end -->/;
   if (!marker.test(source) && /<live-deck-panel\b/i.test(source)) {
-    throw new Error("簡報已經有未受 CLI 管理的 <live-deck-panel>，請先確認並移除舊片段");
+    throw new Error("The deck already contains an unmanaged <live-deck-panel>. Review and remove the old snippet first");
   }
   const next = marker.test(source) ? source.replace(marker, block) : source.replace(/<\/body\s*>/i, `${block}\n</body>`);
   await writeFile(deckPath, next);
@@ -38,7 +38,7 @@ export async function integrateDeck(options) {
 
 export async function configureAdminToken(tokenInput) {
   const token = tokenInput || randomBytes(32).toString("base64url");
-  if (token.length < 24) throw new Error("管理 token 至少需要 24 個字元");
+  if (token.length < 24) throw new Error("The admin token must contain at least 24 characters");
   const hash = createHash("sha256").update(token).digest("hex");
   const wranglerPath = path.join(packageRoot, "wrangler.jsonc");
   const source = await readFile(wranglerPath, "utf8");
@@ -46,7 +46,7 @@ export async function configureAdminToken(tokenInput) {
     /("ADMIN_TOKEN_SHA256"\s*:\s*")[0-9a-f]*(")/i,
     `$1${hash}$2`,
   );
-  if (next === source) throw new Error("wrangler.jsonc 缺少 ADMIN_TOKEN_SHA256");
+  if (next === source) throw new Error("wrangler.jsonc is missing ADMIN_TOKEN_SHA256");
   await writeFile(wranglerPath, next);
   await writeFile(path.join(packageRoot, ".live-deck-admin-token"), `${token}\n`, { mode: 0o600 });
   return { hash, tokenPath: path.join(packageRoot, ".live-deck-admin-token") };
@@ -73,10 +73,10 @@ export async function doctor() {
   }
   const config = JSON.parse(await readFile(path.join(packageRoot, "public", "event.config.json"), "utf8"));
   const errors = [];
-  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(config.eventId || "")) errors.push("eventId 必須是小寫 slug");
-  if (!Array.isArray(config.polls) || config.polls.length > 8) errors.push("polls 必須是 0 到 8 題");
-  if (config.difficulty?.labels?.length !== 5) errors.push("difficulty.labels 必須有 5 個標籤");
-  if (missing.length) errors.push(`缺少檔案 ${missing.join(", ")}`);
+  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(config.eventId || "")) errors.push("eventId must be a lowercase slug");
+  if (!Array.isArray(config.polls) || config.polls.length > 8) errors.push("polls must contain zero to eight polls");
+  if (config.difficulty?.labels?.length !== 5) errors.push("difficulty.labels must contain exactly five labels");
+  if (missing.length) errors.push(`Missing files: ${missing.join(", ")}`);
   return { ok: errors.length === 0, errors, eventId: config.eventId, pollCount: config.polls?.length ?? 0 };
 }
 
@@ -85,10 +85,10 @@ export async function installSkill(options = {}) {
   const target = path.join(codexHome, "skills", "live-deck-kit");
   try {
     await stat(target);
-    if (!options.force) throw new Error(`${target} 已存在，若要覆蓋請加 --force`);
+    if (!options.force) throw new Error(`${target} already exists. Add --force to overwrite it`);
   } catch (error) {
-    if (error instanceof Error && !error.message.includes("ENOENT") && !error.message.includes("已存在")) throw error;
-    if (error instanceof Error && error.message.includes("已存在")) throw error;
+    if (error instanceof Error && !error.message.includes("ENOENT") && !error.message.includes("already exists")) throw error;
+    if (error instanceof Error && error.message.includes("already exists")) throw error;
   }
   await mkdir(path.dirname(target), { recursive: true });
   await cp(path.join(packageRoot, "skills", "live-deck-kit"), target, { recursive: true, force: Boolean(options.force) });
@@ -99,7 +99,7 @@ async function main(argv) {
   const command = argv[2] || "help";
   const args = parseArgs(argv.slice(3));
   if (command === "integrate") {
-    if (!args.deck || !args["service-url"]) throw new Error("用法 live-deck-kit integrate --deck <index.html> --service-url <https://...>");
+    if (!args.deck || !args["service-url"]) throw new Error("Usage: live-deck-kit integrate --deck <index.html> --service-url <https://...>");
     const result = await integrateDeck({
       deck: args.deck,
       serviceUrl: args["service-url"],
@@ -156,7 +156,7 @@ function normalizeServiceUrl(value) {
   if (value === "/") return "";
   const parsed = new URL(value);
   if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
-    throw new Error("service-url 必須使用 HTTPS，localhost 除外");
+    throw new Error("service-url must use HTTPS, except for localhost");
   }
   return value.replace(/\/+$/, "");
 }

@@ -45,8 +45,8 @@ template.innerHTML = `
     }
     button::before { content: "●"; color: #b9f24a; font-size: 9px; }
     :host([collapsed]) aside { transform: translateX(102%); opacity: 0; pointer-events: none; }
-    :host(:not([collapsed])) button span::before { content: "收起互動"; }
-    :host([collapsed]) button span::before { content: "現場互動"; }
+    :host(:not([collapsed])) button span::before { content: "Hide dashboard"; }
+    :host([collapsed]) button span::before { content: "Live audience"; }
     .scrim { display: none; }
     @media (max-width: 900px) {
       :host { width: min(94vw, 500px); }
@@ -62,10 +62,10 @@ template.innerHTML = `
     }
     @media (prefers-reduced-motion: reduce) { aside { transition: none; } }
   </style>
-  <button type="button" aria-expanded="true" aria-label="收起現場互動"><span></span></button>
+  <button type="button" aria-expanded="true" aria-label="Hide live audience dashboard"><span></span></button>
   <div class="scrim" aria-hidden="true"></div>
-  <aside aria-label="現場互動 dashboard">
-    <iframe title="現場互動 dashboard" loading="eager" allow="clipboard-write"></iframe>
+  <aside aria-label="Live audience dashboard">
+    <iframe title="Live audience dashboard" loading="eager" allow="clipboard-write"></iframe>
   </aside>
 `;
 
@@ -121,7 +121,7 @@ class LiveDeckPanel extends HTMLElement {
     const compact = matchMedia("(max-width: 900px)").matches;
     const collapsed = this.hasAttribute("collapsed");
     this.#button.setAttribute("aria-expanded", String(!collapsed));
-    this.#button.setAttribute("aria-label", collapsed ? "開啟現場互動" : "收起現場互動");
+    this.#button.setAttribute("aria-label", collapsed ? "Open live audience dashboard" : "Hide live audience dashboard");
     if (this.getAttribute("mode") !== "split" || compact || collapsed) {
       this.#restoreLayout();
       return;

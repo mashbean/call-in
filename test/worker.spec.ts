@@ -26,20 +26,20 @@ describe("Live Deck Kit Worker", () => {
     const secondVoter = crypto.randomUUID();
     await post("/api/question", {
       voterId: firstVoter,
-      text: "第一個測試問題",
+      text: "First test question",
       nickname: "A",
       lens: "clarify",
       difficulty: 2,
     });
     const state = await post("/api/question", {
       voterId: secondVoter,
-      text: "第二個測試問題",
+      text: "Second test question",
       nickname: "B",
       lens: "keeper",
       difficulty: 5,
     });
     expect(state.questions).toHaveLength(2);
-    expect(state.questions[0]?.text).toBe("第二個測試問題");
+    expect(state.questions[0]?.text).toBe("Second test question");
     expect(state.questions[0]?.difficulty).toBe(5);
   });
 
