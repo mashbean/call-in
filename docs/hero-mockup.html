@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Deck Kit device mockup</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1530px;
+        height: 1000px;
+        margin: 0;
+        overflow: hidden;
+        background: #070d1d;
+        font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        position: relative;
+        color: #f4f7ff;
+        background:
+          radial-gradient(circle at 69% 28%, rgba(255, 79, 154, 0.17), transparent 32%),
+          radial-gradient(circle at 24% 77%, rgba(53, 220, 255, 0.14), transparent 36%),
+          linear-gradient(145deg, #050a16 0%, #0a1328 52%, #101433 100%);
+      }
+
+      body::before {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background-image:
+          linear-gradient(rgba(53, 220, 255, 0.065) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(53, 220, 255, 0.065) 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent 96%);
+      }
+
+      .brand {
+        position: absolute;
+        top: 74px;
+        left: 94px;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        color: #ff5ba3;
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 0.23em;
+      }
+
+      .brand::before {
+        width: 11px;
+        height: 11px;
+        border-radius: 999px;
+        background: #b9f24a;
+        box-shadow: 0 0 0 7px rgba(185, 242, 74, 0.12), 0 0 24px rgba(185, 242, 74, 0.5);
+        content: "";
+      }
+
+      .floor-glow {
+        position: absolute;
+        left: 84px;
+        right: 70px;
+        bottom: 60px;
+        height: 210px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse, rgba(53, 220, 255, 0.2), transparent 70%);
+        filter: blur(20px);
+        transform: perspective(500px) rotateX(68deg);
+      }
+
+      .laptop {
+        position: absolute;
+        top: 138px;
+        left: 74px;
+        z-index: 2;
+        width: 1190px;
+        height: 744px;
+        filter: drop-shadow(0 50px 60px rgba(0, 0, 0, 0.5));
+      }
+
+      .laptop-lid {
+        position: absolute;
+        top: 0;
+        left: 44px;
+        width: 1100px;
+        height: 714px;
+        padding: 17px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 30px 30px 19px 19px;
+        background: linear-gradient(145deg, #dce1e8 0%, #838c9a 4%, #222a38 10%, #111725 100%);
+        box-shadow:
+          inset 0 0 0 2px rgba(255, 255, 255, 0.05),
+          inset 0 -18px 40px rgba(0, 0, 0, 0.52),
+          0 0 0 1px rgba(0, 0, 0, 0.7);
+      }
+
+      .laptop-camera {
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        z-index: 2;
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #050912;
+        box-shadow: inset 0 0 2px #3adfff;
+        transform: translateX(-50%);
+      }
+
+      .laptop-screen {
+        position: relative;
+        width: 1066px;
+        height: 666px;
+        overflow: hidden;
+        border-radius: 15px;
+        background: #050914;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.9);
+      }
+
+      .laptop-screen img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .laptop-screen::after,
+      .phone-screen::after {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        content: "";
+        background: linear-gradient(125deg, rgba(255, 255, 255, 0.11), transparent 17%, transparent 74%, rgba(255, 255, 255, 0.035));
+        mix-blend-mode: screen;
+      }
+
+      .laptop-base {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 1190px;
+        height: 47px;
+        clip-path: polygon(4% 0, 96% 0, 100% 62%, 94% 90%, 6% 90%, 0 62%);
+        background: linear-gradient(to bottom, #d8dde4 0%, #7b8490 36%, #313a47 69%, #0c111b 100%);
+        box-shadow: inset 0 2px rgba(255, 255, 255, 0.62);
+      }
+
+      .laptop-base::after {
+        position: absolute;
+        top: 0;
+        left: 45%;
+        width: 10%;
+        height: 7px;
+        border-radius: 0 0 8px 8px;
+        background: rgba(29, 35, 44, 0.7);
+        content: "";
+      }
+
+      .phone {
+        position: absolute;
+        top: 205px;
+        right: 74px;
+        z-index: 4;
+        width: 322px;
+        height: 710px;
+        padding: 13px;
+        border: 2px solid rgba(255, 255, 255, 0.52);
+        border-radius: 58px;
+        background: linear-gradient(145deg, #b9c1cc 0%, #3b4554 4%, #0d1421 10%, #050913 100%);
+        box-shadow:
+          inset 0 0 0 3px rgba(255, 255, 255, 0.07),
+          0 48px 66px rgba(0, 0, 0, 0.58),
+          -20px 5px 50px rgba(53, 220, 255, 0.08);
+        transform: rotate(1.7deg);
+      }
+
+      .phone::before {
+        position: absolute;
+        top: 121px;
+        right: -5px;
+        width: 4px;
+        height: 82px;
+        border-radius: 0 3px 3px 0;
+        background: #656e7a;
+        content: "";
+      }
+
+      .phone-screen {
+        position: relative;
+        width: 292px;
+        height: 680px;
+        overflow: hidden;
+        border-radius: 45px;
+        background: #070d1d;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      }
+
+      .phone-screen img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .dynamic-island {
+        position: absolute;
+        top: 23px;
+        left: 50%;
+        z-index: 5;
+        width: 92px;
+        height: 27px;
+        border-radius: 999px;
+        background: #02040a;
+        box-shadow: inset -16px 0 20px rgba(19, 29, 44, 0.52);
+        transform: translateX(-50%);
+      }
+
+      .dynamic-island::after {
+        position: absolute;
+        top: 9px;
+        right: 11px;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #071525;
+        box-shadow: inset 0 0 3px #2b62a3;
+        content: "";
+      }
+
+      .device-label {
+        position: absolute;
+        right: 99px;
+        bottom: 48px;
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(235, 241, 255, 0.68);
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .device-label span {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #35dcff;
+        box-shadow: 0 0 16px #35dcff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="brand">LIVE DECK KIT</div>
+    <div class="floor-glow"></div>
+
+    <div class="laptop" aria-label="Presenter deck shown on a laptop">
+      <div class="laptop-lid">
+        <div class="laptop-camera"></div>
+        <div class="laptop-screen">
+          <img src="./demo-presenter.jpg" alt="Live Deck Kit presenter dashboard" />
+        </div>
+      </div>
+      <div class="laptop-base"></div>
+    </div>
+
+    <div class="phone" aria-label="Audience interaction shown on a phone">
+      <div class="phone-screen">
+        <div class="dynamic-island"></div>
+        <img src="./demo-audience.jpg" alt="Live Deck Kit audience page" />
+      </div>
+    </div>
+
+    <div class="device-label"><span></span>Presenter + audience, one realtime room</div>
+  </body>
+</html>
