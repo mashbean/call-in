@@ -147,6 +147,7 @@ Tests use Cloudflare's official Vitest Workers integration and exercise a real D
 - The four question lenses borrow vocabulary from [`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground), licensed under CC0-1.0. Live Deck Kit does not include its post-event clustering or loopback pipeline
 - Realtime state uses Cloudflare Workers, Durable Objects, SQLite, and Hibernation WebSockets
 - QR code generation uses [`soldair/node-qrcode`](https://github.com/soldair/node-qrcode)
+- The repository device mockup uses [`picturepan2/devices.css`](https://github.com/picturepan2/devices.css), licensed under MIT
 
 Live Deck Kit is a separate implementation designed for live feedback beside a web presentation. It does not include the quiz editor, authentication, scoring, or game lifecycle from `kahoot-cf`.
 

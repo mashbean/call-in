@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Live Deck Kit device mockup</title>
+    <link rel="stylesheet" href="../node_modules/devices.css/dist/devices.css" />
     <style>
       * {
         box-sizing: border-box;
@@ -23,8 +24,8 @@
         position: relative;
         color: #f4f7ff;
         background:
-          radial-gradient(circle at 69% 28%, rgba(255, 79, 154, 0.17), transparent 32%),
-          radial-gradient(circle at 24% 77%, rgba(53, 220, 255, 0.14), transparent 36%),
+          radial-gradient(circle at 73% 36%, rgba(255, 79, 154, 0.15), transparent 34%),
+          radial-gradient(circle at 24% 74%, rgba(53, 220, 255, 0.14), transparent 34%),
           linear-gradient(145deg, #050a16 0%, #0a1328 52%, #101433 100%);
       }
 
@@ -41,8 +42,8 @@
 
       .brand {
         position: absolute;
-        top: 74px;
-        left: 94px;
+        top: 72px;
+        left: 74px;
         z-index: 5;
         display: flex;
         align-items: center;
@@ -64,177 +65,60 @@
 
       .floor-glow {
         position: absolute;
-        left: 48px;
-        right: 48px;
-        bottom: 60px;
-        height: 210px;
+        left: 140px;
+        right: 140px;
+        bottom: 72px;
+        height: 180px;
         border-radius: 50%;
-        background: radial-gradient(ellipse, rgba(53, 220, 255, 0.2), transparent 70%);
+        background: radial-gradient(ellipse, rgba(53, 220, 255, 0.19), transparent 69%);
         filter: blur(20px);
         transform: perspective(500px) rotateX(68deg);
       }
 
-      .laptop {
+      .phone-slot,
+      .macbook-slot {
         position: absolute;
+        z-index: 2;
+      }
+
+      .phone-slot {
         top: 164px;
-        left: 390px;
-        z-index: 2;
-        width: 1080px;
-        height: 700px;
-        filter: drop-shadow(0 42px 48px rgba(0, 0, 0, 0.52));
+        left: 46px;
+        width: 334px;
+        height: 678px;
       }
 
-      .laptop-lid {
-        position: absolute;
-        top: 0;
-        left: 25px;
-        width: 1030px;
-        height: 651px;
-        padding: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.42);
-        border-radius: 22px 22px 11px 11px;
-        background: linear-gradient(145deg, #cbd1d9 0%, #7a8491 1.5%, #202734 3.5%, #080d16 7%, #070b13 100%);
-        box-shadow:
-          inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-          inset 0 -8px 22px rgba(0, 0, 0, 0.42),
-          0 0 0 1px rgba(0, 0, 0, 0.78);
+      .macbook-slot {
+        top: 204px;
+        left: 430px;
+        width: 1051px;
+        height: 617px;
       }
 
-      .laptop-camera {
-        position: absolute;
-        top: 4px;
-        left: 50%;
-        z-index: 2;
-        width: 5px;
-        height: 5px;
-        border-radius: 999px;
-        background: #050912;
-        box-shadow: inset 0 0 2px #3adfff;
-        transform: translateX(-50%);
+      .phone-device {
+        filter: drop-shadow(0 38px 42px rgba(0, 0, 0, 0.58));
+        transform: scale(0.78);
+        transform-origin: top left;
       }
 
-      .laptop-screen {
-        position: relative;
-        width: 1010px;
-        height: 631px;
-        overflow: hidden;
-        border-radius: 12px 12px 7px 7px;
-        background: #050914;
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.9);
+      .macbook-device {
+        filter: drop-shadow(0 42px 44px rgba(0, 0, 0, 0.5));
+        transform: scale(1.42);
+        transform-origin: top left;
       }
 
-      .laptop-screen img {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+      .phone-device .device-screen,
+      .macbook-device .device-screen {
+        object-fit: contain;
       }
 
-      .laptop-screen::after,
-      .phone-screen::after {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        content: "";
-        background: linear-gradient(125deg, rgba(255, 255, 255, 0.11), transparent 17%, transparent 74%, rgba(255, 255, 255, 0.035));
-        mix-blend-mode: screen;
-      }
-
-      .laptop-base {
-        position: absolute;
-        bottom: 12px;
-        left: 0;
-        width: 1080px;
-        height: 34px;
-        clip-path: polygon(3% 0, 97% 0, 100% 64%, 97% 86%, 3% 86%, 0 64%);
-        background: linear-gradient(to bottom, #e2e5e9 0%, #949ca7 29%, #4c5663 55%, #171d27 87%, #090d14 100%);
-        box-shadow: inset 0 1px rgba(255, 255, 255, 0.78);
-      }
-
-      .laptop-base::after {
-        position: absolute;
-        top: 0;
-        left: 45%;
-        width: 10%;
-        height: 5px;
-        border-radius: 0 0 7px 7px;
-        background: rgba(34, 40, 49, 0.72);
-        content: "";
-      }
-
-      .phone {
-        position: absolute;
-        top: 184px;
-        left: 58px;
-        z-index: 3;
-        width: 304px;
-        height: 680px;
-        padding: 12px;
-        border: 2px solid rgba(255, 255, 255, 0.52);
-        border-radius: 52px;
-        background: linear-gradient(145deg, #b9c1cc 0%, #3b4554 4%, #0d1421 10%, #050913 100%);
-        box-shadow:
-          inset 0 0 0 3px rgba(255, 255, 255, 0.07),
-          0 42px 58px rgba(0, 0, 0, 0.58),
-          12px 5px 46px rgba(53, 220, 255, 0.08);
-      }
-
-      .phone::before {
-        position: absolute;
-        top: 121px;
-        right: -5px;
-        width: 4px;
-        height: 82px;
-        border-radius: 0 3px 3px 0;
-        background: #656e7a;
-        content: "";
-      }
-
-      .phone-screen {
-        position: relative;
-        width: 276px;
-        height: 652px;
-        overflow: hidden;
-        border-radius: 40px;
-        background: #070d1d;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-      }
-
-      .phone-screen img {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .dynamic-island {
-        position: absolute;
-        top: 23px;
-        left: 50%;
-        z-index: 5;
-        width: 92px;
-        height: 27px;
-        border-radius: 999px;
-        background: #02040a;
-        box-shadow: inset -16px 0 20px rgba(19, 29, 44, 0.52);
-        transform: translateX(-50%);
-      }
-
-      .dynamic-island::after {
-        position: absolute;
-        top: 9px;
-        right: 11px;
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: #071525;
-        box-shadow: inset 0 0 3px #2b62a3;
-        content: "";
+      .phone-device .device-screen {
+        background: #071022;
       }
 
       .device-label {
         position: absolute;
-        right: 70px;
+        right: 62px;
         bottom: 48px;
         z-index: 6;
         display: flex;
@@ -260,20 +144,31 @@
     <div class="brand">LIVE DECK KIT</div>
     <div class="floor-glow"></div>
 
-    <div class="laptop" aria-label="Presenter deck shown on a laptop">
-      <div class="laptop-lid">
-        <div class="laptop-camera"></div>
-        <div class="laptop-screen">
-          <img src="./demo-presenter.jpg" alt="Live Deck Kit presenter dashboard" />
+    <div class="phone-slot" aria-label="Audience interaction shown on an iPhone">
+      <div class="device device-iphone-14-pro device-black phone-device">
+        <div class="device-frame">
+          <img class="device-screen" src="./demo-audience.jpg" alt="Live Deck Kit audience page" />
         </div>
+        <div class="device-stripe"></div>
+        <div class="device-header"></div>
+        <div class="device-sensors"></div>
+        <div class="device-btns"></div>
+        <div class="device-power"></div>
+        <div class="device-home"></div>
       </div>
-      <div class="laptop-base"></div>
     </div>
 
-    <div class="phone" aria-label="Audience interaction shown on a phone">
-      <div class="phone-screen">
-        <div class="dynamic-island"></div>
-        <img src="./demo-audience.jpg" alt="Live Deck Kit audience page" />
+    <div class="macbook-slot" aria-label="Presenter deck and dashboard shown on a MacBook Pro">
+      <div class="device device-macbook-pro device-spacegray macbook-device">
+        <div class="device-frame">
+          <img class="device-screen" src="./demo-presenter.jpg" alt="Live Deck Kit presenter dashboard" />
+        </div>
+        <div class="device-stripe"></div>
+        <div class="device-header"></div>
+        <div class="device-sensors"></div>
+        <div class="device-btns"></div>
+        <div class="device-power"></div>
+        <div class="device-home"></div>
       </div>
     </div>
 

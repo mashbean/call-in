@@ -35,3 +35,10 @@ The question-lens design was informed by
 
 QR Code generation uses [`soldair/node-qrcode`](https://github.com/soldair/node-qrcode),
 available under the MIT License. Its full license is included in the installed package.
+
+## devices.css
+
+The documentation device mockup uses [`picturepan2/devices.css`](https://github.com/picturepan2/devices.css),
+available under the MIT License.
+
+Copyright (c) 2017 Yan Zhu
