@@ -4,7 +4,7 @@ Add realtime difficulty feedback, audience questions, emoji reactions, quick pol
 
 Audience members join from their phones. The presenter sees a live dashboard beside the deck and can collapse it at any time. Desktop layouts can use a 75/25 split, while phones and tablets get a touch-friendly drawer.
 
-![Live Deck Kit running on a presenter laptop and an audience phone](./docs/hero-mockup.jpg)
+![Live Deck Kit running on a presenter laptop and an audience phone](./docs/hero-mockup-v2.jpg)
 
 ## Start with one prompt
 
