@@ -463,12 +463,6 @@ export class LiveSession extends DurableObject<Env> {
       visibility,
       publishAt,
     );
-    this.ctx.storage.sql.exec(
-      "INSERT INTO question_votes (question_id, voter_id, created_at) VALUES (?, ?, ?)",
-      id,
-      voterId,
-      now,
-    );
     if (participant) {
       this.ctx.storage.sql.exec(
         "UPDATE participants SET last_seen_at = ? WHERE voter_id = ?",
@@ -485,7 +479,7 @@ export class LiveSession extends DurableObject<Env> {
         lens,
         difficulty,
         createdAt: now,
-        upvotes: 1,
+        upvotes: 0,
       });
       snapshot.questions = snapshot.questions.slice(0, 100);
     }
@@ -500,7 +494,7 @@ export class LiveSession extends DurableObject<Env> {
         lens,
         difficulty,
         createdAt: now,
-        upvotes: 1,
+        upvotes: 0,
         visibility,
         statusLabel: statusLabel(visibility),
       },
