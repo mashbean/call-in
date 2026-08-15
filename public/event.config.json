@@ -28,6 +28,31 @@
       { "id": "keeper", "label": "Keep this", "description": "A condition, risk, or constraint should stay visible" }
     ]
   },
+  "moderation": {
+    "enabled": true,
+    "presentationDelaySeconds": 8,
+    "questionCooldownSeconds": 20,
+    "questionsPerTenMinutes": 5,
+    "slowModeSeconds": 90,
+    "flags": {
+      "enabled": true,
+      "maxPerDevice": 8,
+      "autoHoldMin": 3,
+      "autoHoldMax": 5,
+      "autoHoldParticipantRatio": 0.03
+    },
+    "codeOfConduct": {
+      "version": "2026-08-15",
+      "title": "Help keep the room useful",
+      "summary": "Critique the ideas, pace, method, and conclusions directly. Keep questions in good faith and focused on moving the discussion forward.",
+      "rules": [
+        "No personal attacks, harassment, discrimination, threats, impersonation, or private information.",
+        "No flooding, repeated provocation, or deliberate disruption of the discussion.",
+        "Moderators may hold or hide content and limit question access for this event.",
+        "Moderation actions are logged and can be reviewed or reversed."
+      ]
+    }
+  },
   "reactions": [
     { "id": "applause", "emoji": "👏", "label": "Well said" },
     { "id": "insight", "emoji": "💡", "label": "Insight" },

@@ -45,6 +45,78 @@ function validateEventConfig(value: unknown): PublicEventConfig {
   ) {
     throw new Error("question.maxPerDevice must be between 1 and 100");
   }
+  if (config.moderation) {
+    const moderation = config.moderation;
+    if (typeof moderation.enabled !== "boolean") {
+      throw new Error("moderation.enabled must be a boolean");
+    }
+    if (
+      !Number.isInteger(moderation.presentationDelaySeconds) ||
+      moderation.presentationDelaySeconds < 0 ||
+      moderation.presentationDelaySeconds > 30
+    ) {
+      throw new Error("moderation.presentationDelaySeconds must be between 0 and 30");
+    }
+    if (
+      !Number.isInteger(moderation.questionCooldownSeconds) ||
+      moderation.questionCooldownSeconds < 0 ||
+      moderation.questionCooldownSeconds > 300
+    ) {
+      throw new Error("moderation.questionCooldownSeconds must be between 0 and 300");
+    }
+    if (
+      !Number.isInteger(moderation.questionsPerTenMinutes) ||
+      moderation.questionsPerTenMinutes < 1 ||
+      moderation.questionsPerTenMinutes > 100
+    ) {
+      throw new Error("moderation.questionsPerTenMinutes must be between 1 and 100");
+    }
+    if (
+      !Number.isInteger(moderation.slowModeSeconds) ||
+      moderation.slowModeSeconds < 10 ||
+      moderation.slowModeSeconds > 600
+    ) {
+      throw new Error("moderation.slowModeSeconds must be between 10 and 600");
+    }
+    const flags = moderation.flags;
+    if (!flags || typeof flags.enabled !== "boolean") {
+      throw new Error("moderation.flags is incomplete");
+    }
+    if (!Number.isInteger(flags.maxPerDevice) || flags.maxPerDevice < 1 || flags.maxPerDevice > 30) {
+      throw new Error("moderation.flags.maxPerDevice must be between 1 and 30");
+    }
+    if (!Number.isInteger(flags.autoHoldMin) || flags.autoHoldMin < 2 || flags.autoHoldMin > 10) {
+      throw new Error("moderation.flags.autoHoldMin must be between 2 and 10");
+    }
+    if (
+      !Number.isInteger(flags.autoHoldMax) ||
+      flags.autoHoldMax < flags.autoHoldMin ||
+      flags.autoHoldMax > 20
+    ) {
+      throw new Error("moderation.flags.autoHoldMax must be between autoHoldMin and 20");
+    }
+    if (
+      typeof flags.autoHoldParticipantRatio !== "number" ||
+      flags.autoHoldParticipantRatio < 0 ||
+      flags.autoHoldParticipantRatio > 0.2
+    ) {
+      throw new Error("moderation.flags.autoHoldParticipantRatio must be between 0 and 0.2");
+    }
+    const coc = moderation.codeOfConduct;
+    if (
+      !coc ||
+      typeof coc.version !== "string" ||
+      !coc.version.trim() ||
+      typeof coc.title !== "string" ||
+      typeof coc.summary !== "string" ||
+      !Array.isArray(coc.rules) ||
+      coc.rules.length < 2 ||
+      coc.rules.length > 8 ||
+      coc.rules.some((rule) => typeof rule !== "string" || !rule.trim())
+    ) {
+      throw new Error("moderation.codeOfConduct is incomplete");
+    }
+  }
   return config;
 }
 

@@ -23,6 +23,9 @@ The skill configures the event, deploys the realtime service, embeds the dashboa
 - An always-available dashboard QR code that points to the audience page
 - Hibernation WebSockets so the Durable Object can sleep while idle
 - A configurable per-device question limit, defaulting to 20
+- A code-of-conduct gate with a fixed event alias and stable participant badge
+- An eight-second presentation buffer, author-only holds, slow mode, approval mode, pause, and event close controls
+- A mobile-first moderator console with hide, restore, review, and mute actions
 - Token-protected export and reset endpoints
 - A privacy-preserving Uncommon Ground post-event export
 - An idempotent HTML integration CLI
@@ -55,16 +58,17 @@ npm install
 npm run types
 ```
 
-Edit [`public/event.config.json`](./public/event.config.json), then create an admin token and check the project.
+Edit [`public/event.config.json`](./public/event.config.json), then create separate admin and moderator tokens and check the project.
 
 ```bash
 npm run admin-token
+npm run moderator-token
 npm run check
 npx wrangler login
 npm run deploy
 ```
 
-`npm run admin-token` writes the token's SHA-256 hash to `wrangler.jsonc`. The plaintext token is stored only in the Git-ignored `.live-deck-admin-token` file.
+The token commands write SHA-256 hashes to `wrangler.jsonc`. Plaintext tokens are stored only in the Git-ignored `.live-deck-admin-token` and `.live-deck-moderator-token` files. Give assistants only the moderator token. It cannot export or reset event data.
 
 After Wrangler returns the HTTPS service URL, add the dashboard to an existing deck.
 
@@ -130,6 +134,26 @@ unset LIVE_DECK_ADMIN_TOKEN
 ```
 
 Resetting state cannot be undone by the service. Export first and verify the exact event URL before resetting anything.
+
+## Live moderation
+
+When moderation is enabled in `public/event.config.json`, a participant accepts the event code of conduct and chooses one event alias before asking a question. The server keeps that alias fixed and adds a short event-local badge. Questions enter a configurable presentation buffer before becoming public.
+
+Participants can report a public question for harassment, deliberate disruption, serious off-topic content, or private information. There is no general dislike reason. One event identity can report a question once and cannot report its own question. The adaptive threshold requires several independent identities before the question is temporarily removed from public view. Report counts and reasons remain moderator-only.
+
+Open the mobile-first console at `https://YOUR-WORKER.workers.dev/moderate/` and enter the separate moderator token. Moderators can confirm or reverse a community hold, hide or restore one question, slow a participant, require review for future questions, mute free-text questions, or restore access. The presenter dashboard and public API only receive public questions. A held question remains visible on its author's device with a truthful `Not public` status.
+
+Confirmed reports increase the reporter's future trust weight. Restored questions reduce the weight of reporters whose flags were rejected. Crowd reports never mute a participant automatically, and moderator judgment always wins.
+
+Session controls provide five modes
+
+- `open` publishes questions after the configured buffer
+- `slow` applies the longer event cooldown
+- `approval` holds every new question for moderator review
+- `paused` temporarily stops new questions while polls, reactions, and difficulty remain available
+- `closed` ends free-text questions for the event
+
+All moderation actions, original question rows, report reasons, resolution outcomes, and event-local reporter IDs remain available to the admin export. The default schema does not store IP addresses or legal names.
 
 ## Close the loop with Uncommon Ground
 

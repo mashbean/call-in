@@ -40,3 +40,7 @@ The component updates only the selected root and restores the original inline va
 - Arrow keys pressed inside the dashboard still reach the deck.
 - The dashboard QR opens the same audience service origin.
 - A fresh browser profile receives live snapshots and reconnects after a network interruption.
+- A participant must accept the current code of conduct once, and the chosen event alias stays fixed.
+- A new question appears in the author status area before the presentation delay expires.
+- A moderator can move a question to author-only visibility and restore it from `/moderate/`.
+- Pause and approval modes update the audience page without a reload.

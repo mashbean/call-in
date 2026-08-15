@@ -1,6 +1,6 @@
 {
   "name": "@mashbean/live-deck-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Prompt-ready realtime audience interaction for web slide decks",
   "type": "module",
   "license": "Apache-2.0",
@@ -37,6 +37,7 @@
     "integrate": "node scripts/cli.mjs integrate",
     "doctor": "node scripts/cli.mjs doctor",
     "admin-token": "node scripts/cli.mjs admin-token",
+    "moderator-token": "node scripts/cli.mjs moderator-token",
     "install-skill": "node scripts/cli.mjs install-skill",
     "uncommon-ground": "node scripts/cli.mjs uncommon-ground"
   },

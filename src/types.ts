@@ -1,5 +1,10 @@
 export type QuestionLens = "clarify" | "chorus" | "bridge" | "keeper";
 export type ReactionKind = "applause" | "insight" | "resonate" | "pause";
+export type SessionMode = "open" | "slow" | "approval" | "paused" | "closed";
+export type QuestionVisibility = "pending" | "public" | "author_only";
+export type ParticipantQuestionState = "normal" | "review" | "muted";
+export type ModerationReason = "harassment" | "disruption" | "off_topic" | "privacy" | "other";
+export type FlagReason = "harassment" | "disruption" | "off_topic" | "privacy";
 
 export type Poll = {
   id: string;
@@ -31,9 +36,60 @@ export type DifficultySnapshot = {
 
 export type SessionSnapshot = {
   updatedAt: number;
+  session: { mode: SessionMode };
   polls: PollResult[];
   difficulty: DifficultySnapshot;
   questions: AudienceQuestion[];
+};
+
+export type ParticipantProfile = {
+  alias: string;
+  publicLabel: string;
+  cocVersion: string;
+  questionState: ParticipantQuestionState;
+  slowUntil: number | null;
+};
+
+export type OwnQuestion = AudienceQuestion & {
+  visibility: QuestionVisibility;
+  statusLabel: string;
+};
+
+export type ParticipantState = {
+  participant: ParticipantProfile | null;
+  questions: OwnQuestion[];
+};
+
+export type QuestionSubmission = {
+  snapshot: SessionSnapshot;
+  submission: OwnQuestion;
+};
+
+export type ModeratorQuestion = OwnQuestion & {
+  voterId: string;
+  moderationReason: ModerationReason | null;
+  moderatedAt: number | null;
+  flagCount: number;
+  flagWeight: number;
+  flagThreshold: number;
+  flagReasons: Partial<Record<FlagReason, number>>;
+};
+
+export type ModerationAction = {
+  id: string;
+  questionId: string | null;
+  voterId: string | null;
+  action: string;
+  reason: string;
+  actor: string;
+  createdAt: number;
+};
+
+export type ModeratorSnapshot = {
+  updatedAt: number;
+  session: { mode: SessionMode };
+  questions: ModeratorQuestion[];
+  actions: ModerationAction[];
 };
 
 export type PublicEventConfig = {
@@ -51,6 +107,26 @@ export type PublicEventConfig = {
     placeholder: string;
     maxPerDevice: number;
     lenses: Array<{ id: QuestionLens; label: string; description: string }>;
+  };
+  moderation?: {
+    enabled: boolean;
+    presentationDelaySeconds: number;
+    questionCooldownSeconds: number;
+    questionsPerTenMinutes: number;
+    slowModeSeconds: number;
+    flags: {
+      enabled: boolean;
+      maxPerDevice: number;
+      autoHoldMin: number;
+      autoHoldMax: number;
+      autoHoldParticipantRatio: number;
+    };
+    codeOfConduct: {
+      version: string;
+      title: string;
+      summary: string;
+      rules: string[];
+    };
   };
   reactions: Array<{ id: ReactionKind; emoji: string; label: string }>;
   polls: Poll[];

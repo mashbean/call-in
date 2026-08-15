@@ -14,7 +14,8 @@
   "vars": {
     "ROOM_ID": "default",
     "ALLOWED_ORIGINS": "",
-    "ADMIN_TOKEN_SHA256": ""
+    "ADMIN_TOKEN_SHA256": "",
+    "MODERATOR_TOKEN_SHA256": ""
   },
   "durable_objects": {
     "bindings": [
