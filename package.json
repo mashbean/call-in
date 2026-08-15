@@ -39,7 +39,8 @@
     "admin-token": "node scripts/cli.mjs admin-token",
     "moderator-token": "node scripts/cli.mjs moderator-token",
     "install-skill": "node scripts/cli.mjs install-skill",
-    "uncommon-ground": "node scripts/cli.mjs uncommon-ground"
+    "uncommon-ground": "node scripts/cli.mjs uncommon-ground",
+    "seed-demo": "node scripts/seed-demo.mjs"
   },
   "dependencies": {
     "qrcode": "^1.5.4"
