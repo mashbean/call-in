@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#081225" />
+    <title>Live Deck moderation</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/moderate/moderate.css" />
+  </head>
+  <body class="moderator-page">
+    <header class="moderator-header">
+      <div><div class="eyebrow">MODERATOR</div><h1>Keep the room useful</h1></div>
+      <div class="moderator-status" data-moderator-status>Signed out</div>
+    </header>
+    <main class="moderator-main">
+      <section class="moderator-login" data-login-panel>
+        <h2>Open the moderation controls</h2>
+        <p>Use the separate moderator token. It cannot export or reset event data.</p>
+        <form data-login-form>
+          <label for="moderator-token">Moderator token</label>
+          <input id="moderator-token" name="token" type="password" minlength="24" required autocomplete="current-password" />
+          <button class="primary" type="submit">Continue</button>
+          <span data-login-message aria-live="polite"></span>
+        </form>
+      </section>
+
+      <div data-moderator-app hidden>
+        <section class="session-controls">
+          <div><div class="eyebrow">SESSION MODE</div><h2>Control new questions</h2></div>
+          <div class="mode-grid" data-mode-grid>
+            <button data-mode="open">Open</button>
+            <button data-mode="slow">Slow</button>
+            <button data-mode="approval">Approval</button>
+            <button data-mode="paused">Pause</button>
+            <button data-mode="closed">Close</button>
+          </div>
+        </section>
+
+        <section class="moderator-queue">
+          <div class="moderator-section-head">
+            <div><div class="eyebrow">QUESTION QUEUE</div><h2>Newest and held first</h2></div>
+            <button class="quiet" type="button" data-refresh>Refresh</button>
+          </div>
+          <div class="moderator-questions" data-moderator-questions></div>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="/moderate/moderate.js"></script>
+  </body>
+</html>

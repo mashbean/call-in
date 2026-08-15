@@ -12,6 +12,10 @@ const tabPanels = [...document.querySelectorAll("[data-dashboard-panel]")];
 const lensLabels = Object.fromEntries(config.question.lenses.map((lens) => [lens.id, lens.label]));
 
 function render(state) {
+  const mode = state.session?.mode || "open";
+  const modeEl = document.querySelector("[data-session-mode]");
+  modeEl.textContent = mode.toUpperCase();
+  modeEl.dataset.mode = mode;
   renderDifficultyChart(document.querySelector(".dashboard-difficulty"), state.difficulty);
   document.querySelector("[data-poll-total]").textContent = `${state.polls.length} polls`;
   pollsRoot.innerHTML = state.polls

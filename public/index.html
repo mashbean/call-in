@@ -60,7 +60,25 @@
           </div>
         </section>
 
-        <form id="question-form" class="ask-card">
+        <section id="identity-gate" class="identity-card" hidden>
+          <div class="eyebrow">BEFORE YOU ASK</div>
+          <h2 data-coc-title>Help keep the room useful</h2>
+          <p data-coc-summary></p>
+          <ul data-coc-rules></ul>
+          <form id="identity-form">
+            <label for="participant-alias">Choose a name for this event</label>
+            <input id="participant-alias" name="alias" minlength="2" maxlength="24" required placeholder="For example: night-shift resident" autocomplete="nickname" />
+            <label class="coc-check"><input name="coc" type="checkbox" required /><span>I agree to follow this code of conduct. My event name will stay fixed after I continue.</span></label>
+            <button class="primary" type="submit">Agree and continue</button>
+            <div class="form-message" data-identity-message aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section id="participant-profile" class="participant-profile" hidden>
+          <span>Your event name</span><b data-participant-label></b>
+        </section>
+
+        <form id="question-form" class="ask-card" hidden>
           <div class="form-step"><span>01</span><div><b>Set the difficulty above</b><small>Your latest score is saved with the question</small></div></div>
           <div class="form-step"><span>02</span><div><b>Write what feels unclear or worth following up</b><small>Ask when it feels too hard, too easy, or worth exploring</small></div></div>
           <label class="sr-only" for="question">Your question</label>
@@ -69,12 +87,13 @@
             <legend class="form-step"><span>03</span><div><b>How should the room take up this question?</b><small>Choose the closest purpose to help organize Q&amp;A</small></div></legend>
             <div class="intent-grid" data-lenses></div>
           </fieldset>
-          <div class="form-step compact"><span>04</span><div><b>Add a name</b><small>Optional. You can remain anonymous</small></div></div>
-          <label class="sr-only" for="nickname">Name</label>
-          <input id="nickname" name="nickname" maxlength="24" placeholder="For example: front row, anonymous" autocomplete="nickname" />
           <button class="primary" type="submit">Send question</button>
           <div class="form-message" data-form-message aria-live="polite"></div>
         </form>
+        <section id="my-submissions" class="my-submissions" hidden>
+          <div class="section-head compact"><div><div class="eyebrow">YOUR SUBMISSIONS</div><h2>Waiting or held</h2></div></div>
+          <div data-own-questions class="question-list"></div>
+        </section>
         <div class="section-head">
           <div><div class="eyebrow">QUESTION POOL</div><h2 data-config="question.title">Ask anytime</h2></div>
           <span data-question-count>0 questions</span>

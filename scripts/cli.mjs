@@ -53,6 +53,22 @@ export async function configureAdminToken(tokenInput) {
   return { hash, tokenPath: path.join(packageRoot, ".live-deck-admin-token") };
 }
 
+export async function configureModeratorToken(tokenInput) {
+  const token = tokenInput || randomBytes(32).toString("base64url");
+  if (token.length < 24) throw new Error("The moderator token must contain at least 24 characters");
+  const hash = createHash("sha256").update(token).digest("hex");
+  const wranglerPath = path.join(packageRoot, "wrangler.jsonc");
+  const source = await readFile(wranglerPath, "utf8");
+  const next = source.replace(
+    /("MODERATOR_TOKEN_SHA256"\s*:\s*")[0-9a-f]*(")/i,
+    `$1${hash}$2`,
+  );
+  if (next === source) throw new Error("wrangler.jsonc is missing MODERATOR_TOKEN_SHA256");
+  await writeFile(wranglerPath, next);
+  await writeFile(path.join(packageRoot, ".live-deck-moderator-token"), `${token}\n`, { mode: 0o600 });
+  return { hash, tokenPath: path.join(packageRoot, ".live-deck-moderator-token") };
+}
+
 export async function doctor() {
   const requiredFiles = [
     "public/event.config.json",
@@ -61,6 +77,7 @@ export async function doctor() {
     "src/live-session.ts",
     "public/index.html",
     "public/dashboard/index.html",
+    "public/moderate/index.html",
     "public/embed/live-deck-panel.js",
     "skills/live-deck-kit/SKILL.md",
   ];
@@ -77,6 +94,15 @@ export async function doctor() {
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(config.eventId || "")) errors.push("eventId must be a lowercase slug");
   if (!Array.isArray(config.polls) || config.polls.length > 8) errors.push("polls must contain zero to eight polls");
   if (config.difficulty?.labels?.length !== 5) errors.push("difficulty.labels must contain exactly five labels");
+  if (config.moderation?.enabled) {
+    if (!config.moderation.codeOfConduct?.version) errors.push("moderation.codeOfConduct.version is required");
+    if (!Array.isArray(config.moderation.codeOfConduct?.rules) || config.moderation.codeOfConduct.rules.length < 2) {
+      errors.push("moderation.codeOfConduct.rules must contain at least two rules");
+    }
+    if (!Number.isInteger(config.moderation.presentationDelaySeconds)) {
+      errors.push("moderation.presentationDelaySeconds must be an integer");
+    }
+  }
   if (missing.length) errors.push(`Missing files: ${missing.join(", ")}`);
   return { ok: errors.length === 0, errors, eventId: config.eventId, pollCount: config.polls?.length ?? 0 };
 }
@@ -116,6 +142,11 @@ async function main(argv) {
     console.log(JSON.stringify({ ok: true, tokenPath: result.tokenPath, hash: result.hash }, null, 2));
     return;
   }
+  if (command === "moderator-token") {
+    const result = await configureModeratorToken(args.token);
+    console.log(JSON.stringify({ ok: true, tokenPath: result.tokenPath, hash: result.hash }, null, 2));
+    return;
+  }
   if (command === "doctor") {
     const result = await doctor();
     console.log(JSON.stringify(result, null, 2));
@@ -147,6 +178,7 @@ Commands
   doctor
   integrate --deck <index.html> --service-url <https://...> [--mode overlay|split]
   admin-token [--token <24+ chars>]
+  moderator-token [--token <24+ chars>]
   install-skill [--force]
   uncommon-ground --questions <export.json> --out <questions.json> [--question-votes <votes.json>] [--classifications <review.json>] [--keep-names]`);
 }

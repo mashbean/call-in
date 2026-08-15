@@ -153,6 +153,25 @@ body.dashboard-page {
     monospace;
   text-align: right;
 }
+.question-session-meta {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  color: var(--muted);
+  font: 700 10px/1.3 ui-monospace, monospace;
+}
+.question-session-meta b {
+  border: 1px solid #35d9ff55;
+  border-radius: 999px;
+  padding: 4px 7px;
+  color: var(--sage);
+  font-size: 8px;
+}
+.question-session-meta b[data-mode="paused"],
+.question-session-meta b[data-mode="closed"] {
+  border-color: #ff4f9a66;
+  color: var(--clay);
+}
 .dashboard-difficulty.difficulty-card {
   padding: 18px;
   border-color: #35d9ff4d;

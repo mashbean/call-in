@@ -45,6 +45,54 @@ function validateEventConfig(value: unknown): PublicEventConfig {
   ) {
     throw new Error("question.maxPerDevice must be between 1 and 100");
   }
+  if (config.moderation) {
+    const moderation = config.moderation;
+    if (typeof moderation.enabled !== "boolean") {
+      throw new Error("moderation.enabled must be a boolean");
+    }
+    if (
+      !Number.isInteger(moderation.presentationDelaySeconds) ||
+      moderation.presentationDelaySeconds < 0 ||
+      moderation.presentationDelaySeconds > 30
+    ) {
+      throw new Error("moderation.presentationDelaySeconds must be between 0 and 30");
+    }
+    if (
+      !Number.isInteger(moderation.questionCooldownSeconds) ||
+      moderation.questionCooldownSeconds < 0 ||
+      moderation.questionCooldownSeconds > 300
+    ) {
+      throw new Error("moderation.questionCooldownSeconds must be between 0 and 300");
+    }
+    if (
+      !Number.isInteger(moderation.questionsPerTenMinutes) ||
+      moderation.questionsPerTenMinutes < 1 ||
+      moderation.questionsPerTenMinutes > 100
+    ) {
+      throw new Error("moderation.questionsPerTenMinutes must be between 1 and 100");
+    }
+    if (
+      !Number.isInteger(moderation.slowModeSeconds) ||
+      moderation.slowModeSeconds < 10 ||
+      moderation.slowModeSeconds > 600
+    ) {
+      throw new Error("moderation.slowModeSeconds must be between 10 and 600");
+    }
+    const coc = moderation.codeOfConduct;
+    if (
+      !coc ||
+      typeof coc.version !== "string" ||
+      !coc.version.trim() ||
+      typeof coc.title !== "string" ||
+      typeof coc.summary !== "string" ||
+      !Array.isArray(coc.rules) ||
+      coc.rules.length < 2 ||
+      coc.rules.length > 8 ||
+      coc.rules.some((rule) => typeof rule !== "string" || !rule.trim())
+    ) {
+      throw new Error("moderation.codeOfConduct is incomplete");
+    }
+  }
   return config;
 }
 

@@ -3,7 +3,7 @@ node_modules/
 .dev.vars
 .env
 .live-deck-admin-token
+.live-deck-moderator-token
 dist/
 coverage/
 .DS_Store
-

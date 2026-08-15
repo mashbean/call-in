@@ -6,6 +6,7 @@ applyConfig(config);
 const voterKey = `${config.eventId}:live-deck-voter`;
 const voterId = localStorage.getItem(voterKey) || crypto.randomUUID();
 localStorage.setItem(voterKey, voterId);
+const moderationEnabled = Boolean(config.moderation?.enabled);
 
 const pollsRoot = document.querySelector("#polls");
 const questionsRoot = document.querySelector("#questions");
@@ -17,7 +18,16 @@ const difficultyValueEl = document.querySelector("[data-difficulty-value]");
 const difficultyLabelEl = document.querySelector("[data-difficulty-label]");
 const difficultyMessageEl = document.querySelector("[data-difficulty-message]");
 const reactionMessageEl = document.querySelector("[data-reaction-message]");
+const identityGate = document.querySelector("#identity-gate");
+const identityForm = document.querySelector("#identity-form");
+const identityMessageEl = document.querySelector("[data-identity-message]");
+const participantProfileEl = document.querySelector("#participant-profile");
+const participantLabelEl = document.querySelector("[data-participant-label]");
+const mySubmissionsEl = document.querySelector("#my-submissions");
+const ownQuestionsRoot = document.querySelector("[data-own-questions]");
+let participantState = { participant: null, questions: [] };
 let state = {
+  session: { mode: "open" },
   polls: [],
   difficulty: { counts: [0, 0, 0, 0, 0], total: 0, average: null },
   questions: [],
@@ -31,6 +41,27 @@ let currentDifficulty =
     : 3;
 difficultyInput.value = String(currentDifficulty);
 const lensLabels = Object.fromEntries(config.question.lenses.map((lens) => [lens.id, lens.label]));
+
+identityForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(identityForm);
+  const button = identityForm.querySelector("button[type=submit]");
+  button.disabled = true;
+  identityMessageEl.textContent = "Saving your event name";
+  try {
+    participantState = await post("/api/participant", {
+      alias: String(data.get("alias") || ""),
+      cocVersion: config.moderation.codeOfConduct.version,
+      voterId,
+    });
+    identityMessageEl.textContent = "Saved for this event";
+    renderParticipant();
+  } catch (error) {
+    identityMessageEl.textContent = humanError(error);
+  } finally {
+    button.disabled = false;
+  }
+});
 
 updateDifficultySelection(currentDifficulty);
 difficultyInput.addEventListener("input", () => {
@@ -93,16 +124,24 @@ form.addEventListener("submit", async (event) => {
   button.disabled = true;
   messageEl.textContent = "Sending";
   try {
-    state = await post("/api/question", {
+    const result = await post("/api/question", {
       text: String(data.get("question") || ""),
-      nickname: String(data.get("nickname") || "Anonymous"),
       lens: String(data.get("lens") || "clarify"),
       difficulty: currentDifficulty,
       voterId,
     });
+    state = result.snapshot;
+    participantState.questions = [
+      result.submission,
+      ...participantState.questions.filter((question) => question.id !== result.submission.id),
+    ].slice(0, 20);
     form.querySelector("textarea").value = "";
-    messageEl.textContent = "Added to the question pool";
+    messageEl.textContent =
+      result.submission.visibility === "public"
+        ? "Added to the question pool"
+        : "Received. It is waiting before public display";
     render();
+    renderParticipant();
   } catch (error) {
     messageEl.textContent = humanError(error);
   } finally {
@@ -189,6 +228,49 @@ function render() {
       upvote(button.dataset.upvote).catch((error) => alert(humanError(error))),
     );
   });
+  syncQuestionAvailability();
+}
+
+function renderParticipant() {
+  if (!moderationEnabled) {
+    identityGate.hidden = true;
+    participantProfileEl.hidden = true;
+    form.hidden = false;
+    mySubmissionsEl.hidden = true;
+    return;
+  }
+  const participant = participantState.participant;
+  identityGate.hidden = Boolean(participant);
+  participantProfileEl.hidden = !participant;
+  form.hidden = !participant;
+  if (participant) participantLabelEl.textContent = participant.publicLabel;
+  const held = participantState.questions.filter((question) => question.visibility !== "public");
+  mySubmissionsEl.hidden = held.length === 0;
+  if (held.length === 0 && messageEl.textContent.includes("waiting before public display")) {
+    messageEl.textContent = "Published to the question pool";
+  }
+  ownQuestionsRoot.innerHTML = held
+    .map(
+      (question) => `<article class="question-card own-question">
+        <div class="question-rank">${escapeHtml(question.visibility === "pending" ? "WAIT" : "HELD")}</div>
+        <div><div class="question-tags"><span class="question-status">${escapeHtml(question.statusLabel)}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
+      </article>`,
+    )
+    .join("");
+  syncQuestionAvailability();
+}
+
+function syncQuestionAvailability() {
+  const mode = state.session?.mode || "open";
+  const participant = participantState.participant;
+  const blockedBySession = mode === "paused" || mode === "closed";
+  const blockedByModerator = participant?.questionState === "muted";
+  const button = form.querySelector("button[type=submit]");
+  if (button) button.disabled = blockedBySession || blockedByModerator;
+  if (blockedBySession) {
+    messageEl.textContent = mode === "closed" ? "This session is closed" : "Questions are temporarily paused";
+  }
+  if (blockedByModerator) messageEl.textContent = "Question access is limited for this event";
 }
 
 function updateDifficultySelection(score) {
@@ -200,12 +282,19 @@ function updateDifficultySelection(score) {
 function connect() {
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
   socket = new WebSocket(`${protocol}//${location.host}${apiBase}/live`);
-  socket.addEventListener("open", () => setStatus(true));
+  socket.addEventListener("open", () => {
+    setStatus(true);
+    socket.send(JSON.stringify({ type: "identify", voterId }));
+  });
   socket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
     if (message.type === "snapshot") {
       state = message.data;
       render();
+    }
+    if (message.type === "participant") {
+      participantState = message.data;
+      renderParticipant();
     }
   });
   socket.addEventListener("close", () => {
@@ -222,6 +311,12 @@ function setStatus(online) {
 function humanError(error) {
   const message = String(error?.message || error);
   if (message.includes("limit")) return "This device has reached the question limit";
+  if (message.includes("cooldown")) return "Please wait before sending another question";
+  if (message.includes("paused")) return "Questions are temporarily paused";
+  if (message.includes("closed")) return "This session is closed";
+  if (message.includes("code of conduct")) return "Please accept the code of conduct first";
+  if (message.includes("access is limited")) return "Question access is limited for this event";
+  if (message.includes("alias")) return "Choose an event name with at least two characters";
   return "Sending failed. Please try again later";
 }
 
@@ -239,6 +334,12 @@ fetch(`${apiBase}/state`)
     render();
   })
   .catch(() => {});
+post("/api/me", { voterId })
+  .then((data) => {
+    participantState = data;
+    renderParticipant();
+  })
+  .catch(() => renderParticipant());
 post("/api/difficulty", { score: currentDifficulty, voterId })
   .then((data) => {
     state = data;
@@ -294,4 +395,11 @@ function applyConfig(nextConfig) {
       </label>`,
     )
     .join("");
+  if (nextConfig.moderation?.enabled) {
+    document.querySelector("[data-coc-title]").textContent = nextConfig.moderation.codeOfConduct.title;
+    document.querySelector("[data-coc-summary]").textContent = nextConfig.moderation.codeOfConduct.summary;
+    document.querySelector("[data-coc-rules]").innerHTML = nextConfig.moderation.codeOfConduct.rules
+      .map((rule) => `<li>${escapeHtml(rule)}</li>`)
+      .join("");
+  }
 }

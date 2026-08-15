@@ -20,10 +20,10 @@ Read both files before making changes
 2. Obtain Live Deck Kit from `https://github.com/mashbean/live-deck-kit`. Work in a standalone checkout. Do not nest a Git repository inside the target deck repository.
 3. Edit `public/event.config.json` for the event. Keep `eventId` stable after production data exists.
 4. Run `npm install`, `npm run types`, `npm run doctor`, and `npm run check`.
-5. Run `npm run admin-token` before a production deployment. Keep `.live-deck-admin-token` out of Git and user-visible output.
+5. Run `npm run admin-token` and `npm run moderator-token` before a production deployment. Keep both plaintext token files out of Git and user-visible output. Give a live assistant only the moderator token.
 6. Authenticate Wrangler and deploy. Capture the final HTTPS service URL from Wrangler output.
 7. Integrate the deck with the CLI. Use overlay mode when the deck layout is unknown. Use split mode only after identifying a safe presentation root.
-8. Test the audience page, dashboard, QR code, difficulty updates, question ordering, upvotes, polls, emoji bursts, collapse control, keyboard navigation, and reconnect behavior.
+8. Test the audience page, dashboard, moderator page, QR code, fixed event alias, code-of-conduct acceptance, presentation delay, author-only holds, session modes, difficulty updates, question ordering, upvotes, polls, emoji bursts, collapse control, keyboard navigation, and reconnect behavior.
 9. Test at 390 px, 1024 px, and a desktop presentation viewport. Respect `prefers-reduced-motion`.
 10. Report the service URL, audience URL, dashboard URL, integration file, license, and any remaining deployment work.
 
@@ -41,6 +41,8 @@ and verification from a separate `audreyt/uncommon-ground` checkout.
 - Do not commit tokens, `.dev.vars`, `.env`, or `.live-deck-admin-token`.
 - Keep one event per Worker deployment by default. Do not create a shared multi-tenant service without a capacity and privacy review.
 - Do not add patient, attendee, or other sensitive fields to the default schema.
+- Do not give the admin token to a live moderator. Moderator access must not expose export or reset operations.
+- Do not store raw IP addresses or claim that a browser UUID proves a human identity.
 - Treat a successful deployment as incomplete until the canonical audience and dashboard URLs have been checked.
 
 ## Prompt contract
