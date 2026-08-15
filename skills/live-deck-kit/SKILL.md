@@ -1,6 +1,6 @@
 ---
 name: live-deck-kit
-description: Add a realtime audience dashboard to an existing web slide deck. Use for live difficulty feedback, audience questions, emoji reactions, quick polls, QR entry, Cloudflare Workers deployment, or prompt-driven deck integration.
+description: Add a realtime audience dashboard to an existing web slide deck and close the loop after an event. Use for live difficulty feedback, audience questions, emoji reactions, quick polls, QR entry, Cloudflare Workers deployment, prompt-driven deck integration, or an Uncommon Ground question-pool receipt.
 ---
 
 # Live Deck Kit
@@ -26,6 +26,13 @@ Read both files before making changes
 8. Test the audience page, dashboard, QR code, difficulty updates, question ordering, upvotes, polls, emoji bursts, collapse control, keyboard navigation, and reconnect behavior.
 9. Test at 390 px, 1024 px, and a desktop presentation viewport. Respect `prefers-reduced-motion`.
 10. Report the service URL, audience URL, dashboard URL, integration file, license, and any remaining deployment work.
+
+## Post-event Uncommon Ground loopback
+
+Export the event first and preserve the original archive. Run `npm run uncommon-ground` against a
+private copy to create the upstream `questions.json` contract. Remove source UUIDs from the derived
+file. Keep moderated rows as `Withdrawn` for provenance. Run clustering, arc, loopback, assembly,
+and verification from a separate `audreyt/uncommon-ground` checkout.
 
 ## Safety limits
 

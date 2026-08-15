@@ -24,6 +24,7 @@ The skill configures the event, deploys the realtime service, embeds the dashboa
 - Hibernation WebSockets so the Durable Object can sleep while idle
 - A configurable per-device question limit, defaulting to 20
 - Token-protected export and reset endpoints
+- A privacy-preserving Uncommon Ground post-event export
 - An idempotent HTML integration CLI
 - Overlay mode and a desktop 75/25 split mode
 
@@ -130,6 +131,37 @@ unset LIVE_DECK_ADMIN_TOKEN
 
 Resetting state cannot be undone by the service. Export first and verify the exact event URL before resetting anything.
 
+## Close the loop with Uncommon Ground
+
+Live Deck Kit can convert its post-event JSON export into the `questions.json` contract used by
+[`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground). Source question IDs and
+browser voter IDs are replaced with event-local sequential codes. Display names are removed unless
+you explicitly pass `--keep-names`. Moderated rows remain in the private working file as
+`Withdrawn`, while Uncommon Ground excludes them from the published page.
+
+```bash
+npm run uncommon-ground -- \
+  --questions /path/to/questions.json \
+  --question-votes /path/to/question-votes.json \
+  --classifications /path/to/moderation-review.json \
+  --event my-event \
+  --out /private/workdir/questions.json
+```
+
+The default withdrawn labels are `negative` and `provocative`. Override them only after a human
+moderation review.
+
+Then run the upstream pipeline from its own checkout. Do not nest that repository inside a deck
+or Live Deck Kit checkout.
+
+```bash
+gh repo clone audreyt/uncommon-ground
+cd uncommon-ground
+python3 assemble.py /private/workdir templates/uncommon-ground.html /private/workdir/uncommon-ground.html
+node domcheck.js /private/workdir/uncommon-ground.html
+python3 verify.py /private/workdir --expected=N
+```
+
 ## Testing
 
 ```bash
@@ -144,7 +176,7 @@ Tests use Cloudflare's official Vitest Workers integration and exercise a real D
 ## Inspirations and dependencies
 
 - Realtime interaction and Durable Objects routing were informed by [`htlin222/kahoot-cf`](https://github.com/htlin222/kahoot-cf), licensed under MIT
-- The four question lenses borrow vocabulary from [`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground), licensed under CC0-1.0. Live Deck Kit does not include its post-event clustering or loopback pipeline
+- The four question lenses and the post-event export contract interoperate with [`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground), licensed under CC0-1.0. The clustering and loopback pipeline remains in its upstream repository
 - Realtime state uses Cloudflare Workers, Durable Objects, SQLite, and Hibernation WebSockets
 - QR code generation uses [`soldair/node-qrcode`](https://github.com/soldair/node-qrcode)
 - The repository device mockup uses [`picturepan2/devices.css`](https://github.com/picturepan2/devices.css), licensed under MIT

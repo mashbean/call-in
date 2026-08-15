@@ -32,12 +32,13 @@
     "deploy:dry": "wrangler deploy --dry-run",
     "typecheck": "tsc --noEmit",
     "types": "wrangler types",
-    "test": "vitest run",
+    "test": "vitest run && node --test node-test/uncommon-ground-export.test.mjs",
     "check": "npm run typecheck && npm test && npm run deploy:dry",
     "integrate": "node scripts/cli.mjs integrate",
     "doctor": "node scripts/cli.mjs doctor",
     "admin-token": "node scripts/cli.mjs admin-token",
-    "install-skill": "node scripts/cli.mjs install-skill"
+    "install-skill": "node scripts/cli.mjs install-skill",
+    "uncommon-ground": "node scripts/cli.mjs uncommon-ground"
   },
   "dependencies": {
     "qrcode": "^1.5.4"

@@ -28,7 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 ## audreyt/uncommon-ground
 
-The question-lens design was informed by
+The question-lens design and post-event export contract interoperate with
 [`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground), available under CC0-1.0.
 
 ## node-qrcode

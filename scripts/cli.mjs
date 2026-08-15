@@ -4,6 +4,7 @@ import { cp, mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { exportUncommonGround } from "./uncommon-ground.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -126,13 +127,28 @@ async function main(argv) {
     console.log(JSON.stringify({ ok: true, ...result }, null, 2));
     return;
   }
+  if (command === "uncommon-ground") {
+    const meta = await exportUncommonGround({
+      questions: args.questions,
+      questionVotes: args["question-votes"],
+      classifications: args.classifications,
+      withdrawLabels: args["withdraw-labels"],
+      keepNames: Boolean(args["keep-names"]),
+      sourceLabel: args["source-label"],
+      event: args.event,
+      out: args.out,
+    });
+    console.log(JSON.stringify({ ok: true, ...meta }, null, 2));
+    return;
+  }
   console.log(`Live Deck Kit
 
 Commands
   doctor
   integrate --deck <index.html> --service-url <https://...> [--mode overlay|split]
   admin-token [--token <24+ chars>]
-  install-skill [--force]`);
+  install-skill [--force]
+  uncommon-ground --questions <export.json> --out <questions.json> [--question-votes <votes.json>] [--classifications <review.json>] [--keep-names]`);
 }
 
 function parseArgs(argv) {
