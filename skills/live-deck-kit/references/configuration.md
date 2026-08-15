@@ -18,6 +18,10 @@
 - `moderation.questionCooldownSeconds` sets the normal per-device question cooldown.
 - `moderation.questionsPerTenMinutes` limits bursts while keeping the total event limit.
 - `moderation.slowModeSeconds` sets the longer cooldown used by slow mode.
+- `moderation.flags.enabled` adds reason-based audience reports. Reports never expose public counts.
+- `moderation.flags.maxPerDevice` limits how many distinct questions one event identity can report.
+- `moderation.flags.autoHoldMin` and `autoHoldMax` bound the number of independent reports needed before a question is temporarily held.
+- `moderation.flags.autoHoldParticipantRatio` raises that threshold as the registered audience grows. The example uses 3%, bounded to three through five reporters.
 - `moderation.codeOfConduct` contains a version, title, summary, and two to eight public rules. Change the version when participants must accept revised rules.
 
 ## Wrangler variables
@@ -45,4 +49,4 @@ Resolve the exact service URL before running either command. Never print the tok
 
 ## Moderator console
 
-Open `/moderate/` on the deployed service and enter the moderator token. This role can hide or restore questions, change a participant's question state, and change the session mode. It cannot export or reset data.
+Open `/moderate/` on the deployed service and enter the moderator token. This role can review report reasons, confirm or reverse a temporary community hold, hide or restore questions, change a participant's question state, and change the session mode. It cannot export or reset data.

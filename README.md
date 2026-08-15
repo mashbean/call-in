@@ -139,7 +139,11 @@ Resetting state cannot be undone by the service. Export first and verify the exa
 
 When moderation is enabled in `public/event.config.json`, a participant accepts the event code of conduct and chooses one event alias before asking a question. The server keeps that alias fixed and adds a short event-local badge. Questions enter a configurable presentation buffer before becoming public.
 
-Open the mobile-first console at `https://YOUR-WORKER.workers.dev/moderate/` and enter the separate moderator token. Moderators can hide or restore one question, slow a participant, require review for future questions, mute free-text questions, or restore access. The presenter dashboard and public API only receive public questions. A held question remains visible on its author's device with a truthful `Not public` status.
+Participants can report a public question for harassment, deliberate disruption, serious off-topic content, or private information. There is no general dislike reason. One event identity can report a question once and cannot report its own question. The adaptive threshold requires several independent identities before the question is temporarily removed from public view. Report counts and reasons remain moderator-only.
+
+Open the mobile-first console at `https://YOUR-WORKER.workers.dev/moderate/` and enter the separate moderator token. Moderators can confirm or reverse a community hold, hide or restore one question, slow a participant, require review for future questions, mute free-text questions, or restore access. The presenter dashboard and public API only receive public questions. A held question remains visible on its author's device with a truthful `Not public` status.
+
+Confirmed reports increase the reporter's future trust weight. Restored questions reduce the weight of reporters whose flags were rejected. Crowd reports never mute a participant automatically, and moderator judgment always wins.
 
 Session controls provide five modes
 
@@ -149,7 +153,7 @@ Session controls provide five modes
 - `paused` temporarily stops new questions while polls, reactions, and difficulty remain available
 - `closed` ends free-text questions for the event
 
-All moderation actions and original question rows remain available to the admin export. The default schema does not store IP addresses or legal names.
+All moderation actions, original question rows, report reasons, resolution outcomes, and event-local reporter IDs remain available to the admin export. The default schema does not store IP addresses or legal names.
 
 ## Close the loop with Uncommon Ground
 

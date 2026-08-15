@@ -4,6 +4,7 @@ export type SessionMode = "open" | "slow" | "approval" | "paused" | "closed";
 export type QuestionVisibility = "pending" | "public" | "author_only";
 export type ParticipantQuestionState = "normal" | "review" | "muted";
 export type ModerationReason = "harassment" | "disruption" | "off_topic" | "privacy" | "other";
+export type FlagReason = "harassment" | "disruption" | "off_topic" | "privacy";
 
 export type Poll = {
   id: string;
@@ -68,6 +69,10 @@ export type ModeratorQuestion = OwnQuestion & {
   voterId: string;
   moderationReason: ModerationReason | null;
   moderatedAt: number | null;
+  flagCount: number;
+  flagWeight: number;
+  flagThreshold: number;
+  flagReasons: Partial<Record<FlagReason, number>>;
 };
 
 export type ModerationAction = {
@@ -109,6 +114,13 @@ export type PublicEventConfig = {
     questionCooldownSeconds: number;
     questionsPerTenMinutes: number;
     slowModeSeconds: number;
+    flags: {
+      enabled: boolean;
+      maxPerDevice: number;
+      autoHoldMin: number;
+      autoHoldMax: number;
+      autoHoldParticipantRatio: number;
+    };
     codeOfConduct: {
       version: string;
       title: string;

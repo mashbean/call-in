@@ -103,28 +103,48 @@ function render() {
 
 function questionCard(question) {
   const isPublic = question.visibility === "public";
+  const isCommunityHold = question.visibility === "author_only" && question.flagCount > 0;
   const status = question.visibility === "pending" ? "WAITING" : isPublic ? "PUBLIC" : "AUTHOR ONLY";
+  const flagReasons = Object.entries(question.flagReasons || {})
+    .map(([reason, count]) => `${count} ${flagReasonLabel(reason)}`)
+    .join(" · ");
+  const selectedReason = defaultReason(question);
   return `<article class="moderator-card visibility-${escapeHtml(question.visibility)}" data-question-id="${escapeHtml(question.id)}" data-voter-id="${escapeHtml(question.voterId)}">
     <div class="moderator-card-head"><b>${status}</b><time>${formatTime(question.createdAt)}</time></div>
+    ${question.flagCount ? `<div class="flag-summary"><b>${question.flagCount} reports</b><span>${question.flagWeight} / ${question.flagThreshold} weighted threshold</span><small>${escapeHtml(flagReasons)}</small></div>` : ""}
     <p>${escapeHtml(question.text)}</p>
     <div class="moderator-meta"><span>${escapeHtml(question.nickname)}</span><span>${question.difficulty} · ${escapeHtml(question.lens)}</span></div>
     <label>Reason
       <select>
-        <option value="disruption">Flooding or deliberate disruption</option>
-        <option value="harassment">Harassment or personal attack</option>
-        <option value="off_topic">Seriously off topic</option>
-        <option value="privacy">Private information</option>
-        <option value="other">Other</option>
+        <option value="disruption" ${selectedReason === "disruption" ? "selected" : ""}>Flooding or deliberate disruption</option>
+        <option value="harassment" ${selectedReason === "harassment" ? "selected" : ""}>Harassment or personal attack</option>
+        <option value="off_topic" ${selectedReason === "off_topic" ? "selected" : ""}>Seriously off topic</option>
+        <option value="privacy" ${selectedReason === "privacy" ? "selected" : ""}>Private information</option>
+        <option value="other" ${selectedReason === "other" ? "selected" : ""}>Other</option>
       </select>
     </label>
     <div class="moderator-actions">
-      ${isPublic || question.visibility === "pending" ? `<button class="danger" data-action="hide">Hide</button>` : `<button data-action="restore-question">Restore question</button>`}
+      ${isPublic || question.visibility === "pending" ? `<button class="danger" data-action="hide">Hide</button>` : isCommunityHold ? `<button class="danger" data-action="hide">Confirm hidden</button><button data-action="restore-question">Restore question</button>` : `<button data-action="restore-question">Restore question</button>`}
       <button data-action="slow">Slow 10 min</button>
       <button data-action="review">Review future</button>
       <button data-action="mute">Mute questions</button>
       <button data-action="restore">Restore participant</button>
     </div>
   </article>`;
+}
+
+function defaultReason(question) {
+  const ranked = Object.entries(question.flagReasons || {}).sort((left, right) => right[1] - left[1]);
+  return ranked[0]?.[0] || question.moderationReason || "disruption";
+}
+
+function flagReasonLabel(reason) {
+  return ({
+    harassment: "harassment",
+    disruption: "disruption",
+    off_topic: "off-topic",
+    privacy: "privacy",
+  })[reason] || reason;
 }
 
 function scheduleRefresh() {
@@ -147,7 +167,7 @@ function connect() {
     if (!token || document.visibilityState !== "visible") return;
     try {
       const message = JSON.parse(event.data);
-      if (message.type === "snapshot") scheduleRefresh();
+      if (message.type === "snapshot" || message.type === "moderation-activity") scheduleRefresh();
     } catch {
       // ping/pong and malformed messages do not require a moderator refresh.
     }

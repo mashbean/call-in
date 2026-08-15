@@ -78,6 +78,30 @@ function validateEventConfig(value: unknown): PublicEventConfig {
     ) {
       throw new Error("moderation.slowModeSeconds must be between 10 and 600");
     }
+    const flags = moderation.flags;
+    if (!flags || typeof flags.enabled !== "boolean") {
+      throw new Error("moderation.flags is incomplete");
+    }
+    if (!Number.isInteger(flags.maxPerDevice) || flags.maxPerDevice < 1 || flags.maxPerDevice > 30) {
+      throw new Error("moderation.flags.maxPerDevice must be between 1 and 30");
+    }
+    if (!Number.isInteger(flags.autoHoldMin) || flags.autoHoldMin < 2 || flags.autoHoldMin > 10) {
+      throw new Error("moderation.flags.autoHoldMin must be between 2 and 10");
+    }
+    if (
+      !Number.isInteger(flags.autoHoldMax) ||
+      flags.autoHoldMax < flags.autoHoldMin ||
+      flags.autoHoldMax > 20
+    ) {
+      throw new Error("moderation.flags.autoHoldMax must be between autoHoldMin and 20");
+    }
+    if (
+      typeof flags.autoHoldParticipantRatio !== "number" ||
+      flags.autoHoldParticipantRatio < 0 ||
+      flags.autoHoldParticipantRatio > 0.2
+    ) {
+      throw new Error("moderation.flags.autoHoldParticipantRatio must be between 0 and 0.2");
+    }
     const coc = moderation.codeOfConduct;
     if (
       !coc ||

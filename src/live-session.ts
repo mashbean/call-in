@@ -3,6 +3,7 @@ import { EVENT_CONFIG, QUESTION_LENSES, REACTION_KINDS } from "./config";
 import type {
   AudienceQuestion,
   DifficultySnapshot,
+  FlagReason,
   ModerationAction,
   ModerationReason,
   ModeratorQuestion,
@@ -33,6 +34,12 @@ type QuestionRow = {
   publish_at: number | null;
   moderation_reason: ModerationReason | null;
   moderated_at: number | null;
+  flag_count?: number;
+  flag_weight?: number;
+  harassment_flags?: number;
+  disruption_flags?: number;
+  off_topic_flags?: number;
+  privacy_flags?: number;
 };
 
 type ParticipantRow = {
@@ -42,6 +49,8 @@ type ParticipantRow = {
   coc_version: string;
   question_state: ParticipantQuestionState;
   slow_until: number | null;
+  flags_agreed: number;
+  flags_rejected: number;
 };
 
 type ModerationActionRow = {
@@ -54,11 +63,22 @@ type ModerationActionRow = {
   created_at: number;
 };
 
+type QuestionFlagExport = {
+  question_id: string;
+  voter_id: string;
+  reason: FlagReason;
+  weight: number;
+  status: "pending" | "agreed" | "rejected";
+  created_at: number;
+  resolved_at: number | null;
+};
+
 type ExportData = {
   exportedAt: number;
   snapshot: SessionSnapshot;
   questions: QuestionRow[];
   participants: ParticipantRow[];
+  questionFlags: QuestionFlagExport[];
   moderationActions: ModerationAction[];
 };
 
@@ -153,6 +173,27 @@ export class LiveSession extends DurableObject<Env> {
         CREATE INDEX idx_questions_visibility_publish_at ON questions(visibility, publish_at);
         CREATE INDEX idx_moderation_actions_created_at ON moderation_actions(created_at);
         INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (2, ${Date.now()});
+      `);
+    }
+    if (version < 3) {
+      this.ctx.storage.sql.exec(`
+        ALTER TABLE participants ADD COLUMN flags_agreed INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE participants ADD COLUMN flags_rejected INTEGER NOT NULL DEFAULT 0;
+        CREATE TABLE question_flags (
+          question_id TEXT NOT NULL,
+          voter_id TEXT NOT NULL,
+          reason TEXT NOT NULL,
+          weight REAL NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          created_at INTEGER NOT NULL,
+          resolved_at INTEGER,
+          PRIMARY KEY (question_id, voter_id),
+          FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+          FOREIGN KEY (voter_id) REFERENCES participants(voter_id) ON DELETE CASCADE
+        );
+        CREATE INDEX idx_question_flags_question_status ON question_flags(question_id, status);
+        CREATE INDEX idx_question_flags_voter_id ON question_flags(voter_id);
+        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (3, ${Date.now()});
       `);
     }
   }
@@ -519,6 +560,87 @@ export class LiveSession extends DurableObject<Env> {
     return this.broadcastSnapshot(this.touch(snapshot));
   }
 
+  async flagQuestion(
+    questionId: string,
+    reason: FlagReason,
+    voterId: string,
+  ): Promise<{ ok: true; held: boolean }> {
+    assertVoterId(voterId);
+    if (!isUuid(questionId)) throw new Error("invalid question");
+    if (!moderation?.enabled || !moderation.flags.enabled) throw new Error("flagging is disabled");
+    if (!["harassment", "disruption", "off_topic", "privacy"].includes(reason)) {
+      throw new Error("invalid flag reason");
+    }
+    const participant = this.getParticipantRow(voterId);
+    if (!participant || participant.coc_version !== moderation.codeOfConduct.version) {
+      throw new Error("code of conduct must be accepted");
+    }
+    const question = this.ctx.storage.sql
+      .exec<{ voter_id: string; visibility: QuestionVisibility }>(
+        "SELECT voter_id, visibility FROM questions WHERE id = ?",
+        questionId,
+      )
+      .toArray()[0];
+    if (!question || question.visibility !== "public") throw new Error("question not found");
+    if (question.voter_id === voterId) throw new Error("cannot flag your own question");
+
+    const existing = this.ctx.storage.sql
+      .exec<{ status: string }>(
+        "SELECT status FROM question_flags WHERE question_id = ? AND voter_id = ?",
+        questionId,
+        voterId,
+      )
+      .toArray()[0];
+    if (existing) return { ok: true, held: false };
+    const flagTotal = this.ctx.storage.sql
+      .exec<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM question_flags WHERE voter_id = ?",
+        voterId,
+      )
+      .one().count;
+    if (flagTotal >= moderation.flags.maxPerDevice) throw new Error("flag limit reached");
+
+    const weight = flagTrustWeight(participant.flags_agreed, participant.flags_rejected);
+    const now = Date.now();
+    this.ctx.storage.sql.exec(
+      `INSERT INTO question_flags
+        (question_id, voter_id, reason, weight, status, created_at)
+       VALUES (?, ?, ?, ?, 'pending', ?)`,
+      questionId,
+      voterId,
+      reason,
+      weight,
+      now,
+    );
+    const summary = this.getFlagSummary(questionId);
+    const threshold = this.flagThreshold();
+    const held = summary.count >= moderation.flags.autoHoldMin && summary.weight >= threshold;
+    if (held) {
+      this.ctx.storage.sql.exec(
+        `UPDATE questions
+         SET visibility = 'author_only', publish_at = NULL,
+             moderation_reason = 'disruption', moderated_at = ?, moderated_by = 'community'
+         WHERE id = ? AND visibility = 'public'`,
+        now,
+        questionId,
+      );
+      this.recordModerationAction(
+        questionId,
+        question.voter_id,
+        "auto_hold",
+        "community_flags",
+        now,
+        "community",
+      );
+      this.snapshotCache = null;
+      await this.broadcastSnapshot();
+      await this.broadcastParticipantState(question.voter_id);
+    } else {
+      this.broadcastModerationActivity();
+    }
+    return { ok: true, held };
+  }
+
   async react(kind: ReactionKind, voterId: string): Promise<{ ok: true }> {
     assertVoterId(voterId);
     if (!REACTION_KINDS.has(kind)) throw new Error("invalid reaction");
@@ -542,22 +664,29 @@ export class LiveSession extends DurableObject<Env> {
   }
 
   async moderatorSnapshot(): Promise<ModeratorSnapshot> {
+    const flagThreshold = this.flagThreshold();
     const questions = this.ctx.storage.sql
       .exec<QuestionRow>(`
         SELECT
           q.id, q.voter_id, q.text, q.nickname, q.lens, q.difficulty, q.created_at,
           q.visibility, q.publish_at, q.moderation_reason, q.moderated_at,
-          COUNT(qv.question_id) AS upvotes
+          (SELECT COUNT(*) FROM question_votes qv WHERE qv.question_id = q.id) AS upvotes,
+          (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending') AS flag_count,
+          (SELECT COALESCE(SUM(qf.weight), 0) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending') AS flag_weight,
+          (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending' AND qf.reason = 'harassment') AS harassment_flags,
+          (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending' AND qf.reason = 'disruption') AS disruption_flags,
+          (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending' AND qf.reason = 'off_topic') AS off_topic_flags,
+          (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending' AND qf.reason = 'privacy') AS privacy_flags
         FROM questions q
-        LEFT JOIN question_votes qv ON qv.question_id = q.id
-        GROUP BY q.id
         ORDER BY
-          CASE q.visibility WHEN 'pending' THEN 0 WHEN 'public' THEN 1 ELSE 2 END,
+          CASE WHEN q.visibility = 'author_only' AND q.moderated_by = 'community' THEN 0
+               WHEN q.visibility = 'pending' THEN 1 WHEN q.visibility = 'public' THEN 2 ELSE 3 END,
+          flag_weight DESC,
           q.created_at DESC
         LIMIT 200
       `)
       .toArray()
-      .map(toModeratorQuestion);
+      .map((row) => toModeratorQuestion(row, flagThreshold));
     const actions = this.ctx.storage.sql
       .exec<ModerationActionRow>(
         "SELECT * FROM moderation_actions ORDER BY created_at DESC LIMIT 100",
@@ -593,6 +722,7 @@ export class LiveSession extends DurableObject<Env> {
       now,
       questionId,
     );
+    this.resolveFlags(questionId, action === "hide" ? "agreed" : "rejected", now);
     this.recordModerationAction(questionId, row.voter_id, action, reason, now);
     this.snapshotCache = null;
     await this.broadcastSnapshot();
@@ -642,6 +772,7 @@ export class LiveSession extends DurableObject<Env> {
 
   async reset(): Promise<SessionSnapshot> {
     this.ctx.storage.sql.exec("DELETE FROM moderation_actions");
+    this.ctx.storage.sql.exec("DELETE FROM question_flags");
     this.ctx.storage.sql.exec("DELETE FROM question_votes");
     this.ctx.storage.sql.exec("DELETE FROM questions");
     this.ctx.storage.sql.exec("DELETE FROM participants");
@@ -672,18 +803,25 @@ export class LiveSession extends DurableObject<Env> {
       .toArray();
     const participants = this.ctx.storage.sql
       .exec<ParticipantRow>(
-        "SELECT voter_id, alias, public_label, coc_version, question_state, slow_until FROM participants ORDER BY created_at",
+        "SELECT voter_id, alias, public_label, coc_version, question_state, slow_until, flags_agreed, flags_rejected FROM participants ORDER BY created_at",
       )
       .toArray();
     const moderationActions = this.ctx.storage.sql
       .exec<ModerationActionRow>("SELECT * FROM moderation_actions ORDER BY created_at")
       .toArray()
       .map(toModerationAction);
+    const questionFlags = this.ctx.storage.sql
+      .exec<QuestionFlagExport>(
+        `SELECT question_id, voter_id, reason, weight, status, created_at, resolved_at
+         FROM question_flags ORDER BY created_at`,
+      )
+      .toArray();
     return {
       exportedAt: Date.now(),
       snapshot: await this.snapshot(),
       questions,
       participants,
+      questionFlags,
       moderationActions,
     };
   }
@@ -760,7 +898,8 @@ export class LiveSession extends DurableObject<Env> {
   private getParticipantRow(voterId: string): ParticipantRow | undefined {
     return this.ctx.storage.sql
       .exec<ParticipantRow>(
-        `SELECT voter_id, alias, public_label, coc_version, question_state, slow_until
+        `SELECT voter_id, alias, public_label, coc_version, question_state, slow_until,
+                flags_agreed, flags_rejected
          FROM participants WHERE voter_id = ?`,
         voterId,
       )
@@ -773,17 +912,68 @@ export class LiveSession extends DurableObject<Env> {
     action: string,
     reason: string,
     createdAt: number,
+    actor = "moderator",
   ): void {
     this.ctx.storage.sql.exec(
       `INSERT INTO moderation_actions
         (id, question_id, voter_id, action, reason, actor, created_at)
-       VALUES (?, ?, ?, ?, ?, 'moderator', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       crypto.randomUUID(),
       questionId,
       voterId,
       action,
       reason,
+      actor,
       createdAt,
+    );
+  }
+
+  private getFlagSummary(questionId: string): { count: number; weight: number } {
+    return this.ctx.storage.sql
+      .exec<{ count: number; weight: number }>(
+        `SELECT COUNT(*) AS count, COALESCE(SUM(weight), 0) AS weight
+         FROM question_flags WHERE question_id = ? AND status = 'pending'`,
+        questionId,
+      )
+      .one();
+  }
+
+  private flagThreshold(): number {
+    if (!moderation?.enabled || !moderation.flags.enabled) return 0;
+    const participants = this.ctx.storage.sql
+      .exec<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM participants WHERE coc_version = ?",
+        moderation.codeOfConduct.version,
+      )
+      .one().count;
+    return Math.min(
+      moderation.flags.autoHoldMax,
+      Math.max(
+        moderation.flags.autoHoldMin,
+        Math.ceil(participants * moderation.flags.autoHoldParticipantRatio),
+      ),
+    );
+  }
+
+  private resolveFlags(
+    questionId: string,
+    outcome: "agreed" | "rejected",
+    resolvedAt: number,
+  ): void {
+    const scoreColumn = outcome === "agreed" ? "flags_agreed" : "flags_rejected";
+    this.ctx.storage.sql.exec(
+      `UPDATE participants SET ${scoreColumn} = ${scoreColumn} + 1
+       WHERE voter_id IN (
+         SELECT voter_id FROM question_flags WHERE question_id = ? AND status = 'pending'
+       )`,
+      questionId,
+    );
+    this.ctx.storage.sql.exec(
+      `UPDATE question_flags SET status = ?, resolved_at = ?
+       WHERE question_id = ? AND status = 'pending'`,
+      outcome,
+      resolvedAt,
+      questionId,
     );
   }
 
@@ -814,6 +1004,17 @@ export class LiveSession extends DurableObject<Env> {
         socket.send(payload);
       } catch (error) {
         console.error(JSON.stringify({ message: "participant broadcast failed", error: String(error) }));
+      }
+    }
+  }
+
+  private broadcastModerationActivity(): void {
+    const payload = JSON.stringify({ type: "moderation-activity", data: { updatedAt: Date.now() } });
+    for (const socket of this.ctx.getWebSockets()) {
+      try {
+        socket.send(payload);
+      } catch (error) {
+        console.error(JSON.stringify({ message: "moderation activity broadcast failed", error: String(error) }));
       }
     }
   }
@@ -892,13 +1093,29 @@ function toOwnQuestion(row: QuestionRow): OwnQuestion {
   };
 }
 
-function toModeratorQuestion(row: QuestionRow): ModeratorQuestion {
+function toModeratorQuestion(row: QuestionRow, flagThreshold: number): ModeratorQuestion {
+  const flagReasons: Partial<Record<FlagReason, number>> = {};
+  if (row.harassment_flags) flagReasons.harassment = row.harassment_flags;
+  if (row.disruption_flags) flagReasons.disruption = row.disruption_flags;
+  if (row.off_topic_flags) flagReasons.off_topic = row.off_topic_flags;
+  if (row.privacy_flags) flagReasons.privacy = row.privacy_flags;
   return {
     ...toOwnQuestion(row),
     voterId: row.voter_id,
     moderationReason: row.moderation_reason,
     moderatedAt: row.moderated_at,
+    flagCount: row.flag_count ?? 0,
+    flagWeight: Math.round((row.flag_weight ?? 0) * 100) / 100,
+    flagThreshold,
+    flagReasons,
   };
+}
+
+function flagTrustWeight(agreed: number, rejected: number): number {
+  if (rejected >= 3 && rejected >= agreed * 2) return 0.25;
+  if (rejected > agreed) return 0.5;
+  if (agreed >= 3 && rejected / (agreed + rejected) <= 0.25) return 1.5;
+  return 1;
 }
 
 function toParticipantProfile(row: ParticipantRow): ParticipantProfile {

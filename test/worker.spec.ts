@@ -116,6 +116,85 @@ describe("Live Deck Kit Worker", () => {
     expect(ownQuestion?.statusLabel).toBe("Not public");
   });
 
+  it("temporarily holds a question after trusted reports and lets the moderator restore it", async () => {
+    const author = crypto.randomUUID();
+    const flaggers = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
+    await register(author, "Question author");
+    for (const [index, voterId] of flaggers.entries()) {
+      await register(voterId, `Reporter ${index + 1}`);
+    }
+    const question = await postQuestion({
+      voterId: author,
+      text: "A question that needs community review",
+      lens: "bridge",
+      difficulty: 3,
+    });
+    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    await stub.moderateQuestion(question.submission.id, "restore", "other");
+
+    const selfFlag = await SELF.fetch("https://example.com/api/flag", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ questionId: question.submission.id, reason: "disruption", voterId: author }),
+    });
+    expect(selfFlag.status).toBe(400);
+    expect(await selfFlag.json<{ error: string }>()).toEqual({
+      error: "cannot flag your own question",
+    });
+    expect((await stub.flagQuestion(question.submission.id, "off_topic", flaggers[0])).held).toBe(false);
+    expect((await stub.flagQuestion(question.submission.id, "harassment", flaggers[0])).held).toBe(false);
+    const afterDuplicate = (await stub.moderatorSnapshot()).questions.find(
+      (item) => item.id === question.submission.id,
+    );
+    expect(afterDuplicate?.flagCount).toBe(1);
+    expect((await stub.flagQuestion(question.submission.id, "disruption", flaggers[1])).held).toBe(false);
+    expect((await stub.flagQuestion(question.submission.id, "harassment", flaggers[2])).held).toBe(true);
+
+    expect((await stub.snapshot()).questions.some((item) => item.id === question.submission.id)).toBe(false);
+    const held = (await stub.participantState(author)).questions.find(
+      (item) => item.id === question.submission.id,
+    );
+    expect(held?.visibility).toBe("author_only");
+    const moderatorQuestion = (await stub.moderatorSnapshot()).questions.find(
+      (item) => item.id === question.submission.id,
+    );
+    expect(moderatorQuestion).toMatchObject({
+      flagCount: 3,
+      flagWeight: 3,
+      flagThreshold: 3,
+      flagReasons: { off_topic: 1, disruption: 1, harassment: 1 },
+    });
+
+    await stub.moderateQuestion(question.submission.id, "restore", "other");
+    expect((await stub.snapshot()).questions.some((item) => item.id === question.submission.id)).toBe(true);
+    const exported = await stub.exportData();
+    const rejected = exported.participants.filter((item) => flaggers.includes(item.voter_id));
+    expect(rejected.every((item) => item.flags_rejected === 1 && item.flags_agreed === 0)).toBe(true);
+    expect(
+      exported.questionFlags.filter((item) => item.question_id === question.submission.id),
+    ).toHaveLength(3);
+    expect(
+      exported.questionFlags
+        .filter((item) => item.question_id === question.submission.id)
+        .every((item) => item.status === "rejected" && item.resolved_at !== null),
+    ).toBe(true);
+
+    const nextAuthor = crypto.randomUUID();
+    await register(nextAuthor, "Next author");
+    const nextQuestion = await postQuestion({
+      voterId: nextAuthor,
+      text: "A second question for trust weighting",
+      lens: "clarify",
+      difficulty: 2,
+    });
+    await stub.moderateQuestion(nextQuestion.submission.id, "restore", "other");
+    await stub.flagQuestion(nextQuestion.submission.id, "off_topic", flaggers[0]);
+    const weighted = (await stub.moderatorSnapshot()).questions.find(
+      (item) => item.id === nextQuestion.submission.id,
+    );
+    expect(weighted?.flagWeight).toBe(0.5);
+  });
+
   it("updates a quick poll vote without increasing the voter total", async () => {
     const voterId = crypto.randomUUID();
     await post("/api/vote", { voterId, pollId: "starting-point", optionIndex: 0 });

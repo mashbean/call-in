@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { EVENT_CONFIG, QUESTION_LENSES, REACTION_KINDS } from "./config";
 import { LiveSession } from "./live-session";
 import type {
+  FlagReason,
   ModerationReason,
   QuestionLens,
   ReactionKind,
@@ -174,6 +175,21 @@ export default {
         return withCors(Response.json(await stub.upvote(body.questionId, body.voterId)), request, env);
       }
 
+      if (url.pathname === "/api/flag") {
+        if (
+          typeof body.questionId !== "string" ||
+          typeof body.voterId !== "string" ||
+          !isFlagReason(body.reason)
+        ) {
+          return withCors(jsonError("invalid flag", 400), request, env);
+        }
+        return withCors(
+          Response.json(await stub.flagQuestion(body.questionId, body.reason, body.voterId)),
+          request,
+          env,
+        );
+      }
+
       if (url.pathname === "/api/reaction") {
         if (
           typeof body.kind !== "string" ||
@@ -228,6 +244,10 @@ function isParticipantAction(
 
 function isModerationReason(value: unknown): value is ModerationReason {
   return ["harassment", "disruption", "off_topic", "privacy", "other"].includes(String(value));
+}
+
+function isFlagReason(value: unknown): value is FlagReason {
+  return ["harassment", "disruption", "off_topic", "privacy"].includes(String(value));
 }
 
 function isSessionMode(value: unknown): value is SessionMode {

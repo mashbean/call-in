@@ -138,6 +138,27 @@
   line-height: 1.5;
   font-weight: 700;
 }
+.flag-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  margin-top: 14px;
+  border: 1px solid #ff4f9a66;
+  border-radius: 12px;
+  background: #ff4f9a12;
+  padding: 11px 12px;
+  color: #ff9ac4;
+  font: 800 10px/1.35 ui-monospace, monospace;
+}
+.flag-summary span {
+  color: var(--muted);
+  text-align: right;
+}
+.flag-summary small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font: inherit;
+}
 .moderator-card label {
   display: grid;
   gap: 7px;

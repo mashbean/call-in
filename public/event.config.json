@@ -34,6 +34,13 @@
     "questionCooldownSeconds": 20,
     "questionsPerTenMinutes": 5,
     "slowModeSeconds": 90,
+    "flags": {
+      "enabled": true,
+      "maxPerDevice": 8,
+      "autoHoldMin": 3,
+      "autoHoldMax": 5,
+      "autoHoldParticipantRatio": 0.03
+    },
     "codeOfConduct": {
       "version": "2026-08-15",
       "title": "Help keep the room useful",

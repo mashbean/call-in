@@ -161,6 +161,14 @@ async function upvote(questionId) {
   render();
 }
 
+async function flagQuestion(questionId, reason) {
+  if (!participantState.participant) throw new Error("code of conduct must be accepted");
+  const result = await post("/api/flag", { questionId, reason, voterId });
+  localStorage.setItem(`flag:${questionId}`, reason);
+  if (result.held) state.questions = state.questions.filter((question) => question.id !== questionId);
+  render();
+}
+
 async function post(path, body) {
   const response = await fetch(`${apiBase}${path.slice(4)}`, {
     method: "POST",
@@ -218,7 +226,10 @@ function render() {
     <article class="question-card">
       <div class="question-rank">${String(index + 1).padStart(2, "0")}</div>
       <div><div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
-      <button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>
+      <div class="question-actions">
+        <button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>
+        ${renderFlagControl(question)}
+      </div>
     </article>`,
         )
         .join("")
@@ -228,7 +239,32 @@ function render() {
       upvote(button.dataset.upvote).catch((error) => alert(humanError(error))),
     );
   });
+  questionsRoot.querySelectorAll("[data-flag-reason]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const details = button.closest("details");
+      details.open = false;
+      flagQuestion(button.dataset.questionId, button.dataset.flagReason).catch((error) =>
+        alert(humanError(error)),
+      );
+    });
+  });
   syncQuestionAvailability();
+}
+
+function renderFlagControl(question) {
+  if (!config.moderation?.flags?.enabled) return "";
+  if (participantState.questions.some((item) => item.id === question.id)) return "";
+  const reported = localStorage.getItem(`flag:${question.id}`);
+  if (reported) return `<span class="flagged-label">Reported</span>`;
+  return `<details class="flag-control">
+    <summary>Report</summary>
+    <div class="flag-menu" role="group" aria-label="Report this question">
+      <button type="button" data-question-id="${question.id}" data-flag-reason="harassment">Harassment or attack</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="disruption">Deliberate disruption</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="off_topic">Seriously off topic</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="privacy">Private information</button>
+    </div>
+  </details>`;
 }
 
 function renderParticipant() {
@@ -315,6 +351,9 @@ function humanError(error) {
   if (message.includes("paused")) return "Questions are temporarily paused";
   if (message.includes("closed")) return "This session is closed";
   if (message.includes("code of conduct")) return "Please accept the code of conduct first";
+  if (message.includes("own question")) return "You cannot report your own question";
+  if (message.includes("flag limit")) return "This device has reached the report limit";
+  if (message.includes("question not found")) return "This question is no longer public";
   if (message.includes("access is limited")) return "Question access is limited for this event";
   if (message.includes("alias")) return "Choose an event name with at least two characters";
   return "Sending failed. Please try again later";

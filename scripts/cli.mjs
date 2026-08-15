@@ -102,6 +102,17 @@ export async function doctor() {
     if (!Number.isInteger(config.moderation.presentationDelaySeconds)) {
       errors.push("moderation.presentationDelaySeconds must be an integer");
     }
+    if (!config.moderation.flags || typeof config.moderation.flags.enabled !== "boolean") {
+      errors.push("moderation.flags is required");
+    }
+    if (
+      !Number.isInteger(config.moderation.flags?.autoHoldMin) ||
+      !Number.isInteger(config.moderation.flags?.autoHoldMax) ||
+      config.moderation.flags.autoHoldMin < 2 ||
+      config.moderation.flags.autoHoldMax < config.moderation.flags.autoHoldMin
+    ) {
+      errors.push("moderation.flags auto-hold thresholds are invalid");
+    }
   }
   if (missing.length) errors.push(`Missing files: ${missing.join(", ")}`);
   return { ok: errors.length === 0, errors, eventId: config.eventId, pollCount: config.polls?.length ?? 0 };
