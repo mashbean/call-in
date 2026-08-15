@@ -168,3 +168,18 @@ function applyConfig(nextConfig) {
     .map((reaction) => `<b>${escapeHtml(reaction.emoji)}</b>`)
     .join("");
 }
+
+const qrModal = document.querySelector("[data-qr-modal]");
+const qrOpenButton = document.querySelector("[data-qr-open]");
+if (qrModal && qrOpenButton) {
+  qrModal.querySelector("[data-qr-url]").textContent = location.origin.replace(/^https?:\/\//, "");
+  qrOpenButton.addEventListener("click", () => {
+    qrModal.hidden = false;
+  });
+  qrModal.addEventListener("click", () => {
+    qrModal.hidden = true;
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !qrModal.hidden) qrModal.hidden = true;
+  });
+}
