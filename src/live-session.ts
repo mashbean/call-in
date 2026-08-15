@@ -547,15 +547,22 @@ export class LiveSession extends DurableObject<Env> {
         voterId,
       )
       .one();
-    this.ctx.storage.sql.exec(
-      "INSERT OR IGNORE INTO question_votes (question_id, voter_id, created_at) VALUES (?, ?, ?)",
-      questionId,
-      voterId,
-      Date.now(),
-    );
+    const question = snapshot.questions.find((candidate) => candidate.id === questionId);
     if (priorVote.count === 0) {
-      const question = snapshot.questions.find((candidate) => candidate.id === questionId);
+      this.ctx.storage.sql.exec(
+        "INSERT INTO question_votes (question_id, voter_id, created_at) VALUES (?, ?, ?)",
+        questionId,
+        voterId,
+        Date.now(),
+      );
       if (question) question.upvotes += 1;
+    } else {
+      this.ctx.storage.sql.exec(
+        "DELETE FROM question_votes WHERE question_id = ? AND voter_id = ?",
+        questionId,
+        voterId,
+      );
+      if (question) question.upvotes = Math.max(0, question.upvotes - 1);
     }
     return this.broadcastSnapshot(this.touch(snapshot));
   }
