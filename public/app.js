@@ -107,8 +107,10 @@ document.querySelectorAll("[data-reaction]").forEach((button) => {
       void button.offsetWidth;
       button.classList.add("sent");
       setTimeout(() => button.classList.remove("sent"), 700);
-    } catch {
-      reactionMessageEl.textContent = "The reaction was not sent. Please try again";
+    } catch (error) {
+      reactionMessageEl.textContent = String(error?.message || "").includes("rate limit")
+        ? "Reacting fast! Give it a few seconds"
+        : "The reaction was not sent. Please try again";
     } finally {
       setTimeout(() => {
         button.disabled = false;
