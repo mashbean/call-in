@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { anonymousLabelFor } from "./anon-labels";
 import { EVENT_CONFIG, QUESTION_LENSES, REACTION_KINDS } from "./config";
 import type {
   AudienceQuestion,
@@ -196,6 +197,16 @@ export class LiveSession extends DurableObject<Env> {
         INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (3, ${Date.now()});
       `);
     }
+    if (version < 4) {
+      this.ctx.storage.sql.exec(`
+        CREATE TABLE anon_labels (
+          voter_id TEXT PRIMARY KEY,
+          label TEXT NOT NULL,
+          created_at INTEGER NOT NULL
+        );
+        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (4, ${Date.now()});
+      `);
+    }
   }
 
   async snapshot(): Promise<SessionSnapshot> {
@@ -372,6 +383,25 @@ export class LiveSession extends DurableObject<Env> {
     return this.broadcastSnapshot(this.touch(snapshot));
   }
 
+  anonymousLabel(voterId: string): string {
+    assertVoterId(voterId);
+    const existing = this.ctx.storage.sql
+      .exec<{ label: string }>("SELECT label FROM anon_labels WHERE voter_id = ?", voterId)
+      .toArray()[0];
+    if (existing) return existing.label;
+    const assigned = this.ctx.storage.sql
+      .exec<{ count: number }>("SELECT COUNT(*) AS count FROM anon_labels")
+      .one().count;
+    const label = anonymousLabelFor(assigned);
+    this.ctx.storage.sql.exec(
+      "INSERT INTO anon_labels (voter_id, label, created_at) VALUES (?, ?, ?)",
+      voterId,
+      label,
+      Date.now(),
+    );
+    return label;
+  }
+
   async ask(
     text: string,
     nickname: string,
@@ -447,7 +477,7 @@ export class LiveSession extends DurableObject<Env> {
     const delay = moderation?.enabled ? moderation.presentationDelaySeconds * 1000 : 0;
     const visibility: QuestionVisibility = requiresApproval || delay > 0 ? "pending" : "public";
     const publishAt = visibility === "pending" && !requiresApproval ? now + delay : null;
-    const publicLabel = participant?.public_label ?? cleanText(nickname || "Anonymous", 24);
+    const publicLabel = participant?.public_label ?? (cleanText(nickname, 24) || this.anonymousLabel(voterId));
     const id = crypto.randomUUID();
     this.ctx.storage.sql.exec(
       `INSERT INTO questions
@@ -770,6 +800,7 @@ export class LiveSession extends DurableObject<Env> {
     this.ctx.storage.sql.exec("DELETE FROM question_votes");
     this.ctx.storage.sql.exec("DELETE FROM questions");
     this.ctx.storage.sql.exec("DELETE FROM participants");
+    this.ctx.storage.sql.exec("DELETE FROM anon_labels");
     this.ctx.storage.sql.exec("DELETE FROM difficulty_votes");
     this.ctx.storage.sql.exec("DELETE FROM votes");
     this.ctx.storage.sql.exec(
