@@ -174,3 +174,56 @@ function applyConfig(nextConfig) {
     .map((reaction) => `<b>${escapeHtml(reaction.emoji)}</b>`)
     .join("");
 }
+
+const qrModal = document.querySelector("[data-qr-modal]");
+const qrOpenButton = document.querySelector("[data-qr-open]");
+if (qrModal && qrOpenButton) {
+  const qrCloseButton = qrModal.querySelector("[data-qr-close]");
+  const modalBackground = [...document.body.children].filter(
+    (element) => element !== qrModal && element.tagName !== "SCRIPT",
+  );
+  let previousFocus = null;
+
+  function closeQrModal() {
+    if (qrModal.hidden) return;
+    qrModal.hidden = true;
+    qrOpenButton.setAttribute("aria-expanded", "false");
+    modalBackground.forEach((element) => {
+      element.inert = false;
+    });
+    previousFocus?.focus();
+  }
+
+  qrModal.querySelector("[data-qr-url]").textContent = location.origin.replace(/^https?:\/\//, "");
+  qrOpenButton.addEventListener("click", () => {
+    previousFocus = document.activeElement;
+    modalBackground.forEach((element) => {
+      element.inert = true;
+    });
+    qrModal.hidden = false;
+    qrOpenButton.setAttribute("aria-expanded", "true");
+    qrCloseButton?.focus();
+  });
+  qrCloseButton?.addEventListener("click", closeQrModal);
+  qrModal.addEventListener("click", (event) => {
+    if (event.target === qrModal) closeQrModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (qrModal.hidden) return;
+    if (event.key === "Escape") {
+      closeQrModal();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const focusable = [...qrModal.querySelectorAll("a[href], button:not([disabled])")];
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  });
+}

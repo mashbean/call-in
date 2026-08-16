@@ -14,10 +14,10 @@
         <div class="eyebrow" data-config="eyebrow">LIVE DECK</div>
         <h1 data-config="dashboardTitle">Live audience</h1>
       </div>
-      <a class="dashboard-join" href="/" target="_blank" rel="noreferrer">
+      <button class="dashboard-join" type="button" data-qr-open aria-haspopup="dialog" aria-controls="qr-modal" aria-expanded="false" title="Click to enlarge the QR code">
         <img src="/api/qr.svg" alt="Scan to join the live audience page" />
         <span><b>Scan to join</b><small>Difficulty · questions · emoji</small></span>
-      </a>
+      </button>
       <div class="live-status dashboard-connection" data-status><span></span>Connecting</div>
       <nav class="dashboard-tabs" role="tablist" aria-label="Dashboard views">
         <button class="active" type="button" role="tab" aria-selected="true" data-dashboard-tab="live">Live</button>
@@ -53,6 +53,15 @@
     </main>
     <a class="dashboard-open" href="/" target="_blank" rel="noreferrer">Open audience page ↗</a>
     <div class="reaction-stage" data-reaction-stage aria-live="polite"></div>
+    <div class="qr-modal" id="qr-modal" data-qr-modal role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" hidden>
+      <div class="qr-modal-card">
+        <button class="qr-modal-close" type="button" data-qr-close aria-label="Close QR code dialog">×</button>
+        <img src="/api/qr.svg" alt="Scan to join the live audience page" />
+        <b id="qr-modal-title">Scan to join</b>
+        <a class="qr-modal-link" data-qr-url href="/" target="_blank" rel="noreferrer"></a>
+        <span class="qr-modal-hint">Press Escape or use the close button</span>
+      </div>
+    </div>
     <script type="module" src="/dashboard/dashboard.js"></script>
   </body>
 </html>
