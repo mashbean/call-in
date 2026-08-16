@@ -32,7 +32,7 @@
     "deploy:dry": "wrangler deploy --dry-run",
     "typecheck": "tsc --noEmit",
     "types": "wrangler types",
-    "test": "vitest run && node --test node-test/uncommon-ground-export.test.mjs",
+    "test": "vitest run && node --test node-test/*.test.mjs",
     "check": "npm run typecheck && npm test && npm run deploy:dry",
     "integrate": "node scripts/cli.mjs integrate",
     "doctor": "node scripts/cli.mjs doctor",
