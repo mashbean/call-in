@@ -150,7 +150,7 @@ export default {
           Response.json(
             await stub.ask(
               body.text,
-              typeof body.nickname === "string" ? body.nickname : "Anonymous",
+              typeof body.nickname === "string" ? body.nickname : "",
               body.lens as QuestionLens,
               body.difficulty,
               body.voterId,
