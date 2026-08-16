@@ -2,6 +2,7 @@ import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "..
 
 const apiBase = "/api";
 const config = await fetch("/event.config.json").then((response) => response.json());
+const reactionTimes = new Map();
 applyConfig(config);
 const pollsRoot = document.querySelector("#dashboard-polls");
 const questionsRoot = document.querySelector("#dashboard-questions");
@@ -37,15 +38,21 @@ function render(state) {
     .join("");
 
   document.querySelector("[data-question-count]").textContent = `${state.questions.length} questions`;
-  const latestQuestions = [...state.questions].sort(
-    (first, second) => Number(second.createdAt) - Number(first.createdAt),
+  const rankedQuestions = [...state.questions].sort(
+    (first, second) =>
+      second.upvotes - first.upvotes || Number(second.createdAt) - Number(first.createdAt),
   );
-  questionsRoot.innerHTML = latestQuestions.length
-    ? latestQuestions
+  const newestId = state.questions.reduce(
+    (newest, question) =>
+      !newest || Number(question.createdAt) > Number(newest.createdAt) ? question : newest,
+    null,
+  )?.id;
+  questionsRoot.innerHTML = rankedQuestions.length
+    ? rankedQuestions
         .map(
           (question, index) => `
             <article>
-              <div class="dashboard-question-head"><b>${index === 0 ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · Me too ${question.upvotes}</span></div>
+              <div class="dashboard-question-head"><b>${question.id === newestId ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · Me too ${question.upvotes}</span></div>
               <div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div>
               <p>${escapeHtml(question.text)}</p>
               <small>${escapeHtml(question.nickname)}</small>
@@ -102,7 +109,26 @@ function connect() {
   });
 }
 
+function renderReactionLegend() {
+  const legend = document.querySelector("[data-reaction-legend]");
+  const now = Date.now();
+  legend.innerHTML = config.reactions
+    .map((reaction) => {
+      const times = (reactionTimes.get(reaction.id) || []).filter((time) => now - time < 60_000);
+      reactionTimes.set(reaction.id, times);
+      return `<span class="reaction-legend-item"><b>${escapeHtml(reaction.emoji)}</b>${escapeHtml(reaction.label)}<i>${times.length || ""}</i></span>`;
+    })
+    .join("");
+}
+setInterval(renderReactionLegend, 5000);
+
 function showReaction(reaction) {
+  if (config.reactions.some((item) => item.id === reaction?.kind)) {
+    const times = reactionTimes.get(reaction.kind) || [];
+    times.push(Date.now());
+    reactionTimes.set(reaction.kind, times);
+    renderReactionLegend();
+  }
   const emoji = config.reactions.find((item) => item.id === reaction?.kind)?.emoji;
   if (!emoji) return;
   const burst = document.createElement("div");
@@ -164,7 +190,58 @@ function applyConfig(nextConfig) {
   document.documentElement.style.setProperty("--sage", nextConfig.theme.accent);
   document.documentElement.style.setProperty("--panel", nextConfig.theme.panel);
   document.documentElement.style.setProperty("--positive", nextConfig.theme.positive);
-  document.querySelector("[data-reaction-legend]").innerHTML = nextConfig.reactions
-    .map((reaction) => `<b>${escapeHtml(reaction.emoji)}</b>`)
-    .join("");
+  renderReactionLegend();
+}
+
+const qrModal = document.querySelector("[data-qr-modal]");
+const qrOpenButton = document.querySelector("[data-qr-open]");
+if (qrModal && qrOpenButton) {
+  const qrCloseButton = qrModal.querySelector("[data-qr-close]");
+  const modalBackground = [...document.body.children].filter(
+    (element) => element !== qrModal && element.tagName !== "SCRIPT",
+  );
+  let previousFocus = null;
+
+  function closeQrModal() {
+    if (qrModal.hidden) return;
+    qrModal.hidden = true;
+    qrOpenButton.setAttribute("aria-expanded", "false");
+    modalBackground.forEach((element) => {
+      element.inert = false;
+    });
+    previousFocus?.focus();
+  }
+
+  qrModal.querySelector("[data-qr-url]").textContent = location.origin.replace(/^https?:\/\//, "");
+  qrOpenButton.addEventListener("click", () => {
+    previousFocus = document.activeElement;
+    modalBackground.forEach((element) => {
+      element.inert = true;
+    });
+    qrModal.hidden = false;
+    qrOpenButton.setAttribute("aria-expanded", "true");
+    qrCloseButton?.focus();
+  });
+  qrCloseButton?.addEventListener("click", closeQrModal);
+  qrModal.addEventListener("click", (event) => {
+    if (event.target === qrModal) closeQrModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (qrModal.hidden) return;
+    if (event.key === "Escape") {
+      closeQrModal();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const focusable = [...qrModal.querySelectorAll("a[href], button:not([disabled])")];
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  });
 }
