@@ -557,13 +557,14 @@ export class LiveSession extends DurableObject<Env> {
     assertVoterId(voterId);
     if (!isUuid(questionId)) throw new Error("invalid question");
     const snapshot = await this.snapshot();
-    const exists = this.ctx.storage.sql
-      .exec<{ count: number }>(
-        "SELECT COUNT(*) AS count FROM questions WHERE id = ? AND visibility = 'public'",
+    const questionRow = this.ctx.storage.sql
+      .exec<{ voter_id: string }>(
+        "SELECT voter_id FROM questions WHERE id = ? AND visibility = 'public'",
         questionId,
       )
-      .one();
-    if (exists.count === 0) throw new Error("question not found");
+      .toArray()[0];
+    if (!questionRow) throw new Error("question not found");
+    if (questionRow.voter_id === voterId) throw new Error("cannot upvote your own question");
     const priorVote = this.ctx.storage.sql
       .exec<{ count: number }>(
         "SELECT COUNT(*) AS count FROM question_votes WHERE question_id = ? AND voter_id = ?",

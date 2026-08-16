@@ -243,7 +243,9 @@ function render() {
       <div class="question-rank">${String(index + 1).padStart(2, "0")}</div>
       <div><div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
       <div class="question-actions">
-        <button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>
+        ${participantState.questions.some((item) => item.id === question.id)
+          ? `<span class="flagged-label">Your question</span>`
+          : `<button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>`}
         ${renderFlagControl(question)}
       </div>
     </article>`,
@@ -367,7 +369,8 @@ function humanError(error) {
   if (message.includes("paused")) return "Questions are temporarily paused";
   if (message.includes("closed")) return "This session is closed";
   if (message.includes("code of conduct")) return "Please accept the code of conduct first";
-  if (message.includes("own question")) return "You cannot report your own question";
+  if (message.includes("upvote your own question")) return "You cannot upvote your own question";
+  if (message.includes("flag your own question")) return "You cannot report your own question";
   if (message.includes("flag limit")) return "This device has reached the report limit";
   if (message.includes("question not found")) return "This question is no longer public";
   if (message.includes("access is limited")) return "Question access is limited for this event";

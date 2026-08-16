@@ -50,6 +50,29 @@ describe("Live Deck Kit Worker", () => {
     expect(state.questions[0]?.difficulty).toBe(5);
   });
 
+  it("does not let an author upvote their own question", async () => {
+    const author = crypto.randomUUID();
+    await register(author, "Question author");
+    const question = await postQuestion({
+      voterId: author,
+      text: "A question should not count its author",
+      lens: "clarify",
+      difficulty: 3,
+    });
+    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    await stub.moderateQuestion(question.submission.id, "restore", "other");
+
+    const response = await SELF.fetch("https://example.com/api/upvote", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ questionId: question.submission.id, voterId: author }),
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json<{ error: string }>()).toEqual({
+      error: "cannot upvote your own question",
+    });
+  });
+
   it("locks the event alias after the first code-of-conduct acceptance", async () => {
     const voterId = crypto.randomUUID();
     const first = await register(voterId, "Night shift");
