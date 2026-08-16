@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { anonymousLabelFor } from "./anon-labels";
 import { EVENT_CONFIG, QUESTION_LENSES, REACTION_KINDS } from "./config";
 import type {
   AudienceQuestion,
@@ -75,7 +76,6 @@ type QuestionFlagExport = {
 
 type ReactionRow = {
   kind: string;
-  voter_id: string;
   created_at: number;
 };
 
@@ -205,14 +205,23 @@ export class LiveSession extends DurableObject<Env> {
     }
     if (version < 4) {
       this.ctx.storage.sql.exec(`
+        CREATE TABLE anon_labels (
+          voter_id TEXT PRIMARY KEY,
+          label TEXT NOT NULL,
+          created_at INTEGER NOT NULL
+        );
+        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (4, ${Date.now()});
+      `);
+    }
+    if (version < 5) {
+      this.ctx.storage.sql.exec(`
         CREATE TABLE reactions (
           id TEXT PRIMARY KEY,
           kind TEXT NOT NULL,
-          voter_id TEXT NOT NULL,
           created_at INTEGER NOT NULL
         );
         CREATE INDEX idx_reactions_created_at ON reactions(created_at);
-        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (4, ${Date.now()});
+        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (5, ${Date.now()});
       `);
     }
   }
@@ -391,6 +400,25 @@ export class LiveSession extends DurableObject<Env> {
     return this.broadcastSnapshot(this.touch(snapshot));
   }
 
+  anonymousLabel(voterId: string): string {
+    assertVoterId(voterId);
+    const existing = this.ctx.storage.sql
+      .exec<{ label: string }>("SELECT label FROM anon_labels WHERE voter_id = ?", voterId)
+      .toArray()[0];
+    if (existing) return existing.label;
+    const assigned = this.ctx.storage.sql
+      .exec<{ count: number }>("SELECT COUNT(*) AS count FROM anon_labels")
+      .one().count;
+    const label = anonymousLabelFor(assigned);
+    this.ctx.storage.sql.exec(
+      "INSERT INTO anon_labels (voter_id, label, created_at) VALUES (?, ?, ?)",
+      voterId,
+      label,
+      Date.now(),
+    );
+    return label;
+  }
+
   async ask(
     text: string,
     nickname: string,
@@ -466,7 +494,7 @@ export class LiveSession extends DurableObject<Env> {
     const delay = moderation?.enabled ? moderation.presentationDelaySeconds * 1000 : 0;
     const visibility: QuestionVisibility = requiresApproval || delay > 0 ? "pending" : "public";
     const publishAt = visibility === "pending" && !requiresApproval ? now + delay : null;
-    const publicLabel = participant?.public_label ?? cleanText(nickname || "Anonymous", 24);
+    const publicLabel = participant?.public_label ?? (cleanText(nickname, 24) || this.anonymousLabel(voterId));
     const id = crypto.randomUUID();
     this.ctx.storage.sql.exec(
       `INSERT INTO questions
@@ -481,12 +509,6 @@ export class LiveSession extends DurableObject<Env> {
       now,
       visibility,
       publishAt,
-    );
-    this.ctx.storage.sql.exec(
-      "INSERT INTO question_votes (question_id, voter_id, created_at) VALUES (?, ?, ?)",
-      id,
-      voterId,
-      now,
     );
     if (participant) {
       this.ctx.storage.sql.exec(
@@ -504,7 +526,7 @@ export class LiveSession extends DurableObject<Env> {
         lens,
         difficulty,
         createdAt: now,
-        upvotes: 1,
+        upvotes: 0,
       });
       snapshot.questions = snapshot.questions.slice(0, 100);
     }
@@ -519,7 +541,7 @@ export class LiveSession extends DurableObject<Env> {
         lens,
         difficulty,
         createdAt: now,
-        upvotes: 1,
+        upvotes: 0,
         visibility,
         statusLabel: statusLabel(visibility),
       },
@@ -552,13 +574,14 @@ export class LiveSession extends DurableObject<Env> {
     assertVoterId(voterId);
     if (!isUuid(questionId)) throw new Error("invalid question");
     const snapshot = await this.snapshot();
-    const exists = this.ctx.storage.sql
-      .exec<{ count: number }>(
-        "SELECT COUNT(*) AS count FROM questions WHERE id = ? AND visibility = 'public'",
+    const questionRow = this.ctx.storage.sql
+      .exec<{ voter_id: string }>(
+        "SELECT voter_id FROM questions WHERE id = ? AND visibility = 'public'",
         questionId,
       )
-      .one();
-    if (exists.count === 0) throw new Error("question not found");
+      .toArray()[0];
+    if (!questionRow) throw new Error("question not found");
+    if (questionRow.voter_id === voterId) throw new Error("cannot upvote your own question");
     const priorVote = this.ctx.storage.sql
       .exec<{ count: number }>(
         "SELECT COUNT(*) AS count FROM question_votes WHERE question_id = ? AND voter_id = ?",
@@ -566,15 +589,22 @@ export class LiveSession extends DurableObject<Env> {
         voterId,
       )
       .one();
-    this.ctx.storage.sql.exec(
-      "INSERT OR IGNORE INTO question_votes (question_id, voter_id, created_at) VALUES (?, ?, ?)",
-      questionId,
-      voterId,
-      Date.now(),
-    );
+    const question = snapshot.questions.find((candidate) => candidate.id === questionId);
     if (priorVote.count === 0) {
-      const question = snapshot.questions.find((candidate) => candidate.id === questionId);
+      this.ctx.storage.sql.exec(
+        "INSERT INTO question_votes (question_id, voter_id, created_at) VALUES (?, ?, ?)",
+        questionId,
+        voterId,
+        Date.now(),
+      );
       if (question) question.upvotes += 1;
+    } else {
+      this.ctx.storage.sql.exec(
+        "DELETE FROM question_votes WHERE question_id = ? AND voter_id = ?",
+        questionId,
+        voterId,
+      );
+      if (question) question.upvotes = Math.max(0, question.upvotes - 1);
     }
     return this.broadcastSnapshot(this.touch(snapshot));
   }
@@ -670,10 +700,9 @@ export class LiveSession extends DurableObject<Env> {
     this.reactionWindows.set(voterId, window);
     const id = crypto.randomUUID();
     this.ctx.storage.sql.exec(
-      "INSERT INTO reactions (id, kind, voter_id, created_at) VALUES (?, ?, ?, ?)",
+      "INSERT INTO reactions (id, kind, created_at) VALUES (?, ?, ?)",
       id,
       kind,
-      voterId,
       now,
     );
     const payload = JSON.stringify({
@@ -804,6 +833,7 @@ export class LiveSession extends DurableObject<Env> {
     this.ctx.storage.sql.exec("DELETE FROM questions");
     this.ctx.storage.sql.exec("DELETE FROM participants");
     this.ctx.storage.sql.exec("DELETE FROM reactions");
+    this.ctx.storage.sql.exec("DELETE FROM anon_labels");
     this.ctx.storage.sql.exec("DELETE FROM difficulty_votes");
     this.ctx.storage.sql.exec("DELETE FROM votes");
     this.ctx.storage.sql.exec(
@@ -845,7 +875,7 @@ export class LiveSession extends DurableObject<Env> {
       )
       .toArray();
     const reactions = this.ctx.storage.sql
-      .exec<ReactionRow>("SELECT kind, voter_id, created_at FROM reactions ORDER BY created_at")
+      .exec<ReactionRow>("SELECT kind, created_at FROM reactions ORDER BY created_at")
       .toArray();
     return {
       exportedAt: Date.now(),

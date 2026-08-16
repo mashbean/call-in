@@ -78,10 +78,11 @@
           <span>Your event name</span><b data-participant-label></b>
         </section>
 
-        <form id="question-form" class="ask-card" hidden>
+        <form id="question-form" class="ask-card" novalidate hidden>
           <div class="form-step"><span>01</span><div><b>Set the difficulty above</b><small>Your latest score is saved with the question</small></div></div>
           <div class="form-step"><span>02</span><div><b>Write what feels unclear or worth following up</b><small>Ask when it feels too hard, too easy, or worth exploring</small></div></div>
           <label class="sr-only" for="question">Your question</label>
+          <div class="question-hint" data-question-hint hidden>A question needs at least 4 characters so the room can tell what you are asking</div>
           <textarea id="question" name="question" minlength="4" maxlength="280" required data-config-placeholder="question.placeholder"></textarea>
           <fieldset class="intent-fieldset">
             <legend class="form-step"><span>03</span><div><b>How should the room take up this question?</b><small>Choose the closest purpose to help organize Q&amp;A</small></div></legend>

@@ -47,6 +47,8 @@ body.dashboard-page {
   font-size: 9px;
 }
 .dashboard-join {
+  cursor: pointer;
+  font: inherit;
   grid-column: 2;
   grid-row: 1 / span 2;
   display: grid;
@@ -429,4 +431,74 @@ body.dashboard-page {
   font-variant-numeric: tabular-nums;
   color: var(--sage);
   min-width: 14px;
+}
+.qr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #020612d9;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+.qr-modal[hidden] {
+  display: none;
+}
+.qr-modal-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 28px 32px;
+  border-radius: 24px;
+  background: #f3eee4;
+  color: var(--forest);
+  text-align: center;
+  box-shadow: 0 30px 80px #020612b0;
+  cursor: default;
+}
+.qr-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: #08122512;
+  color: var(--forest);
+  font: inherit;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+.qr-modal-close:hover,
+.qr-modal-close:focus-visible {
+  background: #08122524;
+  outline: 3px solid var(--clay);
+  outline-offset: 2px;
+}
+.qr-modal-card img {
+  display: block;
+  width: min(62vmin, 520px);
+  height: min(62vmin, 520px);
+}
+.qr-modal-card b {
+  font-size: clamp(18px, 2.6vmin, 26px);
+}
+.qr-modal-link {
+  font-size: clamp(14px, 2vmin, 20px);
+  color: #43506a;
+  word-break: break-all;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.qr-modal-link::after {
+  content: " ↗";
+}
+.qr-modal-hint {
+  font-size: 12px;
+  color: #43506a99;
 }

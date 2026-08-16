@@ -13,7 +13,7 @@ describe("LiveSession reaction persistence", () => {
     expect(data.reactions.map((row) => row.kind)).toEqual(["applause", "insight"]);
     for (const row of data.reactions) {
       expect(typeof row.created_at).toBe("number");
-      expect(row.voter_id).toBe(voter);
+      expect(row).not.toHaveProperty("voter_id");
     }
 
     await stub.reset();
