@@ -37,15 +37,21 @@ function render(state) {
     .join("");
 
   document.querySelector("[data-question-count]").textContent = `${state.questions.length} questions`;
-  const latestQuestions = [...state.questions].sort(
-    (first, second) => Number(second.createdAt) - Number(first.createdAt),
+  const rankedQuestions = [...state.questions].sort(
+    (first, second) =>
+      second.upvotes - first.upvotes || Number(second.createdAt) - Number(first.createdAt),
   );
-  questionsRoot.innerHTML = latestQuestions.length
-    ? latestQuestions
+  const newestId = state.questions.reduce(
+    (newest, question) =>
+      !newest || Number(question.createdAt) > Number(newest.createdAt) ? question : newest,
+    null,
+  )?.id;
+  questionsRoot.innerHTML = rankedQuestions.length
+    ? rankedQuestions
         .map(
           (question, index) => `
             <article>
-              <div class="dashboard-question-head"><b>${index === 0 ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · Me too ${question.upvotes}</span></div>
+              <div class="dashboard-question-head"><b>${question.id === newestId ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · Me too ${question.upvotes}</span></div>
               <div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div>
               <p>${escapeHtml(question.text)}</p>
               <small>${escapeHtml(question.nickname)}</small>
