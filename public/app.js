@@ -119,8 +119,22 @@ document.querySelectorAll("[data-reaction]").forEach((button) => {
   });
 });
 
+const questionInput = form.querySelector("#question");
+const questionHintEl = form.querySelector("[data-question-hint]");
+questionInput.addEventListener("input", () => {
+  questionInput.classList.remove("input-warning");
+  questionHintEl.hidden = true;
+});
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (questionInput.value.trim().length < 4) {
+    questionInput.classList.add("input-warning");
+    questionHintEl.hidden = false;
+    questionInput.focus();
+    questionInput.scrollIntoView({ block: "center", behavior: "smooth" });
+    return;
+  }
   const data = new FormData(form);
   const button = form.querySelector("button[type=submit]");
   button.disabled = true;
@@ -357,6 +371,8 @@ function humanError(error) {
   if (message.includes("flag limit")) return "This device has reached the report limit";
   if (message.includes("question not found")) return "This question is no longer public";
   if (message.includes("access is limited")) return "Question access is limited for this event";
+  if (message.includes("question too short"))
+    return "A question needs at least 4 characters so the room can tell what you are asking";
   if (message.includes("alias")) return "Choose an event name with at least two characters";
   return "Sending failed. Please try again later";
 }
