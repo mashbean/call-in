@@ -107,8 +107,10 @@ document.querySelectorAll("[data-reaction]").forEach((button) => {
       void button.offsetWidth;
       button.classList.add("sent");
       setTimeout(() => button.classList.remove("sent"), 700);
-    } catch {
-      reactionMessageEl.textContent = "The reaction was not sent. Please try again";
+    } catch (error) {
+      reactionMessageEl.textContent = String(error?.message || "").includes("rate limit")
+        ? "Reacting fast! Give it a few seconds"
+        : "The reaction was not sent. Please try again";
     } finally {
       setTimeout(() => {
         button.disabled = false;
@@ -117,8 +119,22 @@ document.querySelectorAll("[data-reaction]").forEach((button) => {
   });
 });
 
+const questionInput = form.querySelector("#question");
+const questionHintEl = form.querySelector("[data-question-hint]");
+questionInput.addEventListener("input", () => {
+  questionInput.classList.remove("input-warning");
+  questionHintEl.hidden = true;
+});
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (questionInput.value.trim().length < 4) {
+    questionInput.classList.add("input-warning");
+    questionHintEl.hidden = false;
+    questionInput.focus();
+    questionInput.scrollIntoView({ block: "center", behavior: "smooth" });
+    return;
+  }
   const data = new FormData(form);
   const button = form.querySelector("button[type=submit]");
   button.disabled = true;
@@ -130,7 +146,6 @@ form.addEventListener("submit", async (event) => {
       difficulty: currentDifficulty,
       voterId,
     });
-    localStorage.setItem(`upvote:${result.submission.id}`, "1");
     state = result.snapshot;
     participantState.questions = [
       result.submission,
@@ -236,7 +251,9 @@ function render() {
       <div class="question-rank">${String(index + 1).padStart(2, "0")}</div>
       <div><div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
       <div class="question-actions">
-        <button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>
+        ${participantState.questions.some((item) => item.id === question.id)
+          ? `<span class="flagged-label">Your question</span>`
+          : `<button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>`}
         ${renderFlagControl(question)}
       </div>
     </article>`,
@@ -360,10 +377,13 @@ function humanError(error) {
   if (message.includes("paused")) return "Questions are temporarily paused";
   if (message.includes("closed")) return "This session is closed";
   if (message.includes("code of conduct")) return "Please accept the code of conduct first";
-  if (message.includes("own question")) return "You cannot report your own question";
+  if (message.includes("upvote your own question")) return "You cannot upvote your own question";
+  if (message.includes("flag your own question")) return "You cannot report your own question";
   if (message.includes("flag limit")) return "This device has reached the report limit";
   if (message.includes("question not found")) return "This question is no longer public";
   if (message.includes("access is limited")) return "Question access is limited for this event";
+  if (message.includes("question too short"))
+    return "A question needs at least 4 characters so the room can tell what you are asking";
   if (message.includes("alias")) return "Choose an event name with at least two characters";
   return "Sending failed. Please try again later";
 }
