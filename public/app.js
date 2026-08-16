@@ -173,7 +173,11 @@ async function vote(pollId, optionIndex) {
 
 async function upvote(questionId) {
   state = await post("/api/upvote", { questionId, voterId });
-  localStorage.setItem(`upvote:${questionId}`, "1");
+  if (localStorage.getItem(`upvote:${questionId}`)) {
+    localStorage.removeItem(`upvote:${questionId}`);
+  } else {
+    localStorage.setItem(`upvote:${questionId}`, "1");
+  }
   render();
 }
 
@@ -235,8 +239,12 @@ function render() {
   document.querySelectorAll("[data-question-count]").forEach((el) => {
     el.textContent = `${state.questions.length} questions`;
   });
-  questionsRoot.innerHTML = state.questions.length
-    ? state.questions
+  const rankedQuestions = [...state.questions].sort(
+    (first, second) =>
+      second.upvotes - first.upvotes || Number(second.createdAt) - Number(first.createdAt),
+  );
+  questionsRoot.innerHTML = rankedQuestions.length
+    ? rankedQuestions
         .map(
           (question, index) => `
     <article class="question-card">

@@ -1,9 +1,9 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 
-describe("LiveSession.ask upvote seeding", () => {
-  it("starts a new question at zero upvotes and counts only other devices", async () => {
-    const stub = env.LIVE_SESSION.getByName("no-self-upvote-spec:default");
+describe("LiveSession.upvote", () => {
+  it("starts at zero and lets another device toggle its upvote", async () => {
+    const stub = env.LIVE_SESSION.getByName("upvote-toggle-spec:default");
     const author = crypto.randomUUID();
     const fan = crypto.randomUUID();
     await stub.registerParticipant("Upvote Author", "2026-08-15", author);
@@ -17,9 +17,8 @@ describe("LiveSession.ask upvote seeding", () => {
     const likedRow = liked.questions.find((question) => question.id === submission.submission.id);
     expect(likedRow?.upvotes).toBe(1);
 
-    // a repeat press from the same device does not double-count
-    const repeat = await stub.upvote(submission.submission.id, fan);
-    const repeatRow = repeat.questions.find((question) => question.id === submission.submission.id);
-    expect(repeatRow?.upvotes).toBe(1);
+    const unliked = await stub.upvote(submission.submission.id, fan);
+    const unlikedRow = unliked.questions.find((question) => question.id === submission.submission.id);
+    expect(unlikedRow?.upvotes).toBe(0);
   });
 });
