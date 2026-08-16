@@ -425,6 +425,7 @@ body.dashboard-page {
   display: none;
 }
 .qr-modal-card {
+  position: relative;
   display: grid;
   justify-items: center;
   gap: 14px;
@@ -434,6 +435,28 @@ body.dashboard-page {
   color: var(--forest);
   text-align: center;
   box-shadow: 0 30px 80px #020612b0;
+  cursor: default;
+}
+.qr-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: #08122512;
+  color: var(--forest);
+  font: inherit;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+.qr-modal-close:hover,
+.qr-modal-close:focus-visible {
+  background: #08122524;
+  outline: 3px solid var(--clay);
+  outline-offset: 2px;
 }
 .qr-modal-card img {
   display: block;
