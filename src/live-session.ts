@@ -493,12 +493,6 @@ export class LiveSession extends DurableObject<Env> {
       visibility,
       publishAt,
     );
-    this.ctx.storage.sql.exec(
-      "INSERT INTO question_votes (question_id, voter_id, created_at) VALUES (?, ?, ?)",
-      id,
-      voterId,
-      now,
-    );
     if (participant) {
       this.ctx.storage.sql.exec(
         "UPDATE participants SET last_seen_at = ? WHERE voter_id = ?",
@@ -515,7 +509,7 @@ export class LiveSession extends DurableObject<Env> {
         lens,
         difficulty,
         createdAt: now,
-        upvotes: 1,
+        upvotes: 0,
       });
       snapshot.questions = snapshot.questions.slice(0, 100);
     }
@@ -530,7 +524,7 @@ export class LiveSession extends DurableObject<Env> {
         lens,
         difficulty,
         createdAt: now,
-        upvotes: 1,
+        upvotes: 0,
         visibility,
         statusLabel: statusLabel(visibility),
       },
@@ -563,13 +557,14 @@ export class LiveSession extends DurableObject<Env> {
     assertVoterId(voterId);
     if (!isUuid(questionId)) throw new Error("invalid question");
     const snapshot = await this.snapshot();
-    const exists = this.ctx.storage.sql
-      .exec<{ count: number }>(
-        "SELECT COUNT(*) AS count FROM questions WHERE id = ? AND visibility = 'public'",
+    const questionRow = this.ctx.storage.sql
+      .exec<{ voter_id: string }>(
+        "SELECT voter_id FROM questions WHERE id = ? AND visibility = 'public'",
         questionId,
       )
-      .one();
-    if (exists.count === 0) throw new Error("question not found");
+      .toArray()[0];
+    if (!questionRow) throw new Error("question not found");
+    if (questionRow.voter_id === voterId) throw new Error("cannot upvote your own question");
     const priorVote = this.ctx.storage.sql
       .exec<{ count: number }>(
         "SELECT COUNT(*) AS count FROM question_votes WHERE question_id = ? AND voter_id = ?",
