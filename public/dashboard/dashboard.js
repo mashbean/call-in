@@ -2,6 +2,7 @@ import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "..
 
 const apiBase = "/api";
 const config = await fetch("/event.config.json").then((response) => response.json());
+const reactionTimes = new Map();
 applyConfig(config);
 const pollsRoot = document.querySelector("#dashboard-polls");
 const questionsRoot = document.querySelector("#dashboard-questions");
@@ -108,7 +109,26 @@ function connect() {
   });
 }
 
+function renderReactionLegend() {
+  const legend = document.querySelector("[data-reaction-legend]");
+  const now = Date.now();
+  legend.innerHTML = config.reactions
+    .map((reaction) => {
+      const times = (reactionTimes.get(reaction.id) || []).filter((time) => now - time < 60_000);
+      reactionTimes.set(reaction.id, times);
+      return `<span class="reaction-legend-item"><b>${escapeHtml(reaction.emoji)}</b>${escapeHtml(reaction.label)}<i>${times.length || ""}</i></span>`;
+    })
+    .join("");
+}
+setInterval(renderReactionLegend, 5000);
+
 function showReaction(reaction) {
+  if (config.reactions.some((item) => item.id === reaction?.kind)) {
+    const times = reactionTimes.get(reaction.kind) || [];
+    times.push(Date.now());
+    reactionTimes.set(reaction.kind, times);
+    renderReactionLegend();
+  }
   const emoji = config.reactions.find((item) => item.id === reaction?.kind)?.emoji;
   if (!emoji) return;
   const burst = document.createElement("div");
@@ -170,9 +190,7 @@ function applyConfig(nextConfig) {
   document.documentElement.style.setProperty("--sage", nextConfig.theme.accent);
   document.documentElement.style.setProperty("--panel", nextConfig.theme.panel);
   document.documentElement.style.setProperty("--positive", nextConfig.theme.positive);
-  document.querySelector("[data-reaction-legend]").innerHTML = nextConfig.reactions
-    .map((reaction) => `<b>${escapeHtml(reaction.emoji)}</b>`)
-    .join("");
+  renderReactionLegend();
 }
 
 const qrModal = document.querySelector("[data-qr-modal]");

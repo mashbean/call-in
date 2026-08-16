@@ -410,6 +410,28 @@ body.dashboard-page {
   }
 }
 
+[data-reaction-legend] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.reaction-legend-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 11px;
+  color: #8fa0c2;
+  white-space: nowrap;
+}
+.reaction-legend-item b { font-size: 14px; }
+.reaction-legend-item i {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--sage);
+  min-width: 14px;
+}
 .qr-modal {
   position: fixed;
   inset: 0;

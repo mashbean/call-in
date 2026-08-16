@@ -74,6 +74,11 @@ type QuestionFlagExport = {
   resolved_at: number | null;
 };
 
+type ReactionRow = {
+  kind: string;
+  created_at: number;
+};
+
 type ExportData = {
   exportedAt: number;
   snapshot: SessionSnapshot;
@@ -81,6 +86,7 @@ type ExportData = {
   participants: ParticipantRow[];
   questionFlags: QuestionFlagExport[];
   moderationActions: ModerationAction[];
+  reactions: ReactionRow[];
 };
 
 const moderation = EVENT_CONFIG.moderation;
@@ -205,6 +211,17 @@ export class LiveSession extends DurableObject<Env> {
           created_at INTEGER NOT NULL
         );
         INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (4, ${Date.now()});
+      `);
+    }
+    if (version < 5) {
+      this.ctx.storage.sql.exec(`
+        CREATE TABLE reactions (
+          id TEXT PRIMARY KEY,
+          kind TEXT NOT NULL,
+          created_at INTEGER NOT NULL
+        );
+        CREATE INDEX idx_reactions_created_at ON reactions(created_at);
+        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (5, ${Date.now()});
       `);
     }
   }
@@ -681,9 +698,16 @@ export class LiveSession extends DurableObject<Env> {
     if (window.length >= 3) throw new Error("reaction rate limit reached");
     window.push(now);
     this.reactionWindows.set(voterId, window);
+    const id = crypto.randomUUID();
+    this.ctx.storage.sql.exec(
+      "INSERT INTO reactions (id, kind, created_at) VALUES (?, ?, ?)",
+      id,
+      kind,
+      now,
+    );
     const payload = JSON.stringify({
       type: "reaction",
-      data: { id: crypto.randomUUID(), kind, createdAt: now },
+      data: { id, kind, createdAt: now },
     });
     for (const socket of this.ctx.getWebSockets()) {
       try {
@@ -808,6 +832,7 @@ export class LiveSession extends DurableObject<Env> {
     this.ctx.storage.sql.exec("DELETE FROM question_votes");
     this.ctx.storage.sql.exec("DELETE FROM questions");
     this.ctx.storage.sql.exec("DELETE FROM participants");
+    this.ctx.storage.sql.exec("DELETE FROM reactions");
     this.ctx.storage.sql.exec("DELETE FROM anon_labels");
     this.ctx.storage.sql.exec("DELETE FROM difficulty_votes");
     this.ctx.storage.sql.exec("DELETE FROM votes");
@@ -849,6 +874,9 @@ export class LiveSession extends DurableObject<Env> {
          FROM question_flags ORDER BY created_at`,
       )
       .toArray();
+    const reactions = this.ctx.storage.sql
+      .exec<ReactionRow>("SELECT kind, created_at FROM reactions ORDER BY created_at")
+      .toArray();
     return {
       exportedAt: Date.now(),
       snapshot: await this.snapshot(),
@@ -856,6 +884,7 @@ export class LiveSession extends DurableObject<Env> {
       participants,
       questionFlags,
       moderationActions,
+      reactions,
     };
   }
 
