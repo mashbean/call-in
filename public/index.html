@@ -12,12 +12,12 @@
       <div class="eyebrow" data-config="eyebrow">LIVE DECK</div>
       <h1 data-config="title">Live audience</h1>
       <p data-config="description">Share the difficulty, ask a question, or send a live reaction.</p>
-      <div class="live-status" data-status><span></span>Connecting</div>
+      <div class="live-status" data-status><span></span><span data-i18n="status.connecting">Connecting</span></div>
     </header>
     <main>
-      <nav class="tabs" aria-label="Audience interaction">
-        <button class="active" data-tab="questions">Ask anytime</button>
-        <button data-tab="polls">Quick polls</button>
+      <nav class="tabs" data-i18n-aria-label="audience.nav.label" aria-label="Audience interaction">
+        <button class="active" data-tab="questions" data-i18n="audience.tab.questions">Ask anytime</button>
+        <button data-tab="polls" data-i18n="audience.tab.polls">Quick polls</button>
       </nav>
       <section data-panel="polls" class="panel">
         <div id="polls" class="poll-grid" aria-live="polite"></div>
@@ -26,7 +26,7 @@
         <section class="difficulty-card" aria-labelledby="difficulty-title">
           <div class="difficulty-heading">
             <div>
-              <div class="eyebrow">LIVE DIFFICULTY</div>
+              <div class="eyebrow" data-i18n="audience.difficulty.eyebrow">LIVE DIFFICULTY</div>
               <h2 id="difficulty-title" data-config="difficulty.title">How difficult does this feel right now?</h2>
             </div>
             <div class="difficulty-current">
@@ -34,10 +34,10 @@
               <span data-difficulty-label>OK</span>
             </div>
           </div>
-          <label class="sr-only" for="difficulty">Current difficulty</label>
+          <label class="sr-only" for="difficulty" data-i18n="audience.difficulty.inputLabel">Current difficulty</label>
           <input id="difficulty" name="difficulty" type="range" min="1" max="5" step="1" value="3" />
           <div class="difficulty-scale" data-difficulty-scale aria-hidden="true"></div>
-          <div class="difficulty-chart" aria-label="Live difficulty distribution" role="img">
+          <div class="difficulty-chart" data-i18n-aria-label="difficulty.chartLabel" aria-label="Live difficulty distribution" role="img">
             <svg viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
               <path class="difficulty-grid-line" d="M20 170 H580" />
               <path data-difficulty-area class="difficulty-area" />
@@ -47,13 +47,13 @@
             <div class="difficulty-counts" data-difficulty-counts></div>
           </div>
           <div class="difficulty-note">
-            <span data-difficulty-total>Waiting for the first response</span>
-            <span data-difficulty-message>Drag to update automatically</span>
+            <span data-difficulty-total data-i18n="difficulty.waiting">Waiting for the first response</span>
+            <span data-difficulty-message data-i18n="audience.difficulty.hint">Drag to update automatically</span>
           </div>
           <div class="reaction-picker" aria-labelledby="reaction-title">
             <div>
-              <b id="reaction-title">Send a live reaction</b>
-              <small>It appears on the presenter dashboard immediately</small>
+              <b id="reaction-title" data-i18n="audience.reactions.title">Send a live reaction</b>
+              <small data-i18n="audience.reactions.hint">It appears on the presenter dashboard immediately</small>
             </div>
             <div class="reaction-buttons" data-reactions></div>
             <span class="reaction-message" data-reaction-message aria-live="polite"></span>
@@ -61,48 +61,48 @@
         </section>
 
         <section id="identity-gate" class="identity-card" hidden>
-          <div class="eyebrow">BEFORE YOU ASK</div>
+          <div class="eyebrow" data-i18n="audience.identity.eyebrow">BEFORE YOU ASK</div>
           <h2 data-coc-title>Help keep the room useful</h2>
           <p data-coc-summary></p>
           <ul data-coc-rules></ul>
           <form id="identity-form">
-            <label for="participant-alias">Choose a name for this event</label>
-            <input id="participant-alias" name="alias" minlength="2" maxlength="24" required placeholder="For example: night-shift resident" autocomplete="nickname" />
-            <label class="coc-check"><input name="coc" type="checkbox" required /><span>I agree to follow this code of conduct. My event name will stay fixed after I continue.</span></label>
-            <button class="primary" type="submit">Agree and continue</button>
+            <label for="participant-alias" data-i18n="audience.identity.aliasLabel">Choose a name for this event</label>
+            <input id="participant-alias" name="alias" minlength="2" maxlength="24" required data-i18n-placeholder="audience.identity.aliasPlaceholder" placeholder="For example: night-shift resident" autocomplete="nickname" />
+            <label class="coc-check"><input name="coc" type="checkbox" required /><span data-i18n="audience.identity.consent">I agree to follow this code of conduct. My event name will stay fixed after I continue.</span></label>
+            <button class="primary" type="submit" data-i18n="audience.identity.submit">Agree and continue</button>
             <div class="form-message" data-identity-message aria-live="polite"></div>
           </form>
         </section>
 
         <section id="participant-profile" class="participant-profile" hidden>
-          <span>Your event name</span><b data-participant-label></b>
+          <span data-i18n="audience.profile.label">Your event name</span><b data-participant-label></b>
         </section>
 
         <form id="question-form" class="ask-card" novalidate hidden>
-          <div class="form-step"><span>01</span><div><b>Set the difficulty above</b><small>Your latest score is saved with the question</small></div></div>
-          <div class="form-step"><span>02</span><div><b>Write what feels unclear or worth following up</b><small>Ask when it feels too hard, too easy, or worth exploring</small></div></div>
-          <label class="sr-only" for="question">Your question</label>
-          <div class="question-hint" data-question-hint hidden>A question needs at least 4 characters so the room can tell what you are asking</div>
+          <div class="form-step"><span>01</span><div><b data-i18n="audience.ask.step1Title">Set the difficulty above</b><small data-i18n="audience.ask.step1Hint">Your latest score is saved with the question</small></div></div>
+          <div class="form-step"><span>02</span><div><b data-i18n="audience.ask.step2Title">Write what feels unclear or worth following up</b><small data-i18n="audience.ask.step2Hint">Ask when it feels too hard, too easy, or worth exploring</small></div></div>
+          <label class="sr-only" for="question" data-i18n="audience.ask.inputLabel">Your question</label>
+          <div class="question-hint" data-question-hint hidden data-i18n="errors.questionTooShort">A question needs at least 4 characters so the room can tell what you are asking</div>
           <textarea id="question" name="question" minlength="4" maxlength="280" required data-config-placeholder="question.placeholder"></textarea>
           <fieldset class="intent-fieldset">
-            <legend class="form-step"><span>03</span><div><b>How should the room take up this question?</b><small>Choose the closest purpose to help organize Q&amp;A</small></div></legend>
+            <legend class="form-step"><span>03</span><div><b data-i18n="audience.ask.step3Title">How should the room take up this question?</b><small data-i18n="audience.ask.step3Hint">Choose the closest purpose to help organize Q&amp;A</small></div></legend>
             <div class="intent-grid" data-lenses></div>
           </fieldset>
-          <button class="primary" type="submit">Send question</button>
+          <button class="primary" type="submit" data-i18n="audience.ask.submit">Send question</button>
           <div class="form-message" data-form-message aria-live="polite"></div>
         </form>
         <section id="my-submissions" class="my-submissions" hidden>
-          <div class="section-head compact"><div><div class="eyebrow">YOUR SUBMISSIONS</div><h2>Waiting or held</h2></div></div>
+          <div class="section-head compact"><div><div class="eyebrow" data-i18n="audience.mine.eyebrow">YOUR SUBMISSIONS</div><h2 data-i18n="audience.mine.title">Waiting or held</h2></div></div>
           <div data-own-questions class="question-list"></div>
         </section>
         <div class="section-head">
-          <div><div class="eyebrow">QUESTION POOL</div><h2 data-config="question.title">Ask anytime</h2></div>
+          <div><div class="eyebrow" data-i18n="audience.pool.eyebrow">QUESTION POOL</div><h2 data-config="question.title">Ask anytime</h2></div>
           <span data-question-count>0 questions</span>
         </div>
         <div id="questions" class="question-list" aria-live="polite"></div>
       </section>
     </main>
-    <footer><a data-config-href="deckUrl" href="/example/">Back to slides</a><a href="/dashboard/">Open presenter dashboard</a></footer>
+    <footer><a data-config-href="deckUrl" href="/example/" data-i18n="audience.footer.deck">Back to slides</a><a href="/dashboard/" data-i18n="audience.footer.dashboard">Open presenter dashboard</a></footer>
     <script type="module" src="/app.js"></script>
   </body>
 </html>

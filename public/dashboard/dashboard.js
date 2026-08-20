@@ -1,8 +1,10 @@
 import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "../difficulty.js";
+import { initI18n, locale, t } from "../i18n.js";
 
 const apiBase = "/api";
 const config = await fetch("/event.config.json").then((response) => response.json());
 const reactionTimes = new Map();
+await initI18n(config.locale);
 applyConfig(config);
 const pollsRoot = document.querySelector("#dashboard-polls");
 const questionsRoot = document.querySelector("#dashboard-questions");
@@ -15,29 +17,33 @@ const lensLabels = Object.fromEntries(config.question.lenses.map((lens) => [lens
 function render(state) {
   const mode = state.session?.mode || "open";
   const modeEl = document.querySelector("[data-session-mode]");
-  modeEl.textContent = mode.toUpperCase();
+  modeEl.textContent = sessionModeLabel(mode);
   modeEl.dataset.mode = mode;
   renderDifficultyChart(document.querySelector(".dashboard-difficulty"), state.difficulty);
-  document.querySelector("[data-poll-total]").textContent = `${state.polls.length} polls`;
+  document.querySelector("[data-poll-total]").textContent = t("common.pollCount", {
+    count: state.polls.length,
+  });
   pollsRoot.innerHTML = state.polls
     .map(
       (poll, index) => `
         <article class="dashboard-poll">
-          <div class="dashboard-poll-head"><b>${String(index + 1).padStart(2, "0")}</b><span>${poll.total} votes</span></div>
+          <div class="dashboard-poll-head"><b>${String(index + 1).padStart(2, "0")}</b><span>${escapeHtml(t("common.voteCount", { count: poll.total }))}</span></div>
           <h3>${escapeHtml(poll.question)}</h3>
           ${poll.options
             .map((option, optionIndex) => {
               const percent = poll.total
                 ? Math.round((poll.counts[optionIndex] / poll.total) * 100)
                 : 0;
-              return `<div class="dashboard-result-row"><span>${escapeHtml(option)}</span><div><i style="--pct:${percent}%"></i></div><b>${poll.counts[optionIndex]} votes</b></div>`;
+              return `<div class="dashboard-result-row"><span>${escapeHtml(option)}</span><div><i style="--pct:${percent}%"></i></div><b>${escapeHtml(t("common.voteCount", { count: poll.counts[optionIndex] }))}</b></div>`;
             })
             .join("")}
         </article>`,
     )
     .join("");
 
-  document.querySelector("[data-question-count]").textContent = `${state.questions.length} questions`;
+  document.querySelector("[data-question-count]").textContent = t("common.questionCount", {
+    count: state.questions.length,
+  });
   const rankedQuestions = [...state.questions].sort(
     (first, second) =>
       second.upvotes - first.upvotes || Number(second.createdAt) - Number(first.createdAt),
@@ -52,14 +58,20 @@ function render(state) {
         .map(
           (question, index) => `
             <article>
-              <div class="dashboard-question-head"><b>${question.id === newestId ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · Me too ${question.upvotes}</span></div>
+              <div class="dashboard-question-head"><b>${question.id === newestId ? escapeHtml(t("dashboard.newBadge")) : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · ${escapeHtml(t("audience.pool.upvote"))} ${question.upvotes}</span></div>
               <div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div>
               <p>${escapeHtml(question.text)}</p>
               <small>${escapeHtml(question.nickname)}</small>
             </article>`,
         )
         .join("")
-    : `<div class="empty">Waiting for the first question</div>`;
+    : `<div class="empty">${escapeHtml(t("dashboard.questions.empty"))}</div>`;
+}
+
+function sessionModeLabel(mode) {
+  const key = `dashboard.session.${mode}`;
+  const label = t(key);
+  return label === key ? mode.toUpperCase() : label;
 }
 
 function setDashboardTab(name) {
@@ -86,12 +98,12 @@ tabButtons.forEach((button) => {
 function formatTime(value) {
   const date = new Date(Number(value));
   return Number.isFinite(date.getTime())
-    ? new Intl.DateTimeFormat("zh-TW", {
+    ? new Intl.DateTimeFormat(locale(), {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
       }).format(date)
-    : "just now";
+    : t("common.justNow");
 }
 
 function connect() {
@@ -143,7 +155,7 @@ function showReaction(reaction) {
 
 function setStatus(online) {
   statusEl.classList.toggle("online", online);
-  statusEl.lastChild.textContent = online ? "Live" : "Reconnecting";
+  statusEl.lastChild.textContent = t(online ? "status.live" : "status.reconnecting");
 }
 
 function escapeHtml(value) {

@@ -5,6 +5,7 @@
 ## Fields
 
 - `eventId` is a lowercase slug. Changing it selects a different Durable Object and therefore a different data set.
+- `locale` selects the interface language pack in `public/locales/`. `en` is the fallback; a pack may be partial and an unknown value falls back to English with a console warning. Event copy is not translated by the pack, so keep the wording of your event in this file.
 - `eyebrow`, `title`, `description`, and `dashboardTitle` control public copy.
 - `deckUrl` is the return link from the audience page.
 - `theme` maps the event palette to CSS variables.
@@ -23,6 +24,17 @@
 - `moderation.flags.autoHoldMin` and `autoHoldMax` bound the number of independent reports needed before a question is temporarily held.
 - `moderation.flags.autoHoldParticipantRatio` raises that threshold as the registered audience grows. The example uses 3%, bounded to three through five reporters.
 - `moderation.codeOfConduct` contains a version, title, summary, and two to eight public rules. Change the version when participants must accept revised rules.
+
+## Interface languages
+
+Packs are flat JSON files in `public/locales/`, named after the locale (`en.json`,
+`zh-Hant-TW.json`). Keys are dotted names such as `audience.ask.submit`. To add a language,
+copy `en.json`, translate the values, and set `locale` to the new file name.
+
+- Values are strings, or `{ "one", "other" }` when the text carries a count. `other` is required.
+- `{name}` placeholders are filled at render time. A translation may not introduce a placeholder the fallback does not have.
+- Pages mark translatable text with `data-i18n="key"`, and attributes with `data-i18n-aria-label`, `data-i18n-placeholder`, `data-i18n-title`, or `data-i18n-alt`.
+- `npm test` verifies pack integrity and that no page references a key the fallback pack is missing.
 
 ## Wrangler variables
 
