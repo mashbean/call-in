@@ -30,6 +30,7 @@ The skill configures the event, deploys the realtime service, embeds the dashboa
 - A privacy-preserving Uncommon Ground post-event export
 - An idempotent HTML integration CLI
 - Overlay mode and a desktop 75/25 split mode
+- Interface locale packs with an English fallback, shipping English and Traditional Chinese
 
 ## Architecture
 
@@ -116,6 +117,35 @@ The skill is installed to `$CODEX_HOME/skills/live-deck-kit`. When `CODEX_HOME` 
 Public copy, colors, difficulty labels, reactions, question lenses, and polls live in [`public/event.config.json`](./public/event.config.json). The complete field reference is in [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md).
 
 `eventId` participates in the Durable Object name. Keep it stable after a production event begins collecting data unless you intentionally want a new, empty event.
+
+## Interface language
+
+`locale` in `public/event.config.json` selects the interface language. Packs live in
+[`public/locales/`](./public/locales/) as flat JSON files named after the locale, and `en.json`
+is the fallback. The audience page, the presenter dashboard, and the moderator console all read
+the same pack, and `<html lang>` follows the active locale.
+
+```json
+{ "locale": "zh-Hant-TW" }
+```
+
+Event copy stays in `event.config.json`. The locale packs cover interface text only, so the same
+pack works for a Mandarin event and an English one without touching the wording of your event.
+
+To add a language, copy `public/locales/en.json`, translate the values, and save it as
+`public/locales/<locale>.json`. A pack may be partial: any key it omits falls back to English,
+and an unknown `locale` falls back to English with a console warning. `npm test` checks that
+every pack only defines keys the fallback knows, that plural forms are well formed, and that no
+page references a key the fallback is missing.
+
+Some strings need a count. Give those a plural object; languages without a singular form can
+provide `other` alone.
+
+```json
+{
+  "common.questionCount": { "one": "{count} question", "other": "{count} questions" }
+}
+```
 
 ## Admin API
 

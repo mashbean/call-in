@@ -65,13 +65,13 @@ button {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.live-status span {
+.live-status > span:first-child {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: #9d8f80;
 }
-.live-status.online span {
+.live-status.online > span:first-child {
   background: #4d8f58;
   box-shadow: 0 0 0 5px #4d8f5822;
 }
@@ -502,10 +502,10 @@ select {
 .hero p {
   max-width: 760px;
 }
-.live-status span {
+.live-status > span:first-child {
   background: #7283a6;
 }
-.live-status.online span {
+.live-status.online > span:first-child {
   background: #b7f34b;
   box-shadow: 0 0 0 5px #b7f34b22;
 }

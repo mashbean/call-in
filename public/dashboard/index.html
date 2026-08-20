@@ -14,21 +14,21 @@
         <div class="eyebrow" data-config="eyebrow">LIVE DECK</div>
         <h1 data-config="dashboardTitle">Live audience</h1>
       </div>
-      <button class="dashboard-join" type="button" data-qr-open aria-haspopup="dialog" aria-controls="qr-modal" aria-expanded="false" title="Click to enlarge the QR code">
-        <img src="/api/qr.svg" alt="Scan to join the live audience page" />
-        <span><b>Scan to join</b><small>Difficulty · questions · emoji</small></span>
+      <button class="dashboard-join" type="button" data-qr-open aria-haspopup="dialog" aria-controls="qr-modal" aria-expanded="false" data-i18n-title="dashboard.qr.expand" title="Click to enlarge the QR code">
+        <img src="/api/qr.svg" data-i18n-alt="dashboard.qr.alt" alt="Scan to join the live audience page" />
+        <span><b data-i18n="dashboard.qr.title">Scan to join</b><small data-i18n="dashboard.qr.subtitle">Difficulty · questions · emoji</small></span>
       </button>
-      <div class="live-status dashboard-connection" data-status><span></span>Connecting</div>
-      <nav class="dashboard-tabs" role="tablist" aria-label="Dashboard views">
-        <button class="active" type="button" role="tab" aria-selected="true" data-dashboard-tab="live">Live</button>
-        <button type="button" role="tab" aria-selected="false" data-dashboard-tab="polls">Poll results <span data-poll-total>0</span></button>
+      <div class="live-status dashboard-connection" data-status><span></span><span data-i18n="status.connecting">Connecting</span></div>
+      <nav class="dashboard-tabs" role="tablist" data-i18n-aria-label="dashboard.tabsLabel" aria-label="Dashboard views">
+        <button class="active" type="button" role="tab" aria-selected="true" data-dashboard-tab="live" data-i18n="dashboard.tab.live">Live</button>
+        <button type="button" role="tab" aria-selected="false" data-dashboard-tab="polls"><span data-i18n="dashboard.tab.polls">Poll results</span> <span data-poll-total>0</span></button>
       </nav>
     </header>
     <main class="dashboard-main">
       <div class="dashboard-panel" role="tabpanel" data-dashboard-panel="live">
         <section class="dashboard-section dashboard-difficulty difficulty-card">
-          <div class="dashboard-section-head"><div><div class="eyebrow">DIFFICULTY</div><h2>Live difficulty</h2></div><span data-difficulty-total>Waiting for the first response</span></div>
-          <div class="difficulty-chart" aria-label="Live difficulty distribution" role="img">
+          <div class="dashboard-section-head"><div><div class="eyebrow" data-i18n="dashboard.difficulty.eyebrow">DIFFICULTY</div><h2 data-i18n="dashboard.difficulty.title">Live difficulty</h2></div><span data-difficulty-total data-i18n="difficulty.waiting">Waiting for the first response</span></div>
+          <div class="difficulty-chart" data-i18n-aria-label="difficulty.chartLabel" aria-label="Live difficulty distribution" role="img">
             <svg viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
               <path class="difficulty-grid-line" d="M30 172 H570" />
               <path data-difficulty-area class="difficulty-area" />
@@ -37,29 +37,29 @@
             </svg>
             <div class="difficulty-counts" data-difficulty-counts></div>
           </div>
-          <div class="dashboard-reaction-hint"><span>Live reactions</span><div data-reaction-legend aria-hidden="true"></div></div>
+          <div class="dashboard-reaction-hint"><span data-i18n="dashboard.reactions.title">Live reactions</span><div data-reaction-legend aria-hidden="true"></div></div>
         </section>
         <section class="dashboard-section">
-          <div class="dashboard-section-head"><div><div class="eyebrow">Q&amp;A POOL</div><h2 data-config="question.title">Ask anytime</h2></div><div class="question-session-meta"><b data-session-mode>OPEN</b><span data-question-count>0 questions</span></div></div>
+          <div class="dashboard-section-head"><div><div class="eyebrow" data-i18n="dashboard.questions.eyebrow">Q&amp;A POOL</div><h2 data-config="question.title">Ask anytime</h2></div><div class="question-session-meta"><b data-session-mode>OPEN</b><span data-question-count>0 questions</span></div></div>
           <div id="dashboard-questions" class="dashboard-questions"></div>
         </section>
       </div>
       <div class="dashboard-panel" role="tabpanel" data-dashboard-panel="polls" hidden>
         <section class="dashboard-section">
-          <div class="dashboard-section-head"><div><div class="eyebrow">POLL</div><h2>Poll results</h2></div></div>
+          <div class="dashboard-section-head"><div><div class="eyebrow" data-i18n="dashboard.polls.eyebrow">POLL</div><h2 data-i18n="dashboard.polls.title">Poll results</h2></div></div>
           <div id="dashboard-polls" class="dashboard-polls"></div>
         </section>
       </div>
     </main>
-    <a class="dashboard-open" href="/" target="_blank" rel="noreferrer">Open audience page ↗</a>
+    <a class="dashboard-open" href="/" target="_blank" rel="noreferrer" data-i18n="dashboard.openAudience">Open audience page ↗</a>
     <div class="reaction-stage" data-reaction-stage aria-live="polite"></div>
     <div class="qr-modal" id="qr-modal" data-qr-modal role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" hidden>
       <div class="qr-modal-card">
-        <button class="qr-modal-close" type="button" data-qr-close aria-label="Close QR code dialog">×</button>
-        <img src="/api/qr.svg" alt="Scan to join the live audience page" />
-        <b id="qr-modal-title">Scan to join</b>
+        <button class="qr-modal-close" type="button" data-qr-close data-i18n-aria-label="dashboard.qr.close" aria-label="Close QR code dialog">×</button>
+        <img src="/api/qr.svg" data-i18n-alt="dashboard.qr.alt" alt="Scan to join the live audience page" />
+        <b id="qr-modal-title" data-i18n="dashboard.qr.title">Scan to join</b>
         <a class="qr-modal-link" data-qr-url href="/" target="_blank" rel="noreferrer"></a>
-        <span class="qr-modal-hint">Press Escape or use the close button</span>
+        <span class="qr-modal-hint" data-i18n="dashboard.qr.hint">Press Escape or use the close button</span>
       </div>
     </div>
     <script type="module" src="/dashboard/dashboard.js"></script>

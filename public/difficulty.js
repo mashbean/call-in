@@ -1,3 +1,5 @@
+import { t } from "./i18n.js";
+
 export let difficultyLabels = ["Too easy", "Easy", "OK", "Difficult", "Lost"];
 
 export function setDifficultyLabels(labels) {
@@ -59,7 +61,10 @@ export function renderDifficultyChart(root, difficulty = {}) {
   const totalRoot = root.querySelector("[data-difficulty-total]");
   if (totalRoot) {
     totalRoot.textContent = total
-      ? `${total} responses · average ${Number.isFinite(average) ? average.toFixed(1) : "-"}`
-      : "Waiting for the first response";
+      ? t("difficulty.responseSummary", {
+          count: total,
+          average: Number.isFinite(average) ? average.toFixed(1) : "-",
+        })
+      : t("difficulty.waiting");
   }
 }

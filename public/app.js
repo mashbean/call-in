@@ -1,7 +1,9 @@
 import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "./difficulty.js";
+import { initI18n, t } from "./i18n.js";
 
 const apiBase = "/api";
 const config = await fetch("/event.config.json").then((response) => response.json());
+await initI18n(config.locale);
 applyConfig(config);
 const voterKey = `${config.eventId}:live-deck-voter`;
 const voterId = localStorage.getItem(voterKey) || crypto.randomUUID();
@@ -26,6 +28,7 @@ const participantLabelEl = document.querySelector("[data-participant-label]");
 const mySubmissionsEl = document.querySelector("#my-submissions");
 const ownQuestionsRoot = document.querySelector("[data-own-questions]");
 let participantState = { participant: null, questions: [] };
+let awaitingPublicDisplay = false;
 let state = {
   session: { mode: "open" },
   polls: [],
@@ -47,14 +50,14 @@ identityForm?.addEventListener("submit", async (event) => {
   const data = new FormData(identityForm);
   const button = identityForm.querySelector("button[type=submit]");
   button.disabled = true;
-  identityMessageEl.textContent = "Saving your event name";
+  identityMessageEl.textContent = t("audience.identity.saving");
   try {
     participantState = await post("/api/participant", {
       alias: String(data.get("alias") || ""),
       cocVersion: config.moderation.codeOfConduct.version,
       voterId,
     });
-    identityMessageEl.textContent = "Saved for this event";
+    identityMessageEl.textContent = t("audience.identity.saved");
     renderParticipant();
   } catch (error) {
     identityMessageEl.textContent = humanError(error);
@@ -68,17 +71,17 @@ difficultyInput.addEventListener("input", () => {
   currentDifficulty = Number(difficultyInput.value);
   localStorage.setItem("difficulty:current", String(currentDifficulty));
   updateDifficultySelection(currentDifficulty);
-  difficultyMessageEl.textContent = "Updating";
+  difficultyMessageEl.textContent = t("audience.difficulty.updating");
   clearTimeout(difficultyTimer);
   difficultyTimer = setTimeout(() => {
     post("/api/difficulty", { score: currentDifficulty, voterId })
       .then((nextState) => {
         state = nextState;
-        difficultyMessageEl.textContent = "Synced with the presenter";
+        difficultyMessageEl.textContent = t("audience.difficulty.synced");
         render();
       })
       .catch(() => {
-        difficultyMessageEl.textContent = "Sync failed. Please adjust it again";
+        difficultyMessageEl.textContent = t("audience.difficulty.syncFailed");
       });
   }, 220);
 });
@@ -102,15 +105,17 @@ document.querySelectorAll("[data-reaction]").forEach((button) => {
     button.disabled = true;
     try {
       await post("/api/reaction", { kind, voterId });
-      reactionMessageEl.textContent = `${button.firstChild.textContent.trim()} sent`;
+      reactionMessageEl.textContent = t("audience.reactions.sent", {
+        label: button.firstChild.textContent.trim(),
+      });
       button.classList.remove("sent");
       void button.offsetWidth;
       button.classList.add("sent");
       setTimeout(() => button.classList.remove("sent"), 700);
     } catch (error) {
       reactionMessageEl.textContent = String(error?.message || "").includes("rate limit")
-        ? "Reacting fast! Give it a few seconds"
-        : "The reaction was not sent. Please try again";
+        ? t("audience.reactions.tooFast")
+        : t("audience.reactions.failed");
     } finally {
       setTimeout(() => {
         button.disabled = false;
@@ -138,7 +143,7 @@ form.addEventListener("submit", async (event) => {
   const data = new FormData(form);
   const button = form.querySelector("button[type=submit]");
   button.disabled = true;
-  messageEl.textContent = "Sending";
+  messageEl.textContent = t("audience.ask.sending");
   try {
     const result = await post("/api/question", {
       text: String(data.get("question") || ""),
@@ -152,10 +157,10 @@ form.addEventListener("submit", async (event) => {
       ...participantState.questions.filter((question) => question.id !== result.submission.id),
     ].slice(0, 20);
     form.querySelector("textarea").value = "";
-    messageEl.textContent =
-      result.submission.visibility === "public"
-        ? "Added to the question pool"
-        : "Received. It is waiting before public display";
+    awaitingPublicDisplay = result.submission.visibility !== "public";
+    messageEl.textContent = awaitingPublicDisplay
+      ? t("audience.ask.buffered")
+      : t("audience.ask.added");
     render();
     renderParticipant();
   } catch (error) {
@@ -208,7 +213,7 @@ function render() {
       const hasVote = Number.isInteger(selected) && selected >= 0;
       return `
       <article class="poll-card">
-        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${poll.total} votes</span></div>
+        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${escapeHtml(t("common.voteCount", { count: poll.total }))}</span></div>
         <h2><span>${String(index + 1).padStart(2, "0")}</span>${escapeHtml(poll.question)}</h2>
         <div class="options">
           ${poll.options
@@ -219,7 +224,7 @@ function render() {
               return `<button class="option ${hasVote && selected === optionIndex ? "selected" : ""}" data-poll="${poll.id}" data-option="${optionIndex}">
               <span class="bar" style="--pct:${percent}%"></span>
               <span class="option-copy"><b>${String.fromCharCode(65 + optionIndex)}</b>${escapeHtml(option)}</span>
-              <span class="percent">${poll.counts[optionIndex]} votes</span>
+              <span class="percent">${escapeHtml(t("common.voteCount", { count: poll.counts[optionIndex] }))}</span>
             </button>`;
             })
             .join("")}
@@ -237,7 +242,7 @@ function render() {
   });
 
   document.querySelectorAll("[data-question-count]").forEach((el) => {
-    el.textContent = `${state.questions.length} questions`;
+    el.textContent = t("common.questionCount", { count: state.questions.length });
   });
   const rankedQuestions = [...state.questions].sort(
     (first, second) =>
@@ -252,14 +257,14 @@ function render() {
       <div><div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
       <div class="question-actions">
         ${participantState.questions.some((item) => item.id === question.id)
-          ? `<span class="flagged-label">Your question</span>`
-          : `<button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>`}
+          ? `<span class="flagged-label">${escapeHtml(t("audience.pool.yourQuestion"))}</span>`
+          : `<button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="${escapeHtml(t("audience.pool.upvoteLabel"))}">${escapeHtml(t("audience.pool.upvote"))} <b>${question.upvotes}</b></button>`}
         ${renderFlagControl(question)}
       </div>
     </article>`,
         )
         .join("")
-    : `<div class="empty">The first question can change the Q&amp;A route</div>`;
+    : `<div class="empty">${escapeHtml(t("audience.pool.empty"))}</div>`;
   questionsRoot.querySelectorAll("[data-upvote]").forEach((button) => {
     button.addEventListener("click", () =>
       upvote(button.dataset.upvote).catch((error) => alert(humanError(error))),
@@ -281,14 +286,14 @@ function renderFlagControl(question) {
   if (!config.moderation?.flags?.enabled) return "";
   if (participantState.questions.some((item) => item.id === question.id)) return "";
   const reported = localStorage.getItem(`flag:${question.id}`);
-  if (reported) return `<span class="flagged-label">Reported</span>`;
+  if (reported) return `<span class="flagged-label">${escapeHtml(t("audience.flag.reported"))}</span>`;
   return `<details class="flag-control">
-    <summary>Report</summary>
-    <div class="flag-menu" role="group" aria-label="Report this question">
-      <button type="button" data-question-id="${question.id}" data-flag-reason="harassment">Harassment or attack</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="disruption">Deliberate disruption</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="off_topic">Seriously off topic</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="privacy">Private information</button>
+    <summary>${escapeHtml(t("audience.flag.open"))}</summary>
+    <div class="flag-menu" role="group" aria-label="${escapeHtml(t("audience.flag.menuLabel"))}">
+      <button type="button" data-question-id="${question.id}" data-flag-reason="harassment">${escapeHtml(t("audience.flag.reason.harassment"))}</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="disruption">${escapeHtml(t("audience.flag.reason.disruption"))}</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="off_topic">${escapeHtml(t("audience.flag.reason.offTopic"))}</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="privacy">${escapeHtml(t("audience.flag.reason.privacy"))}</button>
     </div>
   </details>`;
 }
@@ -308,14 +313,15 @@ function renderParticipant() {
   if (participant) participantLabelEl.textContent = participant.publicLabel;
   const held = participantState.questions.filter((question) => question.visibility !== "public");
   mySubmissionsEl.hidden = held.length === 0;
-  if (held.length === 0 && messageEl.textContent.includes("waiting before public display")) {
-    messageEl.textContent = "Published to the question pool";
+  if (held.length === 0 && awaitingPublicDisplay) {
+    awaitingPublicDisplay = false;
+    messageEl.textContent = t("audience.ask.published");
   }
   ownQuestionsRoot.innerHTML = held
     .map(
       (question) => `<article class="question-card own-question">
-        <div class="question-rank">${escapeHtml(question.visibility === "pending" ? "WAIT" : "HELD")}</div>
-        <div><div class="question-tags"><span class="question-status">${escapeHtml(question.statusLabel)}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
+        <div class="question-rank">${escapeHtml(t(question.visibility === "pending" ? "audience.mine.wait" : "audience.mine.held"))}</div>
+        <div><div class="question-tags"><span class="question-status">${escapeHtml(ownStatusLabel(question))}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
       </article>`,
     )
     .join("");
@@ -330,9 +336,9 @@ function syncQuestionAvailability() {
   const button = form.querySelector("button[type=submit]");
   if (button) button.disabled = blockedBySession || blockedByModerator;
   if (blockedBySession) {
-    messageEl.textContent = mode === "closed" ? "This session is closed" : "Questions are temporarily paused";
+    messageEl.textContent = t(mode === "closed" ? "errors.sessionClosed" : "errors.sessionPaused");
   }
-  if (blockedByModerator) messageEl.textContent = "Question access is limited for this event";
+  if (blockedByModerator) messageEl.textContent = t("errors.accessLimited");
 }
 
 function updateDifficultySelection(score) {
@@ -367,25 +373,30 @@ function connect() {
 
 function setStatus(online) {
   statusEl.classList.toggle("online", online);
-  statusEl.lastChild.textContent = online ? "Live" : "Reconnecting";
+  statusEl.lastChild.textContent = t(online ? "status.live" : "status.reconnecting");
+}
+
+function ownStatusLabel(question) {
+  const key = `audience.mine.status.${question.visibility}`;
+  const label = t(key);
+  return label === key ? question.statusLabel : label;
 }
 
 function humanError(error) {
   const message = String(error?.message || error);
-  if (message.includes("limit")) return "This device has reached the question limit";
-  if (message.includes("cooldown")) return "Please wait before sending another question";
-  if (message.includes("paused")) return "Questions are temporarily paused";
-  if (message.includes("closed")) return "This session is closed";
-  if (message.includes("code of conduct")) return "Please accept the code of conduct first";
-  if (message.includes("upvote your own question")) return "You cannot upvote your own question";
-  if (message.includes("flag your own question")) return "You cannot report your own question";
-  if (message.includes("flag limit")) return "This device has reached the report limit";
-  if (message.includes("question not found")) return "This question is no longer public";
-  if (message.includes("access is limited")) return "Question access is limited for this event";
-  if (message.includes("question too short"))
-    return "A question needs at least 4 characters so the room can tell what you are asking";
-  if (message.includes("alias")) return "Choose an event name with at least two characters";
-  return "Sending failed. Please try again later";
+  if (message.includes("limit")) return t("errors.questionLimit");
+  if (message.includes("cooldown")) return t("errors.cooldown");
+  if (message.includes("paused")) return t("errors.sessionPaused");
+  if (message.includes("closed")) return t("errors.sessionClosed");
+  if (message.includes("code of conduct")) return t("errors.needCodeOfConduct");
+  if (message.includes("upvote your own question")) return t("errors.upvoteOwn");
+  if (message.includes("flag your own question")) return t("errors.flagOwn");
+  if (message.includes("flag limit")) return t("errors.flagLimit");
+  if (message.includes("question not found")) return t("errors.questionGone");
+  if (message.includes("access is limited")) return t("errors.accessLimited");
+  if (message.includes("question too short")) return t("errors.questionTooShort");
+  if (message.includes("alias")) return t("errors.alias");
+  return t("errors.generic");
 }
 
 function escapeHtml(value) {
@@ -411,11 +422,11 @@ post("/api/me", { voterId })
 post("/api/difficulty", { score: currentDifficulty, voterId })
   .then((data) => {
     state = data;
-    difficultyMessageEl.textContent = "Synced with the presenter";
+    difficultyMessageEl.textContent = t("audience.difficulty.synced");
     render();
   })
   .catch(() => {
-    difficultyMessageEl.textContent = "Drag to update automatically";
+    difficultyMessageEl.textContent = t("audience.difficulty.hint");
   });
 connect();
 
