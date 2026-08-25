@@ -1,31 +1,31 @@
 {
-  "eventId": "my-live-deck",
-  "eyebrow": "LIVE DECK",
-  "title": "You are here. Ask away.",
-  "description": "Scan the QR code to share the difficulty, ask a question, or send a reaction.",
-  "dashboardTitle": "Live audience",
-  "deckUrl": "https://example.com/slides/",
-  "locale": "en",
+  "eventId": "tianjian-2026-0826",
+  "eyebrow": "在田間學 · 2026.08.26",
+  "title": "跟上講者，也把問題留下來",
+  "description": "掃描 QR code，回報目前理解難度、提問，或送出一個即時反應。",
+  "dashboardTitle": "田間現場",
+  "deckUrl": "https://mashbean.net/decks/tianjian-2026-0826/",
+  "locale": "zh-Hant",
   "theme": {
-    "background": "#081225",
-    "panel": "#101d3d",
-    "accent": "#35dcff",
-    "highlight": "#ff4f9a",
-    "positive": "#b9f24a"
+    "background": "#0e0e14",
+    "panel": "#1b1a24",
+    "accent": "#7258ff",
+    "highlight": "#d7ff55",
+    "positive": "#d7ff55"
   },
   "difficulty": {
-    "title": "How difficult does this feel right now?",
-    "labels": ["Too easy", "Easy", "OK", "Difficult", "Lost"]
+    "title": "目前聽起來有多難？",
+    "labels": ["太簡單", "容易", "剛剛好", "有點難", "跟丟了"]
   },
   "question": {
-    "title": "Ask anytime",
-    "placeholder": "Share what feels unclear, worth following up, or worth discussing",
+    "title": "隨時提問",
+    "placeholder": "哪裡還不清楚、值得追問，或想帶回去繼續討論？",
     "maxPerDevice": 20,
     "lenses": [
-      { "id": "clarify", "label": "Clarify", "description": "Help me understand the idea or method" },
-      { "id": "chorus", "label": "Me too", "description": "I want to know who else shares this concern" },
-      { "id": "bridge", "label": "Bridge", "description": "Help us examine the tradeoff between two directions" },
-      { "id": "keeper", "label": "Keep this", "description": "A condition, risk, or constraint should stay visible" }
+      { "id": "clarify", "label": "請講清楚", "description": "幫我再解釋一次這個概念或方法" },
+      { "id": "chorus", "label": "我也想問", "description": "看看還有誰在意同一件事" },
+      { "id": "bridge", "label": "找出取捨", "description": "一起看兩種方向之間怎麼選" },
+      { "id": "keeper", "label": "這點要留著", "description": "讓重要的條件、風險或限制保持可見" }
     ]
   },
   "moderation": {
@@ -42,35 +42,35 @@
       "autoHoldParticipantRatio": 0.03
     },
     "codeOfConduct": {
-      "version": "2026-08-15",
-      "title": "Help keep the room useful",
-      "summary": "Critique the ideas, pace, method, and conclusions directly. Keep questions in good faith and focused on moving the discussion forward.",
+      "version": "2026-08-25",
+      "title": "一起維持一個可用的討論空間",
+      "summary": "可以直接挑戰觀點、節奏、方法與結論。請善意提問，讓問題幫助討論往前走。",
       "rules": [
-        "No personal attacks, harassment, discrimination, threats, impersonation, or private information.",
-        "No flooding, repeated provocation, or deliberate disruption of the discussion.",
-        "Moderators may hold or hide content and limit question access for this event.",
-        "Moderation actions are logged and can be reviewed or reversed."
+        "不做人身攻擊、騷擾、歧視、威脅、冒充，也不張貼他人的私密資料。",
+        "不洗版、不反覆挑釁，也不刻意干擾討論。",
+        "主持與協作人員可以暫緩或隱藏內容，並限制本場次的提問權限。",
+        "管理操作會留下紀錄，也能重新檢視或撤回。"
       ]
     }
   },
   "reactions": [
-    { "id": "applause", "emoji": "👏", "label": "Well said" },
-    { "id": "insight", "emoji": "💡", "label": "Insight" },
-    { "id": "resonate", "emoji": "❤️", "label": "Resonates" },
-    { "id": "pause", "emoji": "🤔", "label": "Let me think" }
+    { "id": "applause", "emoji": "👏", "label": "說得好" },
+    { "id": "insight", "emoji": "💡", "label": "有收穫" },
+    { "id": "resonate", "emoji": "❤️", "label": "有共鳴" },
+    { "id": "pause", "emoji": "🤔", "label": "等我一下" }
   ],
   "polls": [
     {
-      "id": "starting-point",
-      "prompt": "Warm-up",
-      "question": "How do you use AI today?",
-      "options": ["Occasional chat", "Search and organize", "Delegate complete tasks", "Established workflow"]
+      "id": "footprint",
+      "prompt": "開場",
+      "question": "你現在最擔心哪一段數位足跡？",
+      "options": ["查資料與聯絡", "發稿與平台", "帳號與裝置", "收款與金流"]
     },
     {
-      "id": "time-sink",
-      "prompt": "Time allocation",
-      "question": "Which kind of work takes most of your time?",
-      "options": ["Operations", "Teaching", "Research", "Communication"]
+      "id": "first-step",
+      "prompt": "灰人",
+      "question": "聽完之後，你最願意先改善哪一件事？",
+      "options": ["帳號分流", "照片自查", "平台盤點", "收款路徑"]
     }
   ]
 }

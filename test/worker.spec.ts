@@ -1,15 +1,26 @@
 import { env, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import eventConfig from "../public/event.config.json";
 
 const jsonHeaders = { "Content-Type": "application/json" };
+const eventId = eventConfig.eventId;
+const codeOfConductVersion = eventConfig.moderation.codeOfConduct.version;
+const testPoll = eventConfig.polls[0];
 
 describe("Live Deck Kit Worker", () => {
   it("serves the public event configuration", async () => {
     const response = await SELF.fetch("https://example.com/api/config");
     expect(response.status).toBe(200);
     const config = await response.json<{ eventId: string; difficulty: { labels: string[] } }>();
-    expect(config.eventId).toBe("my-live-deck");
+    expect(config.eventId).toBe(eventId);
     expect(config.difficulty.labels).toHaveLength(5);
+  });
+
+  it("serves the cross-origin embed module with public CORS", async () => {
+    const response = await SELF.fetch("https://example.com/embed/live-deck-panel.js");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    expect(response.headers.get("Content-Type")).toContain("text/javascript");
   });
 
   it("records difficulty and keeps only the latest score per device", async () => {
@@ -42,7 +53,7 @@ describe("Live Deck Kit Worker", () => {
     expect(second.submission.visibility).toBe("pending");
     expect(second.snapshot.questions).toHaveLength(0);
 
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName(`${eventId}:default`);
     await stub.moderateQuestion(first.submission.id, "restore", "other");
     const state = await stub.moderateQuestion(second.submission.id, "restore", "other");
     expect(state.questions).toHaveLength(2);
@@ -59,7 +70,7 @@ describe("Live Deck Kit Worker", () => {
       lens: "clarify",
       difficulty: 3,
     });
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName(`${eventId}:default`);
     await stub.moderateQuestion(question.submission.id, "restore", "other");
 
     const response = await SELF.fetch("https://example.com/api/upvote", {
@@ -129,7 +140,7 @@ describe("Live Deck Kit Worker", () => {
       lens: "clarify",
       difficulty: 4,
     });
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName(`${eventId}:default`);
     await stub.moderateQuestion(question.submission.id, "hide", "harassment");
     const publicState = await stub.snapshot();
     const ownState = await stub.participantState(voterId);
@@ -152,7 +163,7 @@ describe("Live Deck Kit Worker", () => {
       lens: "bridge",
       difficulty: 3,
     });
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName(`${eventId}:default`);
     await stub.moderateQuestion(question.submission.id, "restore", "other");
 
     const selfFlag = await SELF.fetch("https://example.com/api/flag", {
@@ -220,11 +231,12 @@ describe("Live Deck Kit Worker", () => {
 
   it("updates a quick poll vote without increasing the voter total", async () => {
     const voterId = crypto.randomUUID();
-    await post("/api/vote", { voterId, pollId: "starting-point", optionIndex: 0 });
-    const state = await post("/api/vote", { voterId, pollId: "starting-point", optionIndex: 3 });
-    const poll = state.polls.find((item) => item.id === "starting-point");
+    await post("/api/vote", { voterId, pollId: testPoll.id, optionIndex: 0 });
+    const finalOptionIndex = testPoll.options.length - 1;
+    const state = await post("/api/vote", { voterId, pollId: testPoll.id, optionIndex: finalOptionIndex });
+    const poll = state.polls.find((item) => item.id === testPoll.id);
     expect(poll?.total).toBe(1);
-    expect(poll?.counts).toEqual([0, 0, 0, 1]);
+    expect(poll?.counts).toEqual(testPoll.options.map((_, index) => Number(index === finalOptionIndex)));
   });
 
   it("keeps admin routes closed until a token hash is configured", async () => {
@@ -275,7 +287,7 @@ async function register(voterId: string, alias: string): Promise<ParticipantStat
   const response = await SELF.fetch("https://example.com/api/participant", {
     method: "POST",
     headers: jsonHeaders,
-    body: JSON.stringify({ voterId, alias, cocVersion: "2026-08-15" }),
+    body: JSON.stringify({ voterId, alias, cocVersion: codeOfConductVersion }),
   });
   expect(response.status).toBe(200);
   return response.json<ParticipantState>();

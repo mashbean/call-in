@@ -19,7 +19,10 @@ export default {
     const requestId = crypto.randomUUID();
     try {
       if (request.method === "OPTIONS") return withCors(new Response(null, { status: 204 }), request, env);
-      if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
+      if (!url.pathname.startsWith("/api/")) {
+        const asset = await env.ASSETS.fetch(request);
+        return url.pathname.startsWith("/embed/") ? withPublicAssetCors(asset) : asset;
+      }
 
       if (url.pathname === "/api/config" && request.method === "GET") {
         return withCors(Response.json(EVENT_CONFIG), request, env);
@@ -271,6 +274,17 @@ function noStore(response: Response): Response {
   headers.set("Cache-Control", "no-store");
   headers.set("X-Content-Type-Options", "nosniff");
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+function withPublicAssetCors(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set("Access-Control-Allow-Origin", "*");
+  headers.set("X-Content-Type-Options", "nosniff");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 function withCors(response: Response, request: Request, env: Env): Response {
