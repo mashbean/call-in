@@ -147,7 +147,36 @@ describe("Live Deck Kit Worker", () => {
     expect(publicState.questions.some((item) => item.id === question.submission.id)).toBe(false);
     const ownQuestion = ownState.questions.find((item) => item.id === question.submission.id);
     expect(ownQuestion?.visibility).toBe("author_only");
-    expect(ownQuestion?.statusLabel).toBe("Not public");
+    expect(ownQuestion?.statusLabel).toBe("未公開");
+  });
+
+  it("applies every participant moderation action and exposes the current state", async () => {
+    const voterId = crypto.randomUUID();
+    await register(voterId, "Moderation target");
+    const question = await postQuestion({
+      voterId,
+      text: "A question for participant moderation",
+      lens: "clarify",
+      difficulty: 3,
+    });
+    const stub = env.LIVE_SESSION.getByName(`${eventId}:default`);
+
+    let snapshot = await stub.moderateParticipant(voterId, "slow", "disruption");
+    let row = snapshot.questions.find((item) => item.id === question.submission.id);
+    expect(row?.questionState).toBe("normal");
+    expect(row?.slowUntil).toBeGreaterThan(Date.now());
+
+    snapshot = await stub.moderateParticipant(voterId, "review", "disruption");
+    row = snapshot.questions.find((item) => item.id === question.submission.id);
+    expect(row).toMatchObject({ questionState: "review", slowUntil: null });
+
+    snapshot = await stub.moderateParticipant(voterId, "mute", "disruption");
+    row = snapshot.questions.find((item) => item.id === question.submission.id);
+    expect(row).toMatchObject({ questionState: "muted", slowUntil: null });
+
+    snapshot = await stub.moderateParticipant(voterId, "restore", "other");
+    row = snapshot.questions.find((item) => item.id === question.submission.id);
+    expect(row).toMatchObject({ questionState: "normal", slowUntil: null });
   });
 
   it("temporarily holds a question after trusted reports and lets the moderator restore it", async () => {

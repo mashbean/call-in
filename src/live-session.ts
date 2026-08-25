@@ -41,6 +41,8 @@ type QuestionRow = {
   disruption_flags?: number;
   off_topic_flags?: number;
   privacy_flags?: number;
+  participant_question_state?: ParticipantQuestionState;
+  participant_slow_until?: number | null;
 };
 
 type ParticipantRow = {
@@ -726,6 +728,8 @@ export class LiveSession extends DurableObject<Env> {
         SELECT
           q.id, q.voter_id, q.text, q.nickname, q.lens, q.difficulty, q.created_at,
           q.visibility, q.publish_at, q.moderation_reason, q.moderated_at,
+          p.question_state AS participant_question_state,
+          p.slow_until AS participant_slow_until,
           (SELECT COUNT(*) FROM question_votes qv WHERE qv.question_id = q.id) AS upvotes,
           (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending') AS flag_count,
           (SELECT COALESCE(SUM(qf.weight), 0) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending') AS flag_weight,
@@ -734,6 +738,7 @@ export class LiveSession extends DurableObject<Env> {
           (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending' AND qf.reason = 'off_topic') AS off_topic_flags,
           (SELECT COUNT(*) FROM question_flags qf WHERE qf.question_id = q.id AND qf.status = 'pending' AND qf.reason = 'privacy') AS privacy_flags
         FROM questions q
+        JOIN participants p ON p.voter_id = q.voter_id
         ORDER BY
           CASE WHEN q.visibility = 'author_only' AND q.moderated_by = 'community' THEN 0
                WHEN q.visibility = 'pending' THEN 1 WHEN q.visibility = 'public' THEN 2 ELSE 3 END,
@@ -1130,9 +1135,9 @@ function shortBadge(voterId: string): string {
 }
 
 function statusLabel(visibility: QuestionVisibility): string {
-  if (visibility === "public") return "Published";
-  if (visibility === "pending") return "Waiting for review";
-  return "Not public";
+  if (visibility === "public") return "已公開";
+  if (visibility === "pending") return "等待審核";
+  return "未公開";
 }
 
 function toAudienceQuestion(row: QuestionRow): AudienceQuestion {
@@ -1164,6 +1169,8 @@ function toModeratorQuestion(row: QuestionRow, flagThreshold: number): Moderator
   return {
     ...toOwnQuestion(row),
     voterId: row.voter_id,
+    questionState: row.participant_question_state ?? "normal",
+    slowUntil: row.participant_slow_until ?? null,
     moderationReason: row.moderation_reason,
     moderatedAt: row.moderated_at,
     flagCount: row.flag_count ?? 0,

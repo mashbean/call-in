@@ -67,6 +67,8 @@ export type QuestionSubmission = {
 
 export type ModeratorQuestion = OwnQuestion & {
   voterId: string;
+  questionState: ParticipantQuestionState;
+  slowUntil: number | null;
   moderationReason: ModerationReason | null;
   moderatedAt: number | null;
   flagCount: number;

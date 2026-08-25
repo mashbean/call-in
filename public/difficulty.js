@@ -1,4 +1,4 @@
-export let difficultyLabels = ["Too easy", "Easy", "OK", "Difficult", "Lost"];
+export let difficultyLabels = ["太簡單", "容易", "剛剛好", "有點難", "跟丟了"];
 
 export function setDifficultyLabels(labels) {
   if (Array.isArray(labels) && labels.length === 5) difficultyLabels = [...labels];
@@ -59,7 +59,7 @@ export function renderDifficultyChart(root, difficulty = {}) {
   const totalRoot = root.querySelector("[data-difficulty-total]");
   if (totalRoot) {
     totalRoot.textContent = total
-      ? `${total} responses · average ${Number.isFinite(average) ? average.toFixed(1) : "-"}`
-      : "Waiting for the first response";
+      ? `${total} 筆回報 · 平均 ${Number.isFinite(average) ? average.toFixed(1) : "-"}`
+      : "等待第一筆回報";
   }
 }

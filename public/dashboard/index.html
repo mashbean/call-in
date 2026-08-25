@@ -4,31 +4,31 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#081225" />
-    <title>Live Deck Dashboard</title>
+    <title>田間講者畫面</title>
     <link rel="stylesheet" href="/style.css" />
     <link rel="stylesheet" href="/dashboard/dashboard.css" />
   </head>
   <body class="dashboard-page">
     <header class="dashboard-header">
       <div class="dashboard-brand">
-        <div class="eyebrow" data-config="eyebrow">LIVE DECK</div>
-        <h1 data-config="dashboardTitle">Live audience</h1>
+        <div class="eyebrow" data-config="eyebrow">即時互動</div>
+        <h1 data-config="dashboardTitle">田間現場</h1>
       </div>
-      <button class="dashboard-join" type="button" data-qr-open aria-haspopup="dialog" aria-controls="qr-modal" aria-expanded="false" title="Click to enlarge the QR code">
-        <img src="/api/qr.svg" alt="Scan to join the live audience page" />
-        <span><b>Scan to join</b><small>Difficulty · questions · emoji</small></span>
+      <button class="dashboard-join" type="button" data-qr-open aria-haspopup="dialog" aria-controls="qr-modal" aria-expanded="false" title="放大行動條碼">
+        <img src="/api/qr.svg" alt="掃描後加入現場互動" />
+        <span><b>掃描加入</b><small>理解難度 · 問題 · 即時反應</small></span>
       </button>
-      <div class="live-status dashboard-connection" data-status><span></span>Connecting</div>
-      <nav class="dashboard-tabs" role="tablist" aria-label="Dashboard views">
-        <button class="active" type="button" role="tab" aria-selected="true" data-dashboard-tab="live">Live</button>
-        <button type="button" role="tab" aria-selected="false" data-dashboard-tab="polls">Poll results <span data-poll-total>0</span></button>
+      <div class="live-status dashboard-connection" data-status><span></span>正在連線…</div>
+      <nav class="dashboard-tabs" role="tablist" aria-label="講者畫面分頁">
+        <button class="active" type="button" role="tab" aria-selected="true" data-dashboard-tab="live">現場</button>
+        <button type="button" role="tab" aria-selected="false" data-dashboard-tab="polls">投票結果 <span data-poll-total>0 場</span></button>
       </nav>
     </header>
     <main class="dashboard-main">
       <div class="dashboard-panel" role="tabpanel" data-dashboard-panel="live">
         <section class="dashboard-section dashboard-difficulty difficulty-card">
-          <div class="dashboard-section-head"><div><div class="eyebrow">DIFFICULTY</div><h2>Live difficulty</h2></div><span data-difficulty-total>Waiting for the first response</span></div>
-          <div class="difficulty-chart" aria-label="Live difficulty distribution" role="img">
+          <div class="dashboard-section-head"><div><div class="eyebrow">理解難度</div><h2>現場理解難度</h2></div><span data-difficulty-total>等待第一筆回報</span></div>
+          <div class="difficulty-chart" aria-label="現場理解難度分布" role="img">
             <svg viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
               <path class="difficulty-grid-line" d="M30 172 H570" />
               <path data-difficulty-area class="difficulty-area" />
@@ -37,29 +37,29 @@
             </svg>
             <div class="difficulty-counts" data-difficulty-counts></div>
           </div>
-          <div class="dashboard-reaction-hint"><span>Live reactions</span><div data-reaction-legend aria-hidden="true"></div></div>
+          <div class="dashboard-reaction-hint"><span>即時反應</span><div data-reaction-legend aria-hidden="true"></div></div>
         </section>
         <section class="dashboard-section">
-          <div class="dashboard-section-head"><div><div class="eyebrow">Q&amp;A POOL</div><h2 data-config="question.title">Ask anytime</h2></div><div class="question-session-meta"><b data-session-mode>OPEN</b><span data-question-count>0 questions</span></div></div>
+          <div class="dashboard-section-head"><div><div class="eyebrow">問題池</div><h2 data-config="question.title">隨時提問</h2></div><div class="question-session-meta"><b data-session-mode>開放</b><span data-question-count>0 個問題</span></div></div>
           <div id="dashboard-questions" class="dashboard-questions"></div>
         </section>
       </div>
       <div class="dashboard-panel" role="tabpanel" data-dashboard-panel="polls" hidden>
         <section class="dashboard-section">
-          <div class="dashboard-section-head"><div><div class="eyebrow">POLL</div><h2>Poll results</h2></div></div>
+          <div class="dashboard-section-head"><div><div class="eyebrow">投票</div><h2>投票結果</h2></div></div>
           <div id="dashboard-polls" class="dashboard-polls"></div>
         </section>
       </div>
     </main>
-    <a class="dashboard-open" href="/" target="_blank" rel="noreferrer">Open audience page ↗</a>
+    <a class="dashboard-open" href="/" target="_blank" rel="noreferrer">開啟觀眾頁面 ↗</a>
     <div class="reaction-stage" data-reaction-stage aria-live="polite"></div>
     <div class="qr-modal" id="qr-modal" data-qr-modal role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" hidden>
       <div class="qr-modal-card">
-        <button class="qr-modal-close" type="button" data-qr-close aria-label="Close QR code dialog">×</button>
-        <img src="/api/qr.svg" alt="Scan to join the live audience page" />
-        <b id="qr-modal-title">Scan to join</b>
+        <button class="qr-modal-close" type="button" data-qr-close aria-label="關閉行動條碼視窗">×</button>
+        <img src="/api/qr.svg" alt="掃描後加入現場互動" />
+        <b id="qr-modal-title">掃描加入</b>
         <a class="qr-modal-link" data-qr-url href="/" target="_blank" rel="noreferrer"></a>
-        <span class="qr-modal-hint">Press Escape or use the close button</span>
+        <span class="qr-modal-hint">按 Esc 鍵或右上角按鈕關閉</span>
       </div>
     </div>
     <script type="module" src="/dashboard/dashboard.js"></script>

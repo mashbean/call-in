@@ -47,14 +47,14 @@ identityForm?.addEventListener("submit", async (event) => {
   const data = new FormData(identityForm);
   const button = identityForm.querySelector("button[type=submit]");
   button.disabled = true;
-  identityMessageEl.textContent = "Saving your event name";
+  identityMessageEl.textContent = "正在儲存這次活動使用的名字…";
   try {
     participantState = await post("/api/participant", {
       alias: String(data.get("alias") || ""),
       cocVersion: config.moderation.codeOfConduct.version,
       voterId,
     });
-    identityMessageEl.textContent = "Saved for this event";
+    identityMessageEl.textContent = "已儲存本場次使用的名字";
     renderParticipant();
   } catch (error) {
     identityMessageEl.textContent = humanError(error);
@@ -68,17 +68,17 @@ difficultyInput.addEventListener("input", () => {
   currentDifficulty = Number(difficultyInput.value);
   localStorage.setItem("difficulty:current", String(currentDifficulty));
   updateDifficultySelection(currentDifficulty);
-  difficultyMessageEl.textContent = "Updating";
+  difficultyMessageEl.textContent = "正在更新…";
   clearTimeout(difficultyTimer);
   difficultyTimer = setTimeout(() => {
     post("/api/difficulty", { score: currentDifficulty, voterId })
       .then((nextState) => {
         state = nextState;
-        difficultyMessageEl.textContent = "Synced with the presenter";
+        difficultyMessageEl.textContent = "已同步到講者畫面";
         render();
       })
       .catch(() => {
-        difficultyMessageEl.textContent = "Sync failed. Please adjust it again";
+        difficultyMessageEl.textContent = "同步失敗，請再調整一次";
       });
   }, 220);
 });
@@ -102,15 +102,15 @@ document.querySelectorAll("[data-reaction]").forEach((button) => {
     button.disabled = true;
     try {
       await post("/api/reaction", { kind, voterId });
-      reactionMessageEl.textContent = `${button.firstChild.textContent.trim()} sent`;
+      reactionMessageEl.textContent = `${button.firstChild.textContent.trim()} 已送出`;
       button.classList.remove("sent");
       void button.offsetWidth;
       button.classList.add("sent");
       setTimeout(() => button.classList.remove("sent"), 700);
     } catch (error) {
       reactionMessageEl.textContent = String(error?.message || "").includes("rate limit")
-        ? "Reacting fast! Give it a few seconds"
-        : "The reaction was not sent. Please try again";
+        ? "反應送得有點快，請等幾秒"
+        : "反應沒有送出，請再試一次";
     } finally {
       setTimeout(() => {
         button.disabled = false;
@@ -138,7 +138,7 @@ form.addEventListener("submit", async (event) => {
   const data = new FormData(form);
   const button = form.querySelector("button[type=submit]");
   button.disabled = true;
-  messageEl.textContent = "Sending";
+  messageEl.textContent = "正在送出…";
   try {
     const result = await post("/api/question", {
       text: String(data.get("question") || ""),
@@ -154,8 +154,8 @@ form.addEventListener("submit", async (event) => {
     form.querySelector("textarea").value = "";
     messageEl.textContent =
       result.submission.visibility === "public"
-        ? "Added to the question pool"
-        : "Received. It is waiting before public display";
+        ? "已加入問題池"
+        : "已收到，公開前會先等待審核";
     render();
     renderParticipant();
   } catch (error) {
@@ -208,7 +208,7 @@ function render() {
       const hasVote = Number.isInteger(selected) && selected >= 0;
       return `
       <article class="poll-card">
-        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${poll.total} votes</span></div>
+        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${poll.total} 票</span></div>
         <h2><span>${String(index + 1).padStart(2, "0")}</span>${escapeHtml(poll.question)}</h2>
         <div class="options">
           ${poll.options
@@ -219,7 +219,7 @@ function render() {
               return `<button class="option ${hasVote && selected === optionIndex ? "selected" : ""}" data-poll="${poll.id}" data-option="${optionIndex}">
               <span class="bar" style="--pct:${percent}%"></span>
               <span class="option-copy"><b>${String.fromCharCode(65 + optionIndex)}</b>${escapeHtml(option)}</span>
-              <span class="percent">${poll.counts[optionIndex]} votes</span>
+              <span class="percent">${poll.counts[optionIndex]} 票</span>
             </button>`;
             })
             .join("")}
@@ -237,7 +237,7 @@ function render() {
   });
 
   document.querySelectorAll("[data-question-count]").forEach((el) => {
-    el.textContent = `${state.questions.length} questions`;
+    el.textContent = `${state.questions.length} 個問題`;
   });
   const rankedQuestions = [...state.questions].sort(
     (first, second) =>
@@ -252,14 +252,14 @@ function render() {
       <div><div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
       <div class="question-actions">
         ${participantState.questions.some((item) => item.id === question.id)
-          ? `<span class="flagged-label">Your question</span>`
-          : `<button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>`}
+          ? `<span class="flagged-label">你的問題</span>`
+          : `<button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="我也想問這個問題">我也想問 <b>${question.upvotes}</b></button>`}
         ${renderFlagControl(question)}
       </div>
     </article>`,
         )
         .join("")
-    : `<div class="empty">The first question can change the Q&amp;A route</div>`;
+    : `<div class="empty">第一個問題，也可能改變接下來的討論方向</div>`;
   questionsRoot.querySelectorAll("[data-upvote]").forEach((button) => {
     button.addEventListener("click", () =>
       upvote(button.dataset.upvote).catch((error) => alert(humanError(error))),
@@ -281,14 +281,14 @@ function renderFlagControl(question) {
   if (!config.moderation?.flags?.enabled) return "";
   if (participantState.questions.some((item) => item.id === question.id)) return "";
   const reported = localStorage.getItem(`flag:${question.id}`);
-  if (reported) return `<span class="flagged-label">Reported</span>`;
+  if (reported) return `<span class="flagged-label">已檢舉</span>`;
   return `<details class="flag-control">
-    <summary>Report</summary>
-    <div class="flag-menu" role="group" aria-label="Report this question">
-      <button type="button" data-question-id="${question.id}" data-flag-reason="harassment">Harassment or attack</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="disruption">Deliberate disruption</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="off_topic">Seriously off topic</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="privacy">Private information</button>
+    <summary>檢舉</summary>
+    <div class="flag-menu" role="group" aria-label="檢舉這個問題">
+      <button type="button" data-question-id="${question.id}" data-flag-reason="harassment">騷擾或人身攻擊</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="disruption">刻意干擾討論</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="off_topic">嚴重離題</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="privacy">私密資料</button>
     </div>
   </details>`;
 }
@@ -308,13 +308,13 @@ function renderParticipant() {
   if (participant) participantLabelEl.textContent = participant.publicLabel;
   const held = participantState.questions.filter((question) => question.visibility !== "public");
   mySubmissionsEl.hidden = held.length === 0;
-  if (held.length === 0 && messageEl.textContent.includes("waiting before public display")) {
-    messageEl.textContent = "Published to the question pool";
+  if (held.length === 0 && messageEl.textContent.includes("公開前會先等待審核")) {
+    messageEl.textContent = "已公開到問題池";
   }
   ownQuestionsRoot.innerHTML = held
     .map(
       (question) => `<article class="question-card own-question">
-        <div class="question-rank">${escapeHtml(question.visibility === "pending" ? "WAIT" : "HELD")}</div>
+        <div class="question-rank">${escapeHtml(question.visibility === "pending" ? "待審" : "暫緩")}</div>
         <div><div class="question-tags"><span class="question-status">${escapeHtml(question.statusLabel)}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
       </article>`,
     )
@@ -330,9 +330,9 @@ function syncQuestionAvailability() {
   const button = form.querySelector("button[type=submit]");
   if (button) button.disabled = blockedBySession || blockedByModerator;
   if (blockedBySession) {
-    messageEl.textContent = mode === "closed" ? "This session is closed" : "Questions are temporarily paused";
+    messageEl.textContent = mode === "closed" ? "本場次已關閉提問" : "目前暫停接受問題";
   }
-  if (blockedByModerator) messageEl.textContent = "Question access is limited for this event";
+  if (blockedByModerator) messageEl.textContent = "你在本場次的提問權限目前受到限制";
 }
 
 function updateDifficultySelection(score) {
@@ -367,25 +367,27 @@ function connect() {
 
 function setStatus(online) {
   statusEl.classList.toggle("online", online);
-  statusEl.lastChild.textContent = online ? "Live" : "Reconnecting";
+  statusEl.lastChild.textContent = online ? "即時連線" : "正在重新連線…";
 }
 
 function humanError(error) {
   const message = String(error?.message || error);
-  if (message.includes("limit")) return "This device has reached the question limit";
-  if (message.includes("cooldown")) return "Please wait before sending another question";
-  if (message.includes("paused")) return "Questions are temporarily paused";
-  if (message.includes("closed")) return "This session is closed";
-  if (message.includes("code of conduct")) return "Please accept the code of conduct first";
-  if (message.includes("upvote your own question")) return "You cannot upvote your own question";
-  if (message.includes("flag your own question")) return "You cannot report your own question";
-  if (message.includes("flag limit")) return "This device has reached the report limit";
-  if (message.includes("question not found")) return "This question is no longer public";
-  if (message.includes("access is limited")) return "Question access is limited for this event";
+  if (message.includes("flag limit")) return "這台裝置已達本場次的檢舉上限";
+  if (message.includes("reaction rate limit")) return "反應送得有點快，請等幾秒";
+  if (message.includes("question rate limit")) return "短時間內送出的問題太多，請稍後再試";
+  if (message.includes("limit")) return "這台裝置已達本場次的提問上限";
+  if (message.includes("cooldown")) return "請稍等一下再送出下一個問題";
+  if (message.includes("paused")) return "目前暫停接受問題";
+  if (message.includes("closed")) return "本場次已關閉提問";
+  if (message.includes("code of conduct")) return "請先同意討論守則";
+  if (message.includes("upvote your own question")) return "不能替自己的問題按「我也想問」";
+  if (message.includes("flag your own question")) return "不能檢舉自己的問題";
+  if (message.includes("question not found")) return "這個問題已經不在公開問題池中";
+  if (message.includes("access is limited")) return "你在本場次的提問權限目前受到限制";
   if (message.includes("question too short"))
-    return "A question needs at least 4 characters so the room can tell what you are asking";
-  if (message.includes("alias")) return "Choose an event name with at least two characters";
-  return "Sending failed. Please try again later";
+    return "問題至少要有 4 個字，大家才看得懂你想問什麼";
+  if (message.includes("alias")) return "本場次使用的名字至少要有 2 個字";
+  return "送出失敗，請稍後再試";
 }
 
 function escapeHtml(value) {
@@ -411,11 +413,11 @@ post("/api/me", { voterId })
 post("/api/difficulty", { score: currentDifficulty, voterId })
   .then((data) => {
     state = data;
-    difficultyMessageEl.textContent = "Synced with the presenter";
+    difficultyMessageEl.textContent = "已同步到講者畫面";
     render();
   })
   .catch(() => {
-    difficultyMessageEl.textContent = "Drag to update automatically";
+    difficultyMessageEl.textContent = "拖曳後會自動更新";
   });
 connect();
 

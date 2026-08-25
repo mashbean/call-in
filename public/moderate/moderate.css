@@ -176,6 +176,43 @@
   background: #ff4f9a22;
   color: #ff8fbe;
 }
+.mode-grid button:disabled,
+.moderator-actions button:disabled,
+.quiet:disabled {
+  cursor: default;
+  opacity: 0.52;
+}
+.participant-state {
+  margin-top: 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 11px;
+  color: var(--sage);
+  background: #08122588;
+  font-size: 11px;
+  font-weight: 800;
+}
+.participant-state[data-state="muted"] {
+  border-color: #ff4f9a66;
+  color: #ff9ac4;
+}
+.participant-state[data-state="review"] {
+  border-color: #ffd84d66;
+  color: var(--sand);
+}
+.action-feedback {
+  min-height: 1.5em;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+.action-feedback[data-status="success"] {
+  color: var(--sage);
+}
+.action-feedback[data-status="error"] {
+  color: #ff9ac4;
+}
 @media (max-width: 620px) {
   .moderator-header {
     align-items: start;

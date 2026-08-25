@@ -11,33 +11,34 @@ const reactionStage = document.querySelector("[data-reaction-stage]");
 const tabButtons = [...document.querySelectorAll("[data-dashboard-tab]")];
 const tabPanels = [...document.querySelectorAll("[data-dashboard-panel]")];
 const lensLabels = Object.fromEntries(config.question.lenses.map((lens) => [lens.id, lens.label]));
+const sessionModeLabels = { open: "開放", slow: "慢速", approval: "先審後發", paused: "暫停", closed: "關閉" };
 
 function render(state) {
   const mode = state.session?.mode || "open";
   const modeEl = document.querySelector("[data-session-mode]");
-  modeEl.textContent = mode.toUpperCase();
+  modeEl.textContent = sessionModeLabels[mode] || mode;
   modeEl.dataset.mode = mode;
   renderDifficultyChart(document.querySelector(".dashboard-difficulty"), state.difficulty);
-  document.querySelector("[data-poll-total]").textContent = `${state.polls.length} polls`;
+  document.querySelector("[data-poll-total]").textContent = `${state.polls.length} 場`;
   pollsRoot.innerHTML = state.polls
     .map(
       (poll, index) => `
         <article class="dashboard-poll">
-          <div class="dashboard-poll-head"><b>${String(index + 1).padStart(2, "0")}</b><span>${poll.total} votes</span></div>
+          <div class="dashboard-poll-head"><b>${String(index + 1).padStart(2, "0")}</b><span>${poll.total} 票</span></div>
           <h3>${escapeHtml(poll.question)}</h3>
           ${poll.options
             .map((option, optionIndex) => {
               const percent = poll.total
                 ? Math.round((poll.counts[optionIndex] / poll.total) * 100)
                 : 0;
-              return `<div class="dashboard-result-row"><span>${escapeHtml(option)}</span><div><i style="--pct:${percent}%"></i></div><b>${poll.counts[optionIndex]} votes</b></div>`;
+              return `<div class="dashboard-result-row"><span>${escapeHtml(option)}</span><div><i style="--pct:${percent}%"></i></div><b>${poll.counts[optionIndex]} 票</b></div>`;
             })
             .join("")}
         </article>`,
     )
     .join("");
 
-  document.querySelector("[data-question-count]").textContent = `${state.questions.length} questions`;
+  document.querySelector("[data-question-count]").textContent = `${state.questions.length} 個問題`;
   const rankedQuestions = [...state.questions].sort(
     (first, second) =>
       second.upvotes - first.upvotes || Number(second.createdAt) - Number(first.createdAt),
@@ -52,14 +53,14 @@ function render(state) {
         .map(
           (question, index) => `
             <article>
-              <div class="dashboard-question-head"><b>${question.id === newestId ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · Me too ${question.upvotes}</span></div>
+              <div class="dashboard-question-head"><b>${question.id === newestId ? "最新" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · 我也想問 ${question.upvotes}</span></div>
               <div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div>
               <p>${escapeHtml(question.text)}</p>
               <small>${escapeHtml(question.nickname)}</small>
             </article>`,
         )
         .join("")
-    : `<div class="empty">Waiting for the first question</div>`;
+    : `<div class="empty">等待第一個問題</div>`;
 }
 
 function setDashboardTab(name) {
@@ -91,7 +92,7 @@ function formatTime(value) {
         minute: "2-digit",
         hour12: false,
       }).format(date)
-    : "just now";
+    : "剛剛";
 }
 
 function connect() {
@@ -143,7 +144,7 @@ function showReaction(reaction) {
 
 function setStatus(online) {
   statusEl.classList.toggle("online", online);
-  statusEl.lastChild.textContent = online ? "Live" : "Reconnecting";
+  statusEl.lastChild.textContent = online ? "即時連線" : "正在重新連線…";
 }
 
 function escapeHtml(value) {
@@ -174,7 +175,7 @@ setDashboardTab(location.hash === "#polls" ? "polls" : "live");
 connect();
 
 function applyConfig(nextConfig) {
-  document.title = `${nextConfig.dashboardTitle} · Live Deck`;
+  document.title = `${nextConfig.dashboardTitle} · 即時互動`;
   setDifficultyLabels(nextConfig.difficulty.labels);
   const values = {
     eyebrow: nextConfig.eyebrow,
