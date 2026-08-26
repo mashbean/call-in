@@ -268,6 +268,29 @@ describe("Live Deck Kit Worker", () => {
     expect(poll?.counts).toEqual(testPoll.options.map((_, index) => Number(index === finalOptionIndex)));
   });
 
+  it("freezes every audience interaction after the session is closed", async () => {
+    const stub = env.LIVE_SESSION.getByName(`${eventId}:default`);
+    await stub.setSessionMode("closed");
+    const voterId = crypto.randomUUID();
+    const requests = [
+      ["/api/vote", { voterId, pollId: testPoll.id, optionIndex: 0 }],
+      ["/api/difficulty", { voterId, score: 3 }],
+      ["/api/reaction", { voterId, kind: "applause" }],
+      ["/api/upvote", { voterId, questionId: crypto.randomUUID() }],
+      ["/api/flag", { voterId, questionId: crypto.randomUUID(), reason: "off_topic" }],
+    ];
+
+    for (const [path, body] of requests) {
+      const response = await SELF.fetch(`https://example.com${path}`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify(body),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.json<{ error: string }>()).toEqual({ error: "session is closed" });
+    }
+  });
+
   it("keeps admin routes closed until a token hash is configured", async () => {
     const response = await SELF.fetch("https://example.com/api/admin/reset", { method: "POST" });
     expect(response.status).toBe(404);

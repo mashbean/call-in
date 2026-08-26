@@ -368,6 +368,7 @@ export class LiveSession extends DurableObject<Env> {
       throw new Error("invalid vote");
     }
     assertVoterId(voterId);
+    if (this.getSessionMode() === "closed") throw new Error("session is closed");
     const snapshot = await this.snapshot();
     const previous = this.ctx.storage.sql
       .exec<{ option_index: number }>(
@@ -555,6 +556,7 @@ export class LiveSession extends DurableObject<Env> {
   async setDifficulty(score: number, voterId: string): Promise<SessionSnapshot> {
     assertVoterId(voterId);
     assertDifficulty(score);
+    if (this.getSessionMode() === "closed") throw new Error("session is closed");
     const snapshot = await this.snapshot();
     const previous = this.ctx.storage.sql
       .exec<{ score: number }>("SELECT score FROM difficulty_votes WHERE voter_id = ?", voterId)
@@ -575,6 +577,7 @@ export class LiveSession extends DurableObject<Env> {
   async upvote(questionId: string, voterId: string): Promise<SessionSnapshot> {
     assertVoterId(voterId);
     if (!isUuid(questionId)) throw new Error("invalid question");
+    if (this.getSessionMode() === "closed") throw new Error("session is closed");
     const snapshot = await this.snapshot();
     const questionRow = this.ctx.storage.sql
       .exec<{ voter_id: string }>(
@@ -618,6 +621,7 @@ export class LiveSession extends DurableObject<Env> {
   ): Promise<{ ok: true; held: boolean }> {
     assertVoterId(voterId);
     if (!isUuid(questionId)) throw new Error("invalid question");
+    if (this.getSessionMode() === "closed") throw new Error("session is closed");
     if (!moderation?.enabled || !moderation.flags.enabled) throw new Error("flagging is disabled");
     if (!["harassment", "disruption", "off_topic", "privacy"].includes(reason)) {
       throw new Error("invalid flag reason");
@@ -695,6 +699,7 @@ export class LiveSession extends DurableObject<Env> {
   async react(kind: ReactionKind, voterId: string): Promise<{ ok: true }> {
     assertVoterId(voterId);
     if (!REACTION_KINDS.has(kind)) throw new Error("invalid reaction");
+    if (this.getSessionMode() === "closed") throw new Error("session is closed");
     const now = Date.now();
     const window = (this.reactionWindows.get(voterId) ?? []).filter((time) => now - time < 10_000);
     if (window.length >= 3) throw new Error("reaction rate limit reached");

@@ -326,11 +326,20 @@ function syncQuestionAvailability() {
   const mode = state.session?.mode || "open";
   const participant = participantState.participant;
   const blockedBySession = mode === "paused" || mode === "closed";
+  const interactionClosed = mode === "closed";
   const blockedByModerator = participant?.questionState === "muted";
   const button = form.querySelector("button[type=submit]");
   if (button) button.disabled = blockedBySession || blockedByModerator;
+  difficultyInput.disabled = interactionClosed;
+  document.querySelectorAll("[data-reaction], [data-poll], [data-upvote], [data-flag-reason]").forEach((control) => {
+    control.disabled = interactionClosed;
+  });
   if (blockedBySession) {
     messageEl.textContent = mode === "closed" ? "本場次已關閉提問" : "目前暫停接受問題";
+  }
+  if (interactionClosed) {
+    difficultyMessageEl.textContent = "本場次互動已結束";
+    reactionMessageEl.textContent = "本場次互動已結束";
   }
   if (blockedByModerator) messageEl.textContent = "你在本場次的提問權限目前受到限制";
 }
