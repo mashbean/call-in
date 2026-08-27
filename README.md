@@ -106,7 +106,7 @@ The skill installs to `$CODEX_HOME/skills/call-in` (or `~/.codex/skills/call-in`
 
 ## Support the project
 
-Call-in is a solo-maintained open-source project. Stars, issue reports, documentation fixes, and pull requests are welcome. A GitHub Sponsors profile is being prepared; payment links will be added only after the account can actually receive sponsorships.
+Call-in is a solo-maintained open-source project. Stars, issue reports, documentation fixes, and pull requests are welcome. You can also support ongoing maintenance through [Buy Me a Coffee](https://buymeacoffee.com/mashbean).
 
 ## Development
 

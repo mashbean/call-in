@@ -57,6 +57,12 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.match(englishLandingHtml, /Click to use your slides/);
   assert.doesNotMatch(landingHtml, /Call-in 只保留完成本場活動所需的資料/);
   assert.doesNotMatch(landingHtml, />CALL-IN</);
+  assert.match(landingHtml, /https:\/\/buymeacoffee\.com\/mashbean/);
+  assert.match(landingHtml, /請作者喝杯咖啡/);
+  assert.match(englishLandingHtml, /https:\/\/buymeacoffee\.com\/mashbean/);
+  assert.match(englishLandingHtml, /Buy me a coffee/);
+  assert.doesNotMatch(landingHtml, /Sponsors 即將開放|GitHub Sponsors 收款通道正在準備/);
+  assert.doesNotMatch(englishLandingHtml, /Sponsors coming soon|GitHub Sponsors payment channel is being prepared/);
   assert.match(landingJs, /openCreator/);
   assert.match(creatorJs, /fetch\("\/api\/events"/);
   assert.match(creatorJs, /new FormData\(form\)/);
