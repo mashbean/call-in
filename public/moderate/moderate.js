@@ -7,7 +7,7 @@ const config = await fetch(`${apiBase}/config`).then((response) => response.json
 const locale = createLocale(config);
 const t = locale.text;
 locale.apply();
-document.title = t("Live Deck moderation", "Live Deck 主持工具");
+document.title = t("Call-in moderation", "Call-in 主持工具");
 const lensLabels = Object.fromEntries(config.question.lenses.map((lens) => [lens.id, lens.label]));
 const loginPanel = document.querySelector("[data-login-panel]");
 const loginForm = document.querySelector("[data-login-form]");

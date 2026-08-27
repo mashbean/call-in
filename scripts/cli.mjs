@@ -14,7 +14,7 @@ export async function integrateDeck(options) {
   if (!/<\/body\s*>/i.test(source)) throw new Error("Could not find </body>. Provide a complete HTML slide deck file");
 
   const serviceUrl = normalizeServiceUrl(options.serviceUrl);
-  const scriptUrl = serviceUrl ? `${serviceUrl}/embed/live-deck-panel.js` : "/embed/live-deck-panel.js";
+  const scriptUrl = serviceUrl ? `${serviceUrl}/embed/call-in-panel.js` : "/embed/call-in-panel.js";
   const attributes = [
     `service-url="${escapeAttribute(serviceUrl || "/")}"`,
     `mode="${options.mode === "split" ? "split" : "overlay"}"`,
@@ -23,14 +23,14 @@ export async function integrateDeck(options) {
   if (options.desktopWidth) attributes.push(`desktop-width="${escapeAttribute(options.desktopWidth)}"`);
 
   const block = [
-    "<!-- live-deck-kit:start -->",
+    "<!-- call-in:start -->",
     `<script type="module" src="${escapeAttribute(scriptUrl)}"></script>`,
-    `<live-deck-panel ${attributes.join(" ")}></live-deck-panel>`,
-    "<!-- live-deck-kit:end -->",
+    `<call-in-panel ${attributes.join(" ")}></call-in-panel>`,
+    "<!-- call-in:end -->",
   ].join("\n");
-  const marker = /<!-- live-deck-kit:start -->[\s\S]*?<!-- live-deck-kit:end -->/;
-  if (!marker.test(source) && /<live-deck-panel\b/i.test(source)) {
-    throw new Error("The deck already contains an unmanaged <live-deck-panel>. Review and remove the old snippet first");
+  const marker = /<!-- (?:call-in|live-deck-kit):start -->[\s\S]*?<!-- (?:call-in|live-deck-kit):end -->/;
+  if (!marker.test(source) && /<(?:call-in|live-deck)-panel\b/i.test(source)) {
+    throw new Error("The deck already contains an unmanaged Call-in panel. Review and remove the old snippet first");
   }
   const next = marker.test(source) ? source.replace(marker, block) : source.replace(/<\/body\s*>/i, `${block}\n</body>`);
   await writeFile(deckPath, next);
@@ -49,8 +49,8 @@ export async function configureAdminToken(tokenInput) {
   );
   if (next === source) throw new Error("wrangler.jsonc is missing ADMIN_TOKEN_SHA256");
   await writeFile(wranglerPath, next);
-  await writeFile(path.join(packageRoot, ".live-deck-admin-token"), `${token}\n`, { mode: 0o600 });
-  return { hash, tokenPath: path.join(packageRoot, ".live-deck-admin-token") };
+  await writeFile(path.join(packageRoot, ".call-in-admin-token"), `${token}\n`, { mode: 0o600 });
+  return { hash, tokenPath: path.join(packageRoot, ".call-in-admin-token") };
 }
 
 export async function configureModeratorToken(tokenInput) {
@@ -65,8 +65,8 @@ export async function configureModeratorToken(tokenInput) {
   );
   if (next === source) throw new Error("wrangler.jsonc is missing MODERATOR_TOKEN_SHA256");
   await writeFile(wranglerPath, next);
-  await writeFile(path.join(packageRoot, ".live-deck-moderator-token"), `${token}\n`, { mode: 0o600 });
-  return { hash, tokenPath: path.join(packageRoot, ".live-deck-moderator-token") };
+  await writeFile(path.join(packageRoot, ".call-in-moderator-token"), `${token}\n`, { mode: 0o600 });
+  return { hash, tokenPath: path.join(packageRoot, ".call-in-moderator-token") };
 }
 
 export async function doctor() {
@@ -76,14 +76,15 @@ export async function doctor() {
     "src/index.ts",
     "src/live-session.ts",
     "public/index.html",
+    "public/audience/index.html",
     "public/new/index.html",
     "public/event-context.js",
     "public/dashboard/index.html",
     "public/present/index.html",
     "public/setup/index.html",
     "public/moderate/index.html",
-    "public/embed/live-deck-panel.js",
-    "skills/live-deck-kit/SKILL.md",
+    "public/embed/call-in-panel.js",
+    "skills/call-in/SKILL.md",
   ];
   const missing = [];
   for (const file of requiredFiles) {
@@ -124,7 +125,7 @@ export async function doctor() {
 
 export async function installSkill(options = {}) {
   const codexHome = process.env.CODEX_HOME || path.join(homedir(), ".codex");
-  const target = path.join(codexHome, "skills", "live-deck-kit");
+  const target = path.join(codexHome, "skills", "call-in");
   try {
     await stat(target);
     if (!options.force) throw new Error(`${target} already exists. Add --force to overwrite it`);
@@ -133,7 +134,7 @@ export async function installSkill(options = {}) {
     if (error instanceof Error && error.message.includes("already exists")) throw error;
   }
   await mkdir(path.dirname(target), { recursive: true });
-  await cp(path.join(packageRoot, "skills", "live-deck-kit"), target, { recursive: true, force: Boolean(options.force) });
+  await cp(path.join(packageRoot, "skills", "call-in"), target, { recursive: true, force: Boolean(options.force) });
   return { target };
 }
 
@@ -141,7 +142,7 @@ async function main(argv) {
   const command = argv[2] || "help";
   const args = parseArgs(argv.slice(3));
   if (command === "integrate") {
-    if (!args.deck || !args["service-url"]) throw new Error("Usage: live-deck-kit integrate --deck <index.html> --service-url <https://...>");
+    if (!args.deck || !args["service-url"]) throw new Error("Usage: call-in integrate --deck <index.html> --service-url <https://...>");
     const result = await integrateDeck({
       deck: args.deck,
       serviceUrl: args["service-url"],
@@ -187,7 +188,7 @@ async function main(argv) {
     console.log(JSON.stringify({ ok: true, ...meta }, null, 2));
     return;
   }
-  console.log(`Live Deck Kit
+  console.log(`Call-in
 
 Commands
   doctor

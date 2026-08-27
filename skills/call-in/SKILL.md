@@ -1,9 +1,9 @@
 ---
-name: live-deck-kit
-description: Add a realtime audience dashboard to an existing web slide deck and close the loop after an event. Use for hosted live difficulty feedback, audience questions, emoji reactions, quick polls, QR entry, optional Cloudflare Workers self-hosting, prompt-driven deck integration, or an Uncommon Ground question-pool receipt.
+name: call-in
+description: Add Call-in realtime audience response to an existing slide deck and close the loop after an event. Use for hosted PDF or web decks, live difficulty feedback, audience questions, emoji reactions, quick polls, QR entry, optional Cloudflare Workers self-hosting, prompt-driven deck integration, or an Uncommon Ground question-pool receipt.
 ---
 
-# Live Deck Kit
+# Call-in
 
 Use this skill when a user wants to add live audience interaction to a web presentation or deploy a reusable interaction service.
 
@@ -17,7 +17,7 @@ Read both files before making changes
 ## Workflow
 
 1. Inspect the target deck and confirm that it has a browser-playable URL. Preserve slide content and navigation unless the user explicitly requests changes.
-2. Prefer the hosted `/new/` flow. Enter the event title and deck URL, create the event, and preserve the returned private setup and moderation links without printing their fragments in logs or chat.
+2. Prefer the hosted `https://call-in.mashbean.net/new/` flow. Enter the event title, upload a PDF up to 20MB or paste a deck URL, create the event, and preserve the returned private setup and moderation links without printing their fragments in logs or chat.
 3. Open the private setup link when event copy, reactions, or polls need editing. Keep the generated `eventId` stable.
 4. Use the hosted presenter view when the speaker wants no source edits. If the deck host blocks iframe embedding, use **Open deck separately** or move to the deeper HTML integration path.
 5. Test the creator, presenter view, audience page, dashboard, moderator page, QR code, event isolation, capability separation, presentation delay, moderation, difficulty updates, polls, reactions, collapse control, and reconnect behavior.
@@ -37,7 +37,7 @@ and verification from a separate `audreyt/uncommon-ground` checkout.
 
 - Do not reset production data unless the user explicitly asks.
 - Do not run a large load test by default. Use a short smoke test with at most five simulated participants unless the user explicitly authorizes a larger test.
-- Do not commit tokens, `.dev.vars`, `.env`, `.live-deck-admin-token`, or hosted capability fragments.
+- Do not commit tokens, `.dev.vars`, `.env`, `.call-in-admin-token`, legacy `.live-deck-admin-token`, or hosted capability fragments.
 - Hosted multi-event mode requires one Durable Object per event, separate access hashes, a global creation limit, automatic expiry, and no raw IP storage. Review capacity and privacy again before increasing limits or retention.
 - Do not add patient, attendee, or other sensitive fields to the default schema.
 - Do not give the admin token to a live moderator. Moderator access must not expose export or reset operations.
@@ -49,6 +49,6 @@ and verification from a separate `audreyt/uncommon-ground` checkout.
 
 When details are missing, choose reversible defaults and state them. The smallest useful prompt is
 
-> Create a Live Deck event for this web slide deck. The event is called “My Event.” Preserve the slides, use a right-side dashboard on desktop, and give me the audience and presenter URLs.
+> Use Call-in to add live audience responses to this slide deck. Keep the original slides and return the presenter, audience QR, and moderator links.
 
 The skill should turn that prompt into an isolated hosted event, a usable presenter view, and a tested handoff. Do not introduce cloud deployment unless the user asks to self-host.

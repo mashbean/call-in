@@ -4,6 +4,8 @@ node_modules/
 .env
 .live-deck-admin-token
 .live-deck-moderator-token
+.call-in-admin-token
+.call-in-moderator-token
 dist/
 coverage/
 .DS_Store

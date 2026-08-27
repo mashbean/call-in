@@ -3,106 +3,87 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#081225" />
-    <title>Live Deck Kit</title>
-    <link rel="stylesheet" href="/style.css" />
+    <meta name="theme-color" content="#f7f7fb" />
+    <link rel="icon" type="image/png" href="/brand/call-in-favicon.png" />
+    <meta name="description" content="Call-in 簡報叩應，讓線上分享即時收到觀眾的理解、提問與反應。上傳 PDF 或貼上簡報網址，一分鐘開始。" />
+    <link rel="canonical" href="https://call-in.mashbean.net/" />
+    <link rel="alternate" hreflang="zh-Hant-TW" href="https://call-in.mashbean.net/" />
+    <link rel="alternate" hreflang="en" href="https://call-in.mashbean.net/en/" />
+    <title>Call-in 簡報叩應｜讓你的分享，可以即時叩應</title>
+    <link rel="stylesheet" href="/landing/landing.css" />
   </head>
   <body>
-    <header class="hero">
-      <div class="eyebrow" data-config="eyebrow">LIVE DECK</div>
-      <h1 data-config="title">Live audience</h1>
-      <p data-config="description">Share the difficulty, ask a question, or send a live reaction.</p>
-      <div class="live-status" data-status data-zh-tail="連線中"><span></span>Connecting</div>
-    </header>
-    <main>
-      <nav class="tabs" aria-label="Audience interaction" data-zh-aria="觀眾互動功能">
-        <button class="active" data-tab="questions" data-zh="隨時提問">Ask anytime</button>
-        <button data-tab="polls" data-zh="快速投票">Quick polls</button>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Call-in 簡報叩應首頁">
+        <img class="brand-mark-light" src="/brand/call-in-mark-light.png" alt="" />
+        <img class="brand-mark-dark" src="/brand/call-in-mark-dark.png" alt="" />
+        <span class="brand-copy"><strong>CALL-IN</strong><span>簡報叩應</span></span>
+      </a>
+      <nav class="header-actions" aria-label="網站工具">
+        <a class="language-link" href="/en/" lang="en" hreflang="en">EN</a>
+        <button class="icon-button" type="button" data-theme-toggle data-light-label="切換為亮色模式" data-dark-label="切換為暗色模式" aria-label="切換為暗色模式">☾</button>
       </nav>
-      <section data-panel="polls" class="panel">
-        <div id="polls" class="poll-grid" aria-live="polite"></div>
-      </section>
-      <section data-panel="questions" class="panel active">
-        <section class="difficulty-card" aria-labelledby="difficulty-title">
-          <div class="difficulty-heading">
-            <div>
-              <div class="eyebrow" data-zh="理解難度">LIVE DIFFICULTY</div>
-              <h2 id="difficulty-title" data-config="difficulty.title">How difficult does this feel right now?</h2>
-            </div>
-            <div class="difficulty-current">
-              <b data-difficulty-value>3</b>
-              <span data-difficulty-label>OK</span>
-            </div>
-          </div>
-          <label class="sr-only" for="difficulty" data-zh="目前理解難度">Current difficulty</label>
-          <input id="difficulty" name="difficulty" type="range" min="1" max="5" step="1" value="3" />
-          <div class="difficulty-scale" data-difficulty-scale aria-hidden="true"></div>
-          <div class="difficulty-chart" aria-label="Live difficulty distribution" data-zh-aria="即時理解難度分布" role="img">
-            <svg viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-              <path class="difficulty-grid-line" d="M20 170 H580" />
-              <path data-difficulty-area class="difficulty-area" />
-              <path data-difficulty-line class="difficulty-line" />
-              <g data-difficulty-points></g>
-            </svg>
-            <div class="difficulty-counts" data-difficulty-counts></div>
-          </div>
-          <div class="difficulty-note">
-            <span data-difficulty-total data-zh="等待第一筆回覆">Waiting for the first response</span>
-            <span data-difficulty-message data-zh="拖曳後會自動更新">Drag to update automatically</span>
-          </div>
-          <div class="reaction-picker" aria-labelledby="reaction-title">
-            <div>
-              <b id="reaction-title" data-zh="送出即時反應">Send a live reaction</b>
-              <small data-zh="會立刻出現在講者畫面上">It appears on the presenter dashboard immediately</small>
-            </div>
-            <div class="reaction-buttons" data-reactions></div>
-            <span class="reaction-message" data-reaction-message aria-live="polite"></span>
-          </div>
-        </section>
+    </header>
 
-        <section id="identity-gate" class="identity-card" hidden>
-          <div class="eyebrow" data-zh="提問之前">BEFORE YOU ASK</div>
-          <h2 data-coc-title data-zh="一起維持有用的討論">Help keep the room useful</h2>
-          <p data-coc-summary></p>
-          <ul data-coc-rules></ul>
-          <form id="identity-form">
-            <label for="participant-alias" data-zh="為這場活動選一個暱稱">Choose a name for this event</label>
-            <input id="participant-alias" name="alias" minlength="2" maxlength="24" required placeholder="For example: night-shift resident" data-zh-placeholder="例如：後排聽眾" autocomplete="nickname" />
-            <label class="coc-check"><input name="coc" type="checkbox" required /><span data-zh="我願意遵守討論規則；繼續後，本場活動的暱稱將固定。">I agree to follow this code of conduct. My event name will stay fixed after I continue.</span></label>
-            <button class="primary" type="submit" data-zh="同意並繼續">Agree and continue</button>
-            <div class="form-message" data-identity-message aria-live="polite"></div>
-          </form>
-        </section>
-
-        <section id="participant-profile" class="participant-profile" hidden>
-          <span data-zh="你的活動暱稱">Your event name</span><b data-participant-label></b>
-        </section>
-
-        <form id="question-form" class="ask-card" novalidate hidden>
-          <div class="form-step"><span>01</span><div><b data-zh="先設定上方的理解難度">Set the difficulty above</b><small data-zh="最新分數會和問題一起送出">Your latest score is saved with the question</small></div></div>
-          <div class="form-step"><span>02</span><div><b data-zh="寫下不清楚或值得追問的地方">Write what feels unclear or worth following up</b><small data-zh="太難、太簡單或想再深入，都可以問">Ask when it feels too hard, too easy, or worth exploring</small></div></div>
-          <label class="sr-only" for="question" data-zh="你的問題">Your question</label>
-          <div class="question-hint" data-question-hint hidden data-zh="問題至少需要 4 個字，讓大家知道你想問什麼">A question needs at least 4 characters so the room can tell what you are asking</div>
-          <textarea id="question" name="question" minlength="4" maxlength="280" required data-config-placeholder="question.placeholder"></textarea>
-          <fieldset class="intent-fieldset">
-            <legend class="form-step"><span>03</span><div><b data-zh="你希望現場怎麼處理這個問題？">How should the room take up this question?</b><small data-zh="選擇最接近的目的，幫助整理問答">Choose the closest purpose to help organize Q&amp;A</small></div></legend>
-            <div class="intent-grid" data-lenses></div>
-          </fieldset>
-          <button class="primary" type="submit" data-zh="送出問題">Send question</button>
-          <div class="form-message" data-form-message aria-live="polite"></div>
-        </form>
-        <section id="my-submissions" class="my-submissions" hidden>
-          <div class="section-head compact"><div><div class="eyebrow" data-zh="你的問題">YOUR SUBMISSIONS</div><h2 data-zh="等待中或暫不公開">Waiting or held</h2></div></div>
-          <div data-own-questions class="question-list"></div>
-        </section>
-        <div class="section-head">
-          <div><div class="eyebrow" data-zh="問題池">QUESTION POOL</div><h2 data-config="question.title">Ask anytime</h2></div>
-          <span data-question-count data-zh="0 個問題">0 questions</span>
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Call-in for your slides</div>
+          <h1>讓你的分享，<br /><span class="gradient-text">可以即時叩應</span></h1>
+          <p>把觀眾從沉默的方格帶回現場。上傳 PDF 或貼上簡報網址，一分鐘得到講者畫面、觀眾 QR Code 與主持連結。</p>
+          <div class="hero-actions">
+            <a class="button primary" href="/new/">建立一場叩應 <span aria-hidden="true">→</span></a>
+            <a class="button" href="#prompt">用一行 Prompt 建置</a>
+          </div>
+          <ul class="trust-line" aria-label="產品特色">
+            <li>不需註冊</li><li>PDF 最大 20MB</li><li>七天後自動刪除</li><li>開源</li>
+          </ul>
         </div>
-        <div id="questions" class="question-list" aria-live="polite"></div>
+
+        <div class="product-window" aria-label="Call-in 講者畫面示意">
+          <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><span>call-in.mashbean.net</span><span class="live-pulse">● LIVE</span></div>
+          <div class="product-stage">
+            <div class="slide-preview"><small>06 / SHARED QUESTIONS</small><h2>把觀眾的回應<br />帶回簡報現場</h2><div class="slide-line"></div></div>
+            <div class="response-panel">
+              <div class="mini-brand"><img src="/brand/call-in-mark-dark.png" alt="" /> CALL-IN</div>
+              <div class="response-card"><span>現場理解難度</span><strong>剛剛好</strong><div class="bell-curve"><svg viewBox="0 0 220 74" role="img" aria-label="理解難度呈鐘型分布"><defs><linearGradient id="curve" x1="0" x2="1"><stop stop-color="#914cff"/><stop offset="1" stop-color="#1bd7ee"/></linearGradient></defs><path d="M2 68 C55 68 60 6 110 6 C160 6 165 68 218 68" fill="none" stroke="url(#curve)" stroke-width="5" stroke-linecap="round"/><circle cx="110" cy="6" r="5" fill="#ff6577"/></svg></div></div>
+              <div class="reactions" aria-label="即時反應"><i>👏</i><i>💡</i><i>❤️</i><i>🤔</i></div>
+              <div class="question-chip">💬 這個方法要怎麼用在我的場景？</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="how">
+        <div class="section-header"><div><div class="eyebrow">一分鐘開始</div><h2>簡報照常，<br />現場開始說話。</h2></div><p>不用學新的簡報軟體。Call-in 把簡報與理解難度、問題池和即時反應放進同一個講者畫面。</p></div>
+        <div class="steps">
+          <article class="step"><div class="step-number"><span>01</span><i></i></div><h3>放入你的簡報</h3><p>上傳 20MB 以內的 PDF，或貼上 Google Slides、Canva 與網頁簡報網址。</p></article>
+          <article class="step"><div class="step-number"><span>02</span><i></i></div><h3>打開講者畫面</h3><p>簡報、QR Code 與即時回應同時就位；上排工具列也能收起，完整保留舞台。</p></article>
+          <article class="step"><div class="step-number"><span>03</span><i></i></div><h3>讓觀眾叩應</h3><p>觀眾不用安裝 App，手機掃碼就能回報難度、反應、提問與支持別人的問題。</p></article>
+        </div>
+      </section>
+
+      <section class="prompt-section" id="prompt">
+        <div class="prompt-inner">
+          <div><div class="eyebrow">Claude · Codex · AI agents</div><h2>不想設定？<br />交給你的 Agent。</h2><p>Call-in 的開源套件保留可部署版本。把下面一行交給 Claude 或 Codex，它就知道你要的結果。</p></div>
+          <div class="prompt-box"><code data-prompt>請用 Call-in 為這份簡報建立即時叩應頁面，保留原本簡報，提供講者頁、觀眾 QR Code 與主持連結。</code><button class="button small copy-prompt" type="button" data-copy-prompt data-copied="已複製 Prompt" data-failed="請選取上方文字複製">複製 Prompt</button></div>
+        </div>
+      </section>
+
+      <section class="section" id="privacy">
+        <div class="section-header"><div><div class="eyebrow">清楚的資料邊界</div><h2>你的簡報，<br />仍然只屬於你。</h2></div><p>Call-in 只保留完成本場活動所需的資料，並把實際資料用途寫清楚。</p></div>
+        <div class="principles">
+          <article class="principle"><div class="icon" aria-hidden="true">⌛</div><h3>簡報會消滅</h3><p>上傳的 PDF 只為本場活動暫存，活動七天後自動刪除。Call-in 不拿簡報做模型訓練，也不主張任何著作權；著作權仍屬於你。</p></article>
+          <article class="principle"><div class="icon" aria-hidden="true">◎</div><h3>回應會被記錄</h3><p>透過 call-in.mashbean.net 建立的活動會記錄匿名群眾回應，用於維運並改善專案；活動、簡報與回應資料會在七天後一起刪除。請勿輸入敏感或機密資料。</p></article>
+        </div>
+      </section>
+
+      <section class="section support" id="support">
+        <div class="support-card"><div><div class="eyebrow">Open source, one person</div><h2>讓 Call-in 繼續長大</h2><p>這是一個單人維護的開源專案。你可以先在 GitHub 給一顆星、回報問題或貢獻程式；GitHub Sponsors 收款通道正在準備。</p></div><div class="support-actions"><a class="button primary" href="https://github.com/mashbean/call-in" target="_blank" rel="noreferrer">在 GitHub 支持</a><span class="sponsor-note">Sponsors 即將開放</span></div></div>
       </section>
     </main>
-    <footer><a data-config-href="deckUrl" href="/example/" data-zh="回到簡報">Back to slides</a><a data-event-dashboard href="/dashboard/" data-zh="開啟講者儀表板">Open presenter dashboard</a></footer>
-    <script type="module" src="/app.js"></script>
+
+    <footer><div><div class="footer-brand">CALL-IN · 簡報叩應</div><p>Call-in for your slides. 讓你的分享，可以即時叩應。</p></div><div class="footer-links"><a href="/new/">建立活動</a><a href="https://github.com/mashbean/call-in">GitHub</a><a href="/en/" lang="en">English</a></div></footer>
+    <script type="module" src="/landing/landing.js"></script>
   </body>
 </html>

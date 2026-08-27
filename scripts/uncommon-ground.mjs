@@ -78,7 +78,7 @@ export async function exportUncommonGround(options) {
   const result = {
     meta: {
       source: options.sourceLabel || path.basename(options.questions),
-      event: options.event || "live-deck-event",
+      event: options.event || "call-in-event",
       total: outputQuestions.length,
       live: outputQuestions.length - withdrawn,
       withdrawn,

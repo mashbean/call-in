@@ -5,17 +5,17 @@ import { isAuthorized } from "../src/index";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
-describe("Live Deck Kit Worker", () => {
+describe("Call-in Worker", () => {
   it("serves the public event configuration", async () => {
     const response = await SELF.fetch("https://example.com/api/config");
     expect(response.status).toBe(200);
     const config = await response.json<{ eventId: string; difficulty: { labels: string[] } }>();
-    expect(config.eventId).toBe("my-live-deck");
+    expect(config.eventId).toBe("my-call-in");
     expect(config.difficulty.labels).toHaveLength(5);
   });
 
   it("stores a validated event configuration without changing the event data key", async () => {
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName("my-call-in:default");
     const current = await stub.eventConfig();
     const next = structuredClone(current);
     next.title = "A configured event";
@@ -91,9 +91,9 @@ describe("Live Deck Kit Worker", () => {
     const audiencePage = await SELF.fetch(created.audienceUrl);
     const presenterPage = await SELF.fetch(created.presenterUrl);
     expect(audiencePage.status).toBe(200);
-    expect(await audiencePage.text()).toContain("Live Deck Kit");
+    expect(await audiencePage.text()).toContain("Call-in 簡報叩應");
     expect(presenterPage.status).toBe(200);
-    expect(await presenterPage.text()).toContain("Live Deck 講者頁");
+    expect(await presenterPage.text()).toContain("Call-in 講者頁");
 
     const apiBase = `https://example.com/api/events/${created.eventId}`;
     const publicConfigResponse = await SELF.fetch(`${apiBase}/config`);
@@ -138,6 +138,41 @@ describe("Live Deck Kit Worker", () => {
     expect((await SELF.fetch("https://example.com/e/00000000000000000000000000000000/")).status).toBe(404);
   });
 
+  it("stores an uploaded PDF inside the event and serves it until expiry", async () => {
+    const form = new FormData();
+    form.set("title", "Uploaded deck");
+    form.set("locale", "en");
+    form.set("deckFile", new File(["%PDF-1.7\ncall-in-test"], "speaker deck.pdf", { type: "application/pdf" }));
+    const createdResponse = await SELF.fetch("https://example.com/api/events", {
+      method: "POST",
+      body: form,
+    });
+    expect(createdResponse.status).toBe(201);
+    const created = await createdResponse.json<{ eventId: string; deckMode: string }>();
+    expect(created.deckMode).toBe("upload");
+
+    const configResponse = await SELF.fetch(`https://example.com/api/events/${created.eventId}/config`);
+    const config = await configResponse.json<{ deckUrl: string; locale: string }>();
+    expect(config.deckUrl).toBe(`https://example.com/api/events/${created.eventId}/deck.pdf`);
+    expect(config.locale).toBe("en");
+
+    const deck = await SELF.fetch(config.deckUrl);
+    expect(deck.status).toBe(200);
+    expect(deck.headers.get("content-type")).toBe("application/pdf");
+    expect(deck.headers.get("cache-control")).toBe("private, no-store");
+    expect(deck.headers.get("content-disposition")).toContain("speaker%20deck.pdf");
+    expect(new TextDecoder().decode(await deck.arrayBuffer())).toBe("%PDF-1.7\ncall-in-test");
+  });
+
+  it("rejects a file that is named PDF but has no PDF signature", async () => {
+    const form = new FormData();
+    form.set("title", "Invalid upload");
+    form.set("deckFile", new File(["not actually a pdf"], "fake.pdf", { type: "application/pdf" }));
+    const response = await SELF.fetch("https://example.com/api/events", { method: "POST", body: form });
+    expect(response.status).toBe(400);
+    expect(await response.json<{ error: string }>()).toEqual({ error: "File is not a valid PDF" });
+  });
+
   it("records difficulty and keeps only the latest score per device", async () => {
     const voterId = crypto.randomUUID();
     await post("/api/difficulty", { voterId, score: 2 });
@@ -168,7 +203,7 @@ describe("Live Deck Kit Worker", () => {
     expect(second.submission.visibility).toBe("pending");
     expect(second.snapshot.questions).toHaveLength(0);
 
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName("my-call-in:default");
     await stub.moderateQuestion(first.submission.id, "restore", "other");
     const state = await stub.moderateQuestion(second.submission.id, "restore", "other");
     expect(state.questions).toHaveLength(2);
@@ -185,7 +220,7 @@ describe("Live Deck Kit Worker", () => {
       lens: "clarify",
       difficulty: 3,
     });
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName("my-call-in:default");
     await stub.moderateQuestion(question.submission.id, "restore", "other");
 
     const response = await SELF.fetch("https://example.com/api/upvote", {
@@ -255,7 +290,7 @@ describe("Live Deck Kit Worker", () => {
       lens: "clarify",
       difficulty: 4,
     });
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName("my-call-in:default");
     await stub.moderateQuestion(question.submission.id, "hide", "harassment");
     const publicState = await stub.snapshot();
     const ownState = await stub.participantState(voterId);
@@ -278,7 +313,7 @@ describe("Live Deck Kit Worker", () => {
       lens: "bridge",
       difficulty: 3,
     });
-    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const stub = env.LIVE_SESSION.getByName("my-call-in:default");
     await stub.moderateQuestion(question.submission.id, "restore", "other");
 
     const selfFlag = await SELF.fetch("https://example.com/api/flag", {

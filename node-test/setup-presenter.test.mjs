@@ -30,17 +30,21 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentHtml, /lang="zh-Hant-TW"/);
   assert.match(presentHtml, /data-deck-frame/);
   assert.match(presentHtml, /data-dashboard-toggle/);
+  assert.match(presentHtml, /data-toolbar-toggle/);
+  assert.match(presentHtml, /data-toolbar-peek/);
   assert.match(presentHtml, /src="\/dashboard\/"/);
   assert.match(presentJs, /eventContext\.apiBase}\/config/);
   assert.match(presentJs, /\["http:", "https:"\]/);
   assert.match(presentJs, /!parsed\.username && !parsed\.password/);
+  assert.match(presentJs, /toolbar-collapsed/);
   assert.match(presentCss, /@media \(max-width: 1024px\)/);
   assert.match(presentCss, /@media \(max-width: 720px\)/);
 });
 
 test("hosted creator asks only for the talk and returns public and private links", () => {
   assert.match(newHtml, /lang="zh-Hant-TW"/);
-  assert.match(newHtml, /貼上簡報/);
+  assert.match(newHtml, /上傳 PDF/);
+  assert.match(newHtml, /最大 20MB/);
   assert.match(newHtml, /data-create-form/);
   assert.match(newHtml, /data-presenter-link/);
   assert.match(newHtml, /data-audience-qr/);
@@ -48,6 +52,7 @@ test("hosted creator asks only for the talk and returns public and private links
   assert.match(newHtml, /data-moderator-link/);
   assert.doesNotMatch(newHtml, /Cloudflare|GitHub|Durable Object|token/i);
   assert.match(newJs, /fetch\("\/api\/events"/);
+  assert.match(newJs, /new FormData\(form\)/);
   assert.match(newJs, /result\.presenterUrl/);
   assert.match(newJs, /result\.setupUrl/);
   assert.match(newJs, /result\.moderatorUrl/);

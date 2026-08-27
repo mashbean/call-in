@@ -4,7 +4,7 @@
 
 The interaction flow and Durable Objects routing were informed by
 [`htlin222/kahoot-cf`](https://github.com/htlin222/kahoot-cf), available under the MIT License.
-Live Deck Kit was independently rewritten and does not include the original quiz editor,
+Call-in was independently rewritten and does not include the original quiz editor,
 authentication, scoring, or game lifecycle code.
 
 MIT License

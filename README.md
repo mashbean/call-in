@@ -1,240 +1,126 @@
-# Live Deck Kit
+# Call-in · 簡報叩應
 
-[Start a hosted event](https://live-deck-kit.mashbean.workers.dev/new/)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./public/brand/call-in-mark-dark.png">
+  <img src="./public/brand/call-in-mark-light.png" width="128" alt="Call-in abstract bell-curve mark">
+</picture>
 
-Add realtime difficulty feedback, audience questions, emoji reactions, quick polls, and a QR entry point to any web slide deck. A speaker can connect an existing browser-based deck without deploying infrastructure or editing code.
+**Call-in for your slides. 讓你的分享，可以即時叩應。**
 
-Audience members join from their phones. The presenter sees a live dashboard beside the deck and can collapse it at any time. Desktop layouts can use a 75/25 split, while phones and tablets get a touch-friendly drawer.
+[Start a hosted event](https://call-in.mashbean.net/new/) · [English](https://call-in.mashbean.net/en/) · [Source](https://github.com/mashbean/call-in)
 
-![Live Deck Kit running on a presenter laptop and an audience phone](./docs/hero-mockup-v2.jpg)
+Call-in adds a live audience layer beside an existing slide deck. A speaker uploads a PDF (up to 20MB) or pastes a browser-playable deck URL, then immediately receives:
 
-## Start a hosted event
+- a presenter view combining the deck and live response dashboard;
+- an audience URL and QR code;
+- private setup and moderation links;
+- live difficulty feedback, questions, reactions, and polls.
 
-Open [`/new/`](https://live-deck-kit.mashbean.workers.dev/new/), paste the title and browser-playable deck URL, and choose **Create event**. The service immediately returns
+No account, repository, or Cloudflare setup is required for the hosted flow.
 
-- a presenter view with the deck and dashboard together
-- an audience URL and QR code
-- a private setup link for the speaker
-- a separate private moderation link for an assistant
+## Start in one minute
 
-There is no account, cloud deployment, or token selection in the speaker flow. Access credentials are generated automatically and carried in URL fragments, which are not sent in HTTP requests. The public beta limits new-event creation globally and deletes hosted event data after seven days. Do not use the beta for sensitive or confidential material.
+1. Open [call-in.mashbean.net/new](https://call-in.mashbean.net/new/).
+2. Upload a PDF or paste the deck URL and name the event.
+3. Open **Presenter view** and show the audience QR code.
 
-Some presentation hosts block iframe embedding. The presenter toolbar therefore keeps an **Open deck separately** fallback. Google Slides sharing URLs are converted to embed URLs automatically.
+The presenter toolbar and response panel can both be hidden. Uploaded decks, event data, and audience responses expire after seven days.
 
-## Start with one prompt
+## One-prompt agent workflow
 
-Install the bundled Codex skill, then use a prompt like this
+Give Claude, Codex, or another coding agent this prompt:
 
-> Add Live Deck Kit to this web slide deck. The event is called “My Event.” Preserve the existing slides and animations, deploy the realtime service to my Cloudflare account, use a right-side 25% dashboard on desktop, and use a drawer on mobile.
+> Use Call-in to add live audience responses to this slide deck. Keep the original slides and return the presenter, audience QR, and moderator links.
 
-The skill configures the event, deploys the realtime service, embeds the dashboard, tests desktop and mobile behavior, and hands back the audience and presenter URLs.
+The agent should prefer the hosted creator unless the user explicitly asks to self-host, needs a different retention policy, or requires source-level integration.
 
-## Features
+## Data boundary
 
-- Realtime 1–5 difficulty feedback with a distribution curve
-- Newest-first audience questions, question lenses, difficulty-at-submission, and “I have this question too” upvotes
-- Four configurable emoji reactions with presenter-side popup animations
-- Up to eight quick polls with vote counts
-- An always-available dashboard QR code that points to the audience page
-- A hosted `/new/` flow that creates an isolated event and private capability links in one form submission
-- A no-code `/setup/` wizard that stores event configuration in the event's Durable Object
-- A standalone `/present/` view that combines an existing web deck and the live dashboard
-- Hibernation WebSockets so the Durable Object can sleep while idle
-- A configurable per-device question limit, defaulting to 20
-- A code-of-conduct gate with a fixed event alias and stable participant badge
-- An eight-second presentation buffer, author-only holds, slow mode, approval mode, pause, and event close controls
-- A mobile-first moderator console with hide, restore, review, and mute actions
-- Token-protected export and reset endpoints
-- A privacy-preserving Uncommon Ground post-event export
-- An idempotent HTML integration CLI
-- Overlay mode and a desktop 75/25 split mode
+On `call-in.mashbean.net`:
 
-## Architecture
+- uploaded PDFs are stored only to serve the event and are deleted after seven days;
+- slide copyright remains with the uploader; Call-in does not use decks for model training;
+- anonymous audience responses are recorded to operate and improve the project, then deleted with the event after seven days;
+- speakers should not upload or enter sensitive or confidential material.
 
-```text
-Existing web deck ── iframe ── hosted /present/ ── presenter dashboard
-       or                                           │
-Web slide deck ── live-deck-panel ──────────────────┤
-                                                   │
-Audience phones ── audience page ──────────────────┤
-                                                   ▼
-                                      Cloudflare Worker API
-                                                   │
-                                  one Durable Object per event
-                                                   │
-                                      Hibernation WebSockets
-```
+Each hosted event uses an isolated Durable Object. Access secrets live in URL fragments and tab-scoped session storage; they are not part of public event URLs.
 
-Hosted events share the Worker code but receive separate Durable Objects, SQLite state, random event identifiers, and access hashes. The service does not store raw IP addresses. Self-hosted deployments can still use the original single-event root routes.
+## Self-host on Cloudflare
 
-## Self-host
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mashbean/call-in)
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mashbean/live-deck-kit)
+Or use Wrangler:
 
-Self-hosting is optional. The deploy button copies the repository, provisions the Durable Object, and deploys the Worker. After deployment, open `/new/`; event access links are generated automatically. Use the terminal path below only for a source-configured permanent event or deeper HTML integration.
-
-## Self-host from a terminal
-
-Requirements are Node.js 22 or later and a Cloudflare account.
-
-```bash
-gh repo clone mashbean/live-deck-kit
-cd live-deck-kit
+```sh
+gh repo clone mashbean/call-in
+cd call-in
 npm install
-npm run types
-```
-
-Edit [`public/event.config.json`](./public/event.config.json), then create separate admin and moderator tokens and check the project.
-
-```bash
-npm run admin-token
-npm run moderator-token
+npm run doctor
 npm run check
-npx wrangler login
 npm run deploy
 ```
 
-The token commands write SHA-256 hashes to `wrangler.jsonc`. Plaintext tokens are stored only in the Git-ignored `.live-deck-admin-token` and `.live-deck-moderator-token` files. Give assistants only the moderator token. It cannot export or reset event data.
+Self-hosters should change or remove the `call-in.mashbean.net` custom-domain route in `wrangler.jsonc` before deploying. The Worker service name remains `live-deck-kit` for production Durable Object continuity; it is an internal deployment identifier, not the product name.
 
-After Wrangler returns the HTTPS service URL, add the dashboard to an existing deck.
+## Add Call-in inside an HTML deck
 
-```bash
-npm run integrate -- \
-  --deck /absolute/path/to/deck/index.html \
-  --service-url https://YOUR-WORKER.workers.dev \
-  --mode split \
-  --target-selector '.deck-stage' \
-  --desktop-width '25vw'
+The hosted presenter view does not change deck source. If deeper integration is needed:
+
+```sh
+npm run integrate -- --deck /absolute/path/index.html --service-url https://YOUR-WORKER.workers.dev --mode split
 ```
 
-Use `--mode overlay` when the deck's main presentation container is unknown. The CLI only manages the block between `live-deck-kit:start` and `live-deck-kit:end`, so rerunning it updates the existing integration instead of inserting a duplicate.
-
-## Manual embed
+Or add the web component manually:
 
 ```html
-<script type="module" src="https://YOUR-WORKER.workers.dev/embed/live-deck-panel.js"></script>
-<live-deck-panel
+<script type="module" src="https://YOUR-WORKER.workers.dev/embed/call-in-panel.js"></script>
+<call-in-panel
   service-url="https://YOUR-WORKER.workers.dev"
   mode="split"
   target-selector=".deck-stage"
   desktop-width="25vw"
-></live-deck-panel>
+></call-in-panel>
 ```
 
-## Install the Codex skill
+The old `live-deck-panel` element and script entry point remain as compatibility aliases.
 
-Install directly from GitHub
+## Configuration and moderation
 
-```bash
-npx --yes github:mashbean/live-deck-kit install-skill
+Hosted events use the private setup link returned by `/new/`. Source-configured self-hosted events use [`public/event.config.json`](./public/event.config.json); see [`skills/call-in/references/configuration.md`](./skills/call-in/references/configuration.md).
+
+```sh
+npm run admin-token
+npm run moderator-token
 ```
 
-Or install from a local clone
+Plaintext tokens are stored only in Git-ignored `.call-in-admin-token` and `.call-in-moderator-token` files. Give assistants or live moderators only the moderator credential; it cannot export or reset event data.
 
-```bash
-npm run install-skill
-```
+## CLI and Codex skill
 
-The skill is installed to `$CODEX_HOME/skills/live-deck-kit`. When `CODEX_HOME` is unset, it uses `~/.codex/skills/live-deck-kit`.
-
-## Event configuration
-
-For hosted events, the private setup link returned by `/new/` is the primary way to change public copy, colors, difficulty labels, reactions, and polls. Its access secret is consumed from the URL fragment and retained only for that browser tab. [`public/event.config.json`](./public/event.config.json) remains the version-controlled default and fallback for source-configured self-hosted events. The complete field reference is in [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md).
-
-`eventId` participates in the Durable Object name. Keep it stable after a production event begins collecting data unless you intentionally want a new, empty event.
-
-## Admin API
-
-Load `.live-deck-admin-token` into a temporary shell variable, then unset it when finished.
-
-```bash
-LIVE_DECK_ADMIN_TOKEN="$(tr -d '\n' < .live-deck-admin-token)"
-
-curl -H "Authorization: Bearer $LIVE_DECK_ADMIN_TOKEN" \
-  https://YOUR-WORKER.workers.dev/api/admin/export
-
-curl -X POST -H "Authorization: Bearer $LIVE_DECK_ADMIN_TOKEN" \
-  https://YOUR-WORKER.workers.dev/api/admin/reset
-
-unset LIVE_DECK_ADMIN_TOKEN
-```
-
-Resetting state cannot be undone by the service. Export first and verify the exact event URL before resetting anything.
-
-The setup wizard uses the same admin token with `GET` and `POST /api/admin/config`. The browser keeps the token in `sessionStorage`, not persistent local storage. Configuration updates do not reset responses, and `eventId` cannot be changed through the wizard.
-
-## Live moderation
-
-When moderation is enabled in `public/event.config.json`, a participant accepts the event code of conduct and chooses one event alias before asking a question. The server keeps that alias fixed and adds a short event-local badge. Questions enter a configurable presentation buffer before becoming public.
-
-Participants can report a public question for harassment, deliberate disruption, serious off-topic content, or private information. There is no general dislike reason. One event identity can report a question once and cannot report its own question. The adaptive threshold requires several independent identities before the question is temporarily removed from public view. Report counts and reasons remain moderator-only.
-
-Open the mobile-first console at `https://YOUR-WORKER.workers.dev/moderate/` and enter the separate moderator token. Moderators can confirm or reverse a community hold, hide or restore one question, slow a participant, require review for future questions, mute free-text questions, or restore access. The presenter dashboard and public API only receive public questions. A held question remains visible on its author's device with a truthful `Not public` status.
-
-Confirmed reports increase the reporter's future trust weight. Restored questions reduce the weight of reporters whose flags were rejected. Crowd reports never mute a participant automatically, and moderator judgment always wins.
-
-Session controls provide five modes
-
-- `open` publishes questions after the configured buffer
-- `slow` applies the longer event cooldown
-- `approval` holds every new question for moderator review
-- `paused` temporarily stops new questions while polls, reactions, and difficulty remain available
-- `closed` ends free-text questions for the event
-
-All moderation actions, original question rows, report reasons, resolution outcomes, and event-local reporter IDs remain available to the admin export. The default schema does not store IP addresses or legal names.
-
-## Close the loop with Uncommon Ground
-
-Live Deck Kit can convert its post-event JSON export into the `questions.json` contract used by
-[`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground). Source question IDs and
-browser voter IDs are replaced with event-local sequential codes. Display names are removed unless
-you explicitly pass `--keep-names`. Moderated rows remain in the private working file as
-`Withdrawn`, while Uncommon Ground excludes them from the published page.
-
-```bash
-npm run uncommon-ground -- \
-  --questions /path/to/questions.json \
-  --question-votes /path/to/question-votes.json \
-  --classifications /path/to/moderation-review.json \
-  --event my-event \
-  --out /private/workdir/questions.json
-```
-
-The default withdrawn labels are `negative` and `provocative`. Override them only after a human
-moderation review.
-
-Then run the upstream pipeline from its own checkout. Do not nest that repository inside a deck
-or Live Deck Kit checkout.
-
-```bash
-gh repo clone audreyt/uncommon-ground
-cd uncommon-ground
-python3 assemble.py /private/workdir templates/uncommon-ground.html /private/workdir/uncommon-ground.html
-node domcheck.js /private/workdir/uncommon-ground.html
-python3 verify.py /private/workdir --expected=N
-```
-
-## Testing
-
-```bash
+```sh
 npm run doctor
-npm run typecheck
-npm test
-npm run deploy:dry
+npm run check
+npx --yes github:mashbean/call-in install-skill
 ```
 
-Tests use Cloudflare's official Vitest Workers integration and exercise a real Durable Object binding inside the Workers runtime. The default suite creates only a few participants and does not include a load test.
+The skill installs to `$CODEX_HOME/skills/call-in` (or `~/.codex/skills/call-in`). Full integration guidance is in [`skills/call-in/references/integration.md`](./skills/call-in/references/integration.md).
 
-## Inspirations and dependencies
+## Support the project
 
-- Realtime interaction and Durable Objects routing were informed by [`htlin222/kahoot-cf`](https://github.com/htlin222/kahoot-cf), licensed under MIT
-- The four question lenses and the post-event export contract interoperate with [`audreyt/uncommon-ground`](https://github.com/audreyt/uncommon-ground), licensed under CC0-1.0. The clustering and loopback pipeline remains in its upstream repository
-- Realtime state uses Cloudflare Workers, Durable Objects, SQLite, and Hibernation WebSockets
-- QR code generation uses [`soldair/node-qrcode`](https://github.com/soldair/node-qrcode)
-- The repository device mockup uses [`picturepan2/devices.css`](https://github.com/picturepan2/devices.css), licensed under MIT
+Call-in is a solo-maintained open-source project. Stars, issue reports, documentation fixes, and pull requests are welcome. A GitHub Sponsors profile is being prepared; payment links will be added only after the account can actually receive sponsorships.
 
-Live Deck Kit is a separate implementation designed for live feedback beside a web presentation. It does not include the quiz editor, authentication, scoring, or game lifecycle from `kahoot-cf`.
+## Development
 
-## License
+```sh
+npm install
+npm run types
+npm run doctor
+npm run check
+npm run dev
+```
 
-[Apache License 2.0](./LICENSE). Modification, distribution, and commercial use are permitted, with an explicit patent grant. See [`NOTICE`](./NOTICE) and [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md) for attribution details.
+The test suite covers hosted-event isolation, role capabilities, moderation, reconnect behavior, creator and presenter contracts, and deployment packaging.
+
+## License and provenance
+
+Apache-2.0. See [`NOTICE`](./NOTICE) and [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md). Call-in is an independent implementation for audience response beside web presentations; it does not include the quiz editor, authentication, scoring, or game lifecycle from `kahoot-cf`.

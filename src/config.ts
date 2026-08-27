@@ -172,7 +172,7 @@ function assertPublicUrl(value: unknown, field: string): asserts value is string
   }
   let parsed: URL;
   try {
-    parsed = new URL(value, "https://live-deck.invalid");
+    parsed = new URL(value, "https://call-in.invalid");
   } catch {
     throw new Error(`${field} must be a web URL`);
   }

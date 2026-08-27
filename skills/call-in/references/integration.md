@@ -29,13 +29,13 @@ The component updates only the selected root and restores the original inline va
 ## Manual snippet
 
 ```html
-<script type="module" src="https://SERVICE/embed/live-deck-panel.js"></script>
-<live-deck-panel
+<script type="module" src="https://SERVICE/embed/call-in-panel.js"></script>
+<call-in-panel
   service-url="https://SERVICE"
   mode="split"
   target-selector=".deck-stage"
   desktop-width="25vw"
-></live-deck-panel>
+></call-in-panel>
 ```
 
 ## Verification

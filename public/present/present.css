@@ -2,11 +2,13 @@
 html,
 body { width: 100%; height: 100%; margin: 0; }
 .present-page { overflow: hidden; color: #f6f8ff; background: #030711; font-family: Inter, "Noto Sans TC", system-ui, sans-serif; }
-.present-toolbar { position: fixed; inset: 0 0 auto; z-index: 10; display: grid; grid-template-columns: minmax(170px, 1fr) auto auto 58px; gap: 14px; align-items: center; min-height: 66px; padding: 8px 12px 8px 18px; border-bottom: 1px solid #35d9ff38; background: #07101ff2; box-shadow: 0 10px 34px #0008; backdrop-filter: blur(16px); }
-.present-brand { min-width: 0; }
-.present-brand span,
+.present-toolbar { position: fixed; inset: 0 0 auto; z-index: 10; display: grid; grid-template-columns: minmax(170px, 1fr) auto auto 58px; gap: 14px; align-items: center; min-height: 66px; padding: 8px 12px 8px 18px; border-bottom: 1px solid #35d9ff38; background: #07101ff2; box-shadow: 0 10px 34px #0008; backdrop-filter: blur(16px); transition: transform .24s ease, opacity .2s ease; }
+.present-brand { display:flex; align-items:center; gap:8px; min-width: 0; }
+.present-brand > img { width:30px; height:30px; flex:none; object-fit:contain; }
+.present-brand > span { min-width:0; }
+.present-brand em,
 .present-brand b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.present-brand span { color: #b9f24a; font: 800 10px/1 ui-monospace, monospace; letter-spacing: .13em; }
+.present-brand em { color: #4bdcff; font: 800 10px/1 ui-monospace, monospace; font-style:normal; letter-spacing: .13em; }
 .present-brand b { margin-top: 6px; font-size: 15px; }
 .present-status { color: #91a2c5; font: 750 11px/1.2 ui-monospace, monospace; }
 .present-toolbar nav { display: flex; gap: 7px; }
@@ -17,6 +19,8 @@ body { width: 100%; height: 100%; margin: 0; }
 .present-toolbar a:focus-visible,
 .present-toolbar button:focus-visible { outline: 2px solid #b9f24a; outline-offset: 2px; }
 .present-toolbar > img { display: block; width: 50px; height: 50px; border: 3px solid #f3eee4; border-radius: 9px; background: #f3eee4; }
+.toolbar-peek { position:fixed; z-index:12; top:8px; left:50%; display:none; place-items:center; width:48px; height:28px; margin:0; border:1px solid #35d9ff66; border-radius:999px; padding:0 0 4px; transform:translateX(-50%); background:#07101fe8; color:#b9f24a; box-shadow:0 8px 28px #0009; font:900 22px/1 system-ui,sans-serif; cursor:pointer; backdrop-filter:blur(14px); }
+.toolbar-peek:focus-visible,.toolbar-peek:hover { outline:2px solid #b9f24a; outline-offset:2px; }
 .present-stage { position: fixed; inset: 66px 0 0; display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 1fr); }
 .deck-pane,
 .dashboard-pane { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
@@ -27,17 +31,20 @@ body { width: 100%; height: 100%; margin: 0; }
 .embed-note { position: absolute; left: 16px; bottom: 12px; margin: 0; border-radius: 999px; padding: 8px 11px; background: #030711c9; color: #93a3c4; font-size: 10px; pointer-events: none; }
 .present-page.dashboard-collapsed .present-stage { grid-template-columns: 1fr 0; }
 .present-page.dashboard-collapsed .dashboard-pane { border: 0; }
+.present-page.toolbar-collapsed .present-toolbar { transform:translateY(-105%); opacity:0; pointer-events:none; }
+.present-page.toolbar-collapsed .present-stage { inset-block-start:0; }
+.present-page.toolbar-collapsed .toolbar-peek { display:grid; }
 @media (max-width: 1024px) {
   .present-toolbar { grid-template-columns: minmax(150px, 1fr) auto 50px; }
   .present-status { display: none; }
-  .present-toolbar nav a:nth-child(3) { display: none; }
+  .present-toolbar nav a[data-moderator-link] { display: none; }
   .present-stage { grid-template-columns: minmax(0, 1.65fr) minmax(360px, 1fr); }
 }
 @media (max-width: 720px) {
   .present-toolbar { grid-template-columns: minmax(110px, 1fr) auto; min-height: 58px; padding-inline: 10px; }
   .present-toolbar > img { display: none; }
-  .present-toolbar nav a:nth-child(2),
-  .present-toolbar nav button:last-child { display: none; }
+  .present-toolbar nav a[data-audience-link],
+  .present-toolbar nav button[data-fullscreen] { display: none; }
   .present-toolbar a,
   .present-toolbar button { min-height: 36px; padding: 8px 10px; }
   .present-stage { inset-block-start: 58px; grid-template-columns: 1fr; }
@@ -46,4 +53,6 @@ body { width: 100%; height: 100%; margin: 0; }
   .present-page.dashboard-collapsed .deck-pane { display: block; }
   .present-page.dashboard-collapsed .dashboard-pane { display: none; }
   .present-page.dashboard-collapsed .present-stage { grid-template-columns: 1fr; }
+  .present-page.toolbar-collapsed .present-stage { inset-block-start: 0; }
 }
+@media (prefers-reduced-motion:reduce) { .present-toolbar { transition:none; } }

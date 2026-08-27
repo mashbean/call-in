@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#070d1c" />
+    <link rel="icon" type="image/png" href="/brand/call-in-favicon.png" />
+    <meta name="description" content="Upload a PDF or paste a deck URL and create a Call-in live audience event in one minute." />
+    <title>Start a Call-in for your slides</title>
+    <link rel="stylesheet" href="/new/new.css" />
+  </head>
+  <body>
+    <header class="create-header">
+      <a class="brand" href="/en/"><img src="/brand/call-in-mark-dark.png" alt="" /><span><em>CALL-IN</em><b>FOR YOUR SLIDES</b></span></a>
+      <div class="header-tools"><a href="/new/" lang="zh-Hant-TW">中文</a><span class="pilot-badge">PUBLIC BETA</span></div>
+    </header>
+
+    <main>
+      <section class="create-intro"><div class="eyebrow">Start in 60 seconds</div><h1>Let your audience<br /><span>call in, live.</span></h1><p>Upload a PDF or paste your deck URL. No deployment and no account. You get a presenter view, audience QR code, and two private management links.</p></section>
+
+      <section class="create-card" data-create-panel>
+        <div class="step">01</div>
+        <form data-create-form>
+          <input type="hidden" name="locale" value="en" />
+          <div class="section-head"><div><h2>Start a call-in</h2><p>Your original deck stays untouched.</p></div><span>About 1 minute</span></div>
+          <label>Event title<input name="title" maxlength="160" required placeholder="For example: AI and public participation" autocomplete="off" /></label>
+          <fieldset class="deck-source">
+            <legend>Your slides</legend>
+            <div class="source-tabs" role="tablist" aria-label="Choose a slide source"><button type="button" role="tab" aria-selected="true" data-source-tab="upload">Upload PDF</button><button type="button" role="tab" aria-selected="false" data-source-tab="url">Paste URL</button></div>
+            <div class="source-panel" data-source-panel="upload"><label class="drop-zone" data-drop-zone><input name="deckFile" type="file" accept="application/pdf,.pdf" /><span class="drop-icon" aria-hidden="true">↥</span><strong data-file-label>Choose a PDF or drop it here</strong><small>Up to 20MB · automatically deleted after seven days</small></label></div>
+            <div class="source-panel" data-source-panel="url" hidden><label>Deck URL<input name="deckUrl" type="url" maxlength="2048" placeholder="https://…" inputmode="url" autocomplete="url" /><small>Google Slides, Canva, public web decks, and PDF URLs are supported.</small></label></div>
+          </fieldset>
+          <label>One line for your audience <span>Optional</span><textarea name="description" maxlength="500" rows="3" placeholder="Tell people they can ask, react, and report how easy the talk is to follow."></textarea></label>
+          <aside class="data-note"><strong>How is the data handled?</strong><p>The uploaded deck, event, and anonymous audience responses are deleted together after seven days. Responses may be used to operate and improve Call-in. Decks are not used for training and their copyright remains yours. Do not enter sensitive data.</p></aside>
+          <div class="create-action"><p>By creating an event, you acknowledge the data use above.</p><button type="submit">Start call-in <span>→</span></button></div><div class="form-message" data-create-message aria-live="polite"></div>
+        </form>
+      </section>
+
+      <section class="receipt" data-receipt hidden aria-live="polite">
+        <div class="receipt-ready"><span>READY</span><h2 data-receipt-title>Your call-in is ready</h2><p>You can start now. Keep this page: the two private links below only appear here.</p></div>
+        <article class="start-card"><div><span>FOR THE SPEAKER</span><h3>Start presenting</h3><p>Your slides and live audience response appear together.</p></div><a data-presenter-link target="_blank" rel="noreferrer">Open presenter view →</a></article>
+        <div class="receipt-grid">
+          <article class="audience-card"><img data-audience-qr alt="QR code for joining the call-in" /><div><span>FOR THE AUDIENCE</span><h3>Audience link</h3><a data-audience-link target="_blank" rel="noreferrer"></a><button type="button" data-copy="audience">Copy link</button></div></article>
+          <article class="private-card"><span>PRIVATE SPEAKER LINK</span><h3>Edit event settings</h3><p>Change titles, reactions, and polls. Anyone with this link can edit.</p><a data-setup-link target="_blank" rel="noreferrer">Open settings</a><button type="button" data-copy="setup">Copy private link</button></article>
+          <article class="private-card"><span>PRIVATE COLLABORATOR LINK</span><h3>Moderate questions</h3><p>Share with a moderator. This link cannot export or reset data.</p><a data-moderator-link target="_blank" rel="noreferrer">Open moderation</a><button type="button" data-copy="moderator">Copy private link</button></article>
+        </div>
+        <p class="expiry" data-expiry></p><a class="create-another" href="/en/new/">Start another call-in</a>
+      </section>
+      <section class="how-it-works"><div><span>01</span><b>Add your slides</b><p>Upload a PDF or paste a URL.</p></div><div><span>02</span><b>Start the call-in</b><p>All roles and links are prepared.</p></div><div><span>03</span><b>Show the QR code</b><p>People join directly from a phone.</p></div></section>
+    </main>
+    <footer>Call-in public beta · Do not enter sensitive or confidential information</footer>
+    <script type="module" src="/new/new.js"></script>
+  </body>
+</html>

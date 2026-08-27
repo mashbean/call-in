@@ -24,7 +24,7 @@ try {
 
 const headers = {
   "content-type": "application/json",
-  "user-agent": "Mozilla/5.0 live-deck-seed-demo",
+  "user-agent": "Mozilla/5.0 call-in-seed-demo",
 };
 
 try {

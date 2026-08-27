@@ -16,6 +16,7 @@ export { LiveSession } from "./live-session";
 
 const hostedEventIdPattern = /^[a-f0-9]{32}$/;
 const hostedEventLifetimeMs = 7 * 24 * 60 * 60 * 1000;
+const maxHostedPdfBytes = 20 * 1024 * 1024;
 
 type SessionApiContext = {
   stub: DurableObjectStub<LiveSession>;
@@ -74,22 +75,56 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 async function createHostedEvent(request: Request, env: Env): Promise<Response> {
-  const body = await readSmallJsonRequest(request);
-  if (!isRecord(body)) return jsonError("invalid request", 400);
-  const title = typeof body.title === "string" ? body.title.trim() : "";
-  const description = typeof body.description === "string" ? body.description.trim() : "";
-  const deckUrl = typeof body.deckUrl === "string" ? body.deckUrl.trim() : "";
-  if (!title || !deckUrl) return jsonError("title and deck URL are required", 400);
-  assertHostedDeckUrl(deckUrl, request);
+  const contentType = request.headers.get("Content-Type") || "";
+  const contentLength = Number(request.headers.get("Content-Length") || "0");
+  if (contentType.includes("multipart/form-data") && contentLength > maxHostedPdfBytes + 1024 * 1024) {
+    return jsonError("PDF is too large (20 MB maximum)", 413);
+  }
+
+  let title = "";
+  let description = "";
+  let deckUrl = "";
+  let locale: "zh-Hant-TW" | "en" = "zh-Hant-TW";
+  let deckFile: File | null = null;
+  if (contentType.includes("multipart/form-data")) {
+    const form = await request.formData();
+    title = formText(form, "title");
+    description = formText(form, "description");
+    deckUrl = formText(form, "deckUrl");
+    locale = normalizeHostedLocale(formText(form, "locale"));
+    const upload = form.get("deckFile");
+    deckFile = upload instanceof File && upload.size ? upload : null;
+  } else {
+    const body = await readSmallJsonRequest(request);
+    if (!isRecord(body)) return jsonError("invalid request", 400);
+    title = typeof body.title === "string" ? body.title.trim() : "";
+    description = typeof body.description === "string" ? body.description.trim() : "";
+    deckUrl = typeof body.deckUrl === "string" ? body.deckUrl.trim() : "";
+    locale = normalizeHostedLocale(typeof body.locale === "string" ? body.locale : "");
+  }
+  if (!title || (!deckUrl && !deckFile)) {
+    return jsonError("title and either a deck URL or PDF are required", 400);
+  }
+  if (deckFile) await assertHostedPdf(deckFile);
+  else assertHostedDeckUrl(deckUrl, request);
 
   const createdAt = Date.now();
   const limiter = env.LIVE_SESSION.getByName("hosted:creation-limiter");
-  await limiter.reserveHostedEvent(createdAt);
+  await limiter.reserveHostedEvent(createdAt, deckFile?.size ?? 0);
 
   const eventId = crypto.randomUUID().replaceAll("-", "");
   const adminToken = randomToken();
   const moderatorToken = randomToken();
-  const config = hostedEventConfig(eventId, title, description, deckUrl, createdAt);
+  const publicOrigin = hostedPublicOrigin(request);
+  const apiBase = `${publicOrigin}/api/events/${eventId}`;
+  const config = hostedEventConfig(
+    eventId,
+    title,
+    description,
+    deckFile ? `${apiBase}/deck.pdf` : deckUrl,
+    createdAt,
+    locale,
+  );
   const expiresAt = createdAt + hostedEventLifetimeMs;
   const stub = env.LIVE_SESSION.getByName(`hosted:${eventId}`);
   await stub.initializeHostedEvent(
@@ -99,8 +134,23 @@ async function createHostedEvent(request: Request, env: Env): Promise<Response> 
     createdAt,
     expiresAt,
   );
+  if (deckFile) {
+    const target = new URL("https://call-in.internal/deck");
+    target.searchParams.set("filename", deckFile.name || "slides.pdf");
+    const stored = await stub.fetch(
+      new Request(target, {
+        method: "PUT",
+        headers: { "Content-Length": String(deckFile.size) },
+        body: deckFile.stream(),
+      }),
+    );
+    if (!stored.ok) {
+      await stub.deleteHostedEvent();
+      throw new Error(await stored.text());
+    }
+  }
 
-  const base = `${new URL(request.url).origin}/e/${eventId}`;
+  const base = `${publicOrigin}/e/${eventId}`;
   return noStore(
     Response.json(
       {
@@ -111,6 +161,7 @@ async function createHostedEvent(request: Request, env: Env): Promise<Response> 
         presenterUrl: `${base}/present/`,
         setupUrl: `${base}/setup/#access=${adminToken}`,
         moderatorUrl: `${base}/moderate/#access=${moderatorToken}`,
+        deckMode: deckFile ? "upload" : "url",
       },
       { status: 201 },
     ),
@@ -144,6 +195,10 @@ async function handleSessionApi(
         "X-Content-Type-Options": "nosniff",
       },
     });
+  }
+
+  if (path === "/deck.pdf" && request.method === "GET") {
+    return stub.fetch(new Request("https://call-in.internal/deck", { method: "GET" }));
   }
 
   if (path === "/live") return stub.fetch(request);
@@ -324,30 +379,47 @@ function hostedEventConfig(
   description: string,
   deckUrl: string,
   createdAt: number,
+  locale: "zh-Hant-TW" | "en",
 ): PublicEventConfig {
+  const english = locale === "en";
   return validateEventConfig({
     ...structuredClone(EVENT_CONFIG),
     eventId,
-    eyebrow: "LIVE DECK",
+    eyebrow: "CALL-IN",
     title,
-    description: description || "掃描 QR Code，回報理解程度、提出問題或送出即時反應。",
-    dashboardTitle: `${title}・現場互動`,
+    description:
+      description ||
+      (english
+        ? "Scan the QR code to share your understanding, questions, and live reactions."
+        : "掃描 QR Code，回報理解程度、提出問題或送出即時反應。"),
+    dashboardTitle: english ? `${title} · Live call-in` : `${title}・現場叩應`,
     deckUrl,
-    locale: "zh-Hant-TW",
+    locale,
     difficulty: {
-      title: "現在的理解難度如何？",
-      labels: ["太簡單", "容易", "剛剛好", "有點難", "跟丟了"],
+      title: english ? "How easy is this to follow?" : "現在的理解難度如何？",
+      labels: english
+        ? ["Too easy", "Easy", "Just right", "Hard", "Lost"]
+        : ["太簡單", "容易", "剛剛好", "有點難", "跟丟了"],
     },
     question: {
-      title: "隨時提問",
-      placeholder: "寫下不清楚、想繼續追問，或值得一起討論的地方",
+      title: english ? "Ask anytime" : "隨時提問",
+      placeholder: english
+        ? "What is unclear, worth following up on, or useful to discuss together?"
+        : "寫下不清楚、想繼續追問，或值得一起討論的地方",
       maxPerDevice: 20,
-      lenses: [
-        { id: "clarify", label: "請講清楚", description: "幫我理解這個觀念或方法" },
-        { id: "chorus", label: "我也想問", description: "看看還有誰關心同一個問題" },
-        { id: "bridge", label: "連結兩邊", description: "一起釐清兩種方向之間的取捨" },
-        { id: "keeper", label: "請留下來", description: "這個條件、風險或限制值得保留" },
-      ],
+      lenses: english
+        ? [
+            { id: "clarify", label: "Clarify", description: "Help me understand this idea or method" },
+            { id: "chorus", label: "Me too", description: "See who else shares this question" },
+            { id: "bridge", label: "Bridge", description: "Connect two directions or trade-offs" },
+            { id: "keeper", label: "Keep this", description: "Preserve this condition, risk, or limit" },
+          ]
+        : [
+            { id: "clarify", label: "請講清楚", description: "幫我理解這個觀念或方法" },
+            { id: "chorus", label: "我也想問", description: "看看還有誰關心同一個問題" },
+            { id: "bridge", label: "連結兩邊", description: "一起釐清兩種方向之間的取捨" },
+            { id: "keeper", label: "請留下來", description: "這個條件、風險或限制值得保留" },
+          ],
     },
     moderation: {
       enabled: true,
@@ -364,21 +436,36 @@ function hostedEventConfig(
       },
       codeOfConduct: {
         version: new Date(createdAt).toISOString().slice(0, 10),
-        title: "一起維持有用的討論",
-        summary: "直接討論觀點、方法與結論，讓問題能推進現場交流。",
-        rules: [
-          "不做人身攻擊、騷擾、威脅或揭露私人資訊。",
-          "不洗版、冒充他人或刻意干擾討論。",
-          "管理者可以暫緩或隱藏內容，並限制本場活動的提問權限。",
-        ],
+        title: english ? "Keep the conversation useful" : "一起維持有用的討論",
+        summary: english
+          ? "Discuss ideas, methods, and conclusions directly so questions can move the room forward."
+          : "直接討論觀點、方法與結論，讓問題能推進現場交流。",
+        rules: english
+          ? [
+              "No personal attacks, harassment, threats, or disclosure of private information.",
+              "No spam, impersonation, or deliberate disruption.",
+              "Moderators may hold or hide content and limit questions for this event.",
+            ]
+          : [
+              "不做人身攻擊、騷擾、威脅或揭露私人資訊。",
+              "不洗版、冒充他人或刻意干擾討論。",
+              "管理者可以暫緩或隱藏內容，並限制本場活動的提問權限。",
+            ],
       },
     },
-    reactions: [
-      { id: "applause", emoji: "👏", label: "說得好" },
-      { id: "insight", emoji: "💡", label: "有收穫" },
-      { id: "resonate", emoji: "❤️", label: "有共鳴" },
-      { id: "pause", emoji: "🤔", label: "等我一下" },
-    ],
+    reactions: english
+      ? [
+          { id: "applause", emoji: "👏", label: "Well said" },
+          { id: "insight", emoji: "💡", label: "Insight" },
+          { id: "resonate", emoji: "❤️", label: "Resonates" },
+          { id: "pause", emoji: "🤔", label: "Hold on" },
+        ]
+      : [
+          { id: "applause", emoji: "👏", label: "說得好" },
+          { id: "insight", emoji: "💡", label: "有收穫" },
+          { id: "resonate", emoji: "❤️", label: "有共鳴" },
+          { id: "pause", emoji: "🤔", label: "等我一下" },
+        ],
     polls: [],
   });
 }
@@ -397,13 +484,48 @@ function parseHostedPage(pathname: string): { eventId: string; assetPath: string
   if (!eventId || !hostedEventIdPattern.test(eventId)) return null;
   const page = (match[2] || "").replace(/\/+$/, "");
   const assetPath = ({
-    "": "/",
+    "": "/audience/",
     dashboard: "/dashboard/",
     present: "/present/",
     setup: "/setup/",
     moderate: "/moderate/",
   } as Record<string, string>)[page];
   return assetPath ? { eventId, assetPath } : null;
+}
+
+function formText(form: FormData, key: string): string {
+  const value = form.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeHostedLocale(value: string): "zh-Hant-TW" | "en" {
+  return value.toLowerCase().startsWith("en") ? "en" : "zh-Hant-TW";
+}
+
+function hostedPublicOrigin(request: Request): string {
+  const requestOrigin = new URL(request.url).origin;
+  for (const candidate of [request.headers.get("Origin"), request.headers.get("Referer")]) {
+    if (!candidate) continue;
+    try {
+      const parsed = new URL(candidate);
+      if (["localhost", "127.0.0.1"].includes(parsed.hostname) && ["http:", "https:"].includes(parsed.protocol)) {
+        return parsed.origin;
+      }
+    } catch {
+      // Ignore invalid browser headers and keep checking.
+    }
+  }
+  return requestOrigin;
+}
+
+async function assertHostedPdf(file: File): Promise<void> {
+  if (file.size > maxHostedPdfBytes) throw new Error("PDF is too large (20 MB maximum)");
+  if (file.size < 5) throw new Error("File is not a valid PDF");
+  if (file.type && file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    throw new Error("File must be a PDF");
+  }
+  const signature = new TextDecoder().decode(await file.slice(0, 5).arrayBuffer());
+  if (signature !== "%PDF-") throw new Error("File is not a valid PDF");
 }
 
 function assertHostedDeckUrl(value: string, request: Request): void {

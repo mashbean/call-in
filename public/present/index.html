@@ -4,12 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#050b17" />
-    <title>Live Deck 講者頁</title>
+    <link rel="icon" type="image/png" href="/brand/call-in-favicon.png" />
+    <title>Call-in 講者頁</title>
     <link rel="stylesheet" href="/present/present.css" />
   </head>
   <body class="present-page">
     <header class="present-toolbar">
-      <div class="present-brand"><span>LIVE DECK</span><b data-event-title>講者頁</b></div>
+      <div class="present-brand"><img src="/brand/call-in-mark-dark.png" alt="" /><span><em>CALL-IN</em><b data-event-title>講者頁</b></span></div>
       <div class="present-status" data-present-status>正在載入簡報…</div>
       <nav aria-label="講者工具">
         <a data-open-deck href="#" target="_blank" rel="noreferrer">另開簡報</a>
@@ -17,9 +18,11 @@
         <a data-moderator-link href="/moderate/" target="_blank" rel="noreferrer">管理</a>
         <button type="button" data-dashboard-toggle>隱藏互動</button>
         <button type="button" data-fullscreen>全螢幕</button>
+        <button type="button" data-toolbar-toggle aria-expanded="true">收起工具列</button>
       </nav>
       <img data-audience-qr src="/api/qr.svg" alt="觀眾加入行動條碼" />
     </header>
+    <button class="toolbar-peek" type="button" data-toolbar-peek aria-label="顯示講者工具列" title="顯示講者工具列">⌄</button>
     <main class="present-stage">
       <section class="deck-pane" aria-label="簡報">
         <iframe data-deck-frame title="簡報" allow="fullscreen; autoplay; clipboard-write" allowfullscreen sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation" referrerpolicy="strict-origin-when-cross-origin"></iframe>

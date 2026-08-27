@@ -89,6 +89,16 @@ type HostedEventRow = {
   expires_at: number;
 };
 
+type HostedDeckRow = {
+  filename: string;
+  media_type: string;
+  size_bytes: number;
+};
+
+const maxHostedPdfBytes = 20 * 1024 * 1024;
+const hostedPdfChunkBytes = 1024 * 1024;
+const maxHostedPdfBytesPerDay = 400 * 1024 * 1024;
+
 type ExportData = {
   exportedAt: number;
   config: PublicEventConfig;
@@ -262,6 +272,21 @@ export class LiveSession extends DurableObject<Env> {
         INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (7, ${Date.now()});
       `);
     }
+    if (version < 8) {
+      this.ctx.storage.sql.exec(`
+        CREATE TABLE hosted_deck (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          filename TEXT NOT NULL,
+          media_type TEXT NOT NULL,
+          size_bytes INTEGER NOT NULL
+        );
+        CREATE TABLE hosted_deck_chunks (
+          chunk_index INTEGER PRIMARY KEY,
+          data BLOB NOT NULL
+        );
+        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (8, ${Date.now()});
+      `);
+    }
   }
 
   eventConfig(): PublicEventConfig {
@@ -323,20 +348,42 @@ export class LiveSession extends DurableObject<Env> {
     return timingSafeEqual(actual, hexToBytes(expectedHash));
   }
 
-  reserveHostedEvent(createdAt: number): { minuteCount: number; dayCount: number } {
+  reserveHostedEvent(
+    createdAt: number,
+    uploadBytes = 0,
+  ): { minuteCount: number; dayCount: number; uploadBytes: number } {
     if (!Number.isInteger(createdAt)) throw new Error("invalid creation time");
+    if (!Number.isInteger(uploadBytes) || uploadBytes < 0 || uploadBytes > maxHostedPdfBytes) {
+      throw new Error("PDF is too large (20 MB maximum)");
+    }
     const minuteBucket = `minute:${Math.floor(createdAt / 60_000)}`;
     const dayBucket = `day:${new Date(createdAt).toISOString().slice(0, 10)}`;
+    const uploadBucket = `pdf-bytes:${new Date(createdAt).toISOString().slice(0, 10)}`;
     const minuteCount = this.creationCount(minuteBucket);
     const dayCount = this.creationCount(dayBucket);
+    const uploadedToday = this.creationCount(uploadBucket);
     if (minuteCount >= 6 || dayCount >= 100) throw new Error("hosted event creation limit reached");
+    if (uploadedToday + uploadBytes > maxHostedPdfBytesPerDay) {
+      throw new Error("PDF upload limit reached for today");
+    }
     this.incrementCreationCount(minuteBucket, createdAt);
     this.incrementCreationCount(dayBucket, createdAt);
+    if (uploadBytes) this.incrementCreationCount(uploadBucket, createdAt, uploadBytes);
     this.ctx.storage.sql.exec(
       "DELETE FROM hosted_creation_limits WHERE updated_at < ?",
       createdAt - 2 * 24 * 60 * 60 * 1000,
     );
-    return { minuteCount: minuteCount + 1, dayCount: dayCount + 1 };
+    return {
+      minuteCount: minuteCount + 1,
+      dayCount: dayCount + 1,
+      uploadBytes: uploadedToday + uploadBytes,
+    };
+  }
+
+  async deleteHostedEvent(): Promise<void> {
+    for (const socket of this.ctx.getWebSockets()) socket.close(1001, "event deleted");
+    this.clearHostedEventData();
+    await this.ctx.storage.deleteAlarm();
   }
 
   async updateEventConfig(value: unknown): Promise<{ config: PublicEventConfig; updatedAt: number }> {
@@ -1035,21 +1082,8 @@ export class LiveSession extends DurableObject<Env> {
     const hosted = this.getHostedEvent();
     if (hosted && hosted.expires_at <= now) {
       for (const socket of this.ctx.getWebSockets()) socket.close(1001, "event expired");
-      this.ctx.storage.sql.exec("DELETE FROM moderation_actions");
-      this.ctx.storage.sql.exec("DELETE FROM question_flags");
-      this.ctx.storage.sql.exec("DELETE FROM question_votes");
-      this.ctx.storage.sql.exec("DELETE FROM questions");
-      this.ctx.storage.sql.exec("DELETE FROM participants");
-      this.ctx.storage.sql.exec("DELETE FROM reactions");
-      this.ctx.storage.sql.exec("DELETE FROM anon_labels");
-      this.ctx.storage.sql.exec("DELETE FROM difficulty_votes");
-      this.ctx.storage.sql.exec("DELETE FROM votes");
-      this.ctx.storage.sql.exec("DELETE FROM event_config");
-      this.ctx.storage.sql.exec("DELETE FROM hosted_event");
+      this.clearHostedEventData();
       await this.ctx.storage.deleteAlarm();
-      this.eventConfigCache = null;
-      this.snapshotCache = null;
-      this.reactionWindows.clear();
       return;
     }
     const affectedVoters = this.ctx.storage.sql
@@ -1072,6 +1106,13 @@ export class LiveSession extends DurableObject<Env> {
   }
 
   async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    if (url.pathname === "/deck") {
+      if (!this.isHostedEvent()) return new Response("Event not found", { status: 404 });
+      if (request.method === "PUT") return this.storeHostedDeck(request, url);
+      if (request.method === "GET") return this.readHostedDeck();
+      return new Response("Method not allowed", { status: 405 });
+    }
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return new Response("expected websocket", { status: 426 });
     }
@@ -1137,6 +1178,86 @@ export class LiveSession extends DurableObject<Env> {
       .toArray()[0];
   }
 
+  private async storeHostedDeck(request: Request, url: URL): Promise<Response> {
+    const declaredSize = Number(request.headers.get("Content-Length") || "0");
+    if (!Number.isInteger(declaredSize) || declaredSize < 1 || declaredSize > maxHostedPdfBytes) {
+      return new Response("PDF is too large (20 MB maximum)", { status: 413 });
+    }
+    const buffer = await request.arrayBuffer();
+    if (buffer.byteLength !== declaredSize || buffer.byteLength > maxHostedPdfBytes) {
+      return new Response("PDF is too large (20 MB maximum)", { status: 413 });
+    }
+    const bytes = new Uint8Array(buffer);
+    if (new TextDecoder().decode(bytes.subarray(0, 5)) !== "%PDF-") {
+      return new Response("File is not a valid PDF", { status: 415 });
+    }
+    const filename = cleanHostedFilename(url.searchParams.get("filename") || "slides.pdf");
+    this.ctx.storage.transactionSync(() => {
+      this.ctx.storage.sql.exec("DELETE FROM hosted_deck_chunks");
+      this.ctx.storage.sql.exec("DELETE FROM hosted_deck");
+      this.ctx.storage.sql.exec(
+        "INSERT INTO hosted_deck (id, filename, media_type, size_bytes) VALUES (1, ?, 'application/pdf', ?)",
+        filename,
+        bytes.byteLength,
+      );
+      for (let offset = 0, index = 0; offset < bytes.byteLength; offset += hostedPdfChunkBytes, index += 1) {
+        const chunk = bytes.slice(offset, offset + hostedPdfChunkBytes);
+        this.ctx.storage.sql.exec(
+          "INSERT INTO hosted_deck_chunks (chunk_index, data) VALUES (?, ?)",
+          index,
+          chunk.buffer,
+        );
+      }
+    });
+    return Response.json({ stored: true, size: bytes.byteLength });
+  }
+
+  private readHostedDeck(): Response {
+    const deck = this.ctx.storage.sql
+      .exec<HostedDeckRow>("SELECT filename, media_type, size_bytes FROM hosted_deck WHERE id = 1")
+      .toArray()[0];
+    if (!deck) return new Response("Deck not found", { status: 404 });
+    const chunks = this.ctx.storage.sql
+      .exec<{ data: ArrayBuffer }>("SELECT data FROM hosted_deck_chunks ORDER BY chunk_index")
+      .toArray();
+    const body = new Uint8Array(deck.size_bytes);
+    let offset = 0;
+    for (const row of chunks) {
+      const chunk = new Uint8Array(row.data);
+      body.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    if (offset !== deck.size_bytes) return new Response("Deck storage is incomplete", { status: 500 });
+    return new Response(body, {
+      headers: {
+        "Content-Type": deck.media_type,
+        "Content-Length": String(deck.size_bytes),
+        "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(deck.filename)}`,
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  }
+
+  private clearHostedEventData(): void {
+    this.ctx.storage.sql.exec("DELETE FROM hosted_deck_chunks");
+    this.ctx.storage.sql.exec("DELETE FROM hosted_deck");
+    this.ctx.storage.sql.exec("DELETE FROM moderation_actions");
+    this.ctx.storage.sql.exec("DELETE FROM question_flags");
+    this.ctx.storage.sql.exec("DELETE FROM question_votes");
+    this.ctx.storage.sql.exec("DELETE FROM questions");
+    this.ctx.storage.sql.exec("DELETE FROM participants");
+    this.ctx.storage.sql.exec("DELETE FROM reactions");
+    this.ctx.storage.sql.exec("DELETE FROM anon_labels");
+    this.ctx.storage.sql.exec("DELETE FROM difficulty_votes");
+    this.ctx.storage.sql.exec("DELETE FROM votes");
+    this.ctx.storage.sql.exec("DELETE FROM event_config");
+    this.ctx.storage.sql.exec("DELETE FROM hosted_event");
+    this.eventConfigCache = null;
+    this.snapshotCache = null;
+    this.reactionWindows.clear();
+  }
+
   private creationCount(bucket: string): number {
     return this.ctx.storage.sql
       .exec<{ count: number }>(
@@ -1146,13 +1267,14 @@ export class LiveSession extends DurableObject<Env> {
       .toArray()[0]?.count ?? 0;
   }
 
-  private incrementCreationCount(bucket: string, updatedAt: number): void {
+  private incrementCreationCount(bucket: string, updatedAt: number, amount = 1): void {
     this.ctx.storage.sql.exec(
       `INSERT INTO hosted_creation_limits (bucket, count, updated_at)
-       VALUES (?, 1, ?)
+       VALUES (?, ?, ?)
        ON CONFLICT (bucket) DO UPDATE
-       SET count = count + 1, updated_at = excluded.updated_at`,
+       SET count = count + excluded.count, updated_at = excluded.updated_at`,
       bucket,
+      amount,
       updatedAt,
     );
   }
@@ -1332,6 +1454,15 @@ export class LiveSession extends DurableObject<Env> {
 
 function shortBadge(voterId: string): string {
   return voterId.replaceAll("-", "").slice(-4).toUpperCase();
+}
+
+function cleanHostedFilename(value: string): string {
+  const cleaned = value
+    .normalize("NFKC")
+    .replace(/[\\/\u0000-\u001f\u007f]/g, "-")
+    .trim()
+    .slice(0, 180);
+  return cleaned.toLowerCase().endsWith(".pdf") ? cleaned : `${cleaned || "slides"}.pdf`;
 }
 
 function hexToBytes(value: string): Uint8Array<ArrayBuffer> {

@@ -207,7 +207,7 @@ setDashboardTab(location.hash === "#polls" ? "polls" : "live");
 connect();
 
 function applyConfig(nextConfig) {
-  document.title = `${nextConfig.dashboardTitle} · Live Deck`;
+  document.title = `${nextConfig.dashboardTitle} · Call-in`;
   setDifficultyLabels(nextConfig.difficulty.labels);
   const values = {
     eyebrow: nextConfig.eyebrow,

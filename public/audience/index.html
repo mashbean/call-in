@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#081225" />
+    <link rel="icon" type="image/png" href="/brand/call-in-favicon.png" />
+    <title>Call-in 簡報叩應</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="eyebrow" data-config="eyebrow">CALL-IN</div>
+      <h1 data-config="title">Live audience</h1>
+      <p data-config="description">Share the difficulty, ask a question, or send a live reaction.</p>
+      <div class="live-status" data-status data-zh-tail="連線中"><span></span>Connecting</div>
+    </header>
+    <main>
+      <nav class="tabs" aria-label="Audience interaction" data-zh-aria="觀眾互動功能">
+        <button class="active" data-tab="questions" data-zh="隨時提問">Ask anytime</button>
+        <button data-tab="polls" data-zh="快速投票">Quick polls</button>
+      </nav>
+      <section data-panel="polls" class="panel">
+        <div id="polls" class="poll-grid" aria-live="polite"></div>
+      </section>
+      <section data-panel="questions" class="panel active">
+        <section class="difficulty-card" aria-labelledby="difficulty-title">
+          <div class="difficulty-heading">
+            <div>
+              <div class="eyebrow" data-zh="理解難度">LIVE DIFFICULTY</div>
+              <h2 id="difficulty-title" data-config="difficulty.title">How difficult does this feel right now?</h2>
+            </div>
+            <div class="difficulty-current">
+              <b data-difficulty-value>3</b>
+              <span data-difficulty-label>OK</span>
+            </div>
+          </div>
+          <label class="sr-only" for="difficulty" data-zh="目前理解難度">Current difficulty</label>
+          <input id="difficulty" name="difficulty" type="range" min="1" max="5" step="1" value="3" />
+          <div class="difficulty-scale" data-difficulty-scale aria-hidden="true"></div>
+          <div class="difficulty-chart" aria-label="Live difficulty distribution" data-zh-aria="即時理解難度分布" role="img">
+            <svg viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <path class="difficulty-grid-line" d="M20 170 H580" />
+              <path data-difficulty-area class="difficulty-area" />
+              <path data-difficulty-line class="difficulty-line" />
+              <g data-difficulty-points></g>
+            </svg>
+            <div class="difficulty-counts" data-difficulty-counts></div>
+          </div>
+          <div class="difficulty-note">
+            <span data-difficulty-total data-zh="等待第一筆回覆">Waiting for the first response</span>
+            <span data-difficulty-message data-zh="拖曳後會自動更新">Drag to update automatically</span>
+          </div>
+          <div class="reaction-picker" aria-labelledby="reaction-title">
+            <div>
+              <b id="reaction-title" data-zh="送出即時反應">Send a live reaction</b>
+              <small data-zh="會立刻出現在講者畫面上">It appears on the presenter dashboard immediately</small>
+            </div>
+            <div class="reaction-buttons" data-reactions></div>
+            <span class="reaction-message" data-reaction-message aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section id="identity-gate" class="identity-card" hidden>
+          <div class="eyebrow" data-zh="提問之前">BEFORE YOU ASK</div>
+          <h2 data-coc-title data-zh="一起維持有用的討論">Help keep the room useful</h2>
+          <p data-coc-summary></p>
+          <ul data-coc-rules></ul>
+          <form id="identity-form">
+            <label for="participant-alias" data-zh="為這場活動選一個暱稱">Choose a name for this event</label>
+            <input id="participant-alias" name="alias" minlength="2" maxlength="24" required placeholder="For example: night-shift resident" data-zh-placeholder="例如：後排聽眾" autocomplete="nickname" />
+            <label class="coc-check"><input name="coc" type="checkbox" required /><span data-zh="我願意遵守討論規則；繼續後，本場活動的暱稱將固定。">I agree to follow this code of conduct. My event name will stay fixed after I continue.</span></label>
+            <button class="primary" type="submit" data-zh="同意並繼續">Agree and continue</button>
+            <div class="form-message" data-identity-message aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section id="participant-profile" class="participant-profile" hidden>
+          <span data-zh="你的活動暱稱">Your event name</span><b data-participant-label></b>
+        </section>
+
+        <form id="question-form" class="ask-card" novalidate hidden>
+          <div class="form-step"><span>01</span><div><b data-zh="先設定上方的理解難度">Set the difficulty above</b><small data-zh="最新分數會和問題一起送出">Your latest score is saved with the question</small></div></div>
+          <div class="form-step"><span>02</span><div><b data-zh="寫下不清楚或值得追問的地方">Write what feels unclear or worth following up</b><small data-zh="太難、太簡單或想再深入，都可以問">Ask when it feels too hard, too easy, or worth exploring</small></div></div>
+          <label class="sr-only" for="question" data-zh="你的問題">Your question</label>
+          <div class="question-hint" data-question-hint hidden data-zh="問題至少需要 4 個字，讓大家知道你想問什麼">A question needs at least 4 characters so the room can tell what you are asking</div>
+          <textarea id="question" name="question" minlength="4" maxlength="280" required data-config-placeholder="question.placeholder"></textarea>
+          <fieldset class="intent-fieldset">
+            <legend class="form-step"><span>03</span><div><b data-zh="你希望現場怎麼處理這個問題？">How should the room take up this question?</b><small data-zh="選擇最接近的目的，幫助整理問答">Choose the closest purpose to help organize Q&amp;A</small></div></legend>
+            <div class="intent-grid" data-lenses></div>
+          </fieldset>
+          <button class="primary" type="submit" data-zh="送出問題">Send question</button>
+          <div class="form-message" data-form-message aria-live="polite"></div>
+        </form>
+        <section id="my-submissions" class="my-submissions" hidden>
+          <div class="section-head compact"><div><div class="eyebrow" data-zh="你的問題">YOUR SUBMISSIONS</div><h2 data-zh="等待中或暫不公開">Waiting or held</h2></div></div>
+          <div data-own-questions class="question-list"></div>
+        </section>
+        <div class="section-head">
+          <div><div class="eyebrow" data-zh="問題池">QUESTION POOL</div><h2 data-config="question.title">Ask anytime</h2></div>
+          <span data-question-count data-zh="0 個問題">0 questions</span>
+        </div>
+        <div id="questions" class="question-list" aria-live="polite"></div>
+      </section>
+    </main>
+    <footer><a data-config-href="deckUrl" href="/example/" data-zh="回到簡報">Back to slides</a><a data-event-dashboard href="/dashboard/" data-zh="開啟講者儀表板">Open presenter dashboard</a></footer>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
