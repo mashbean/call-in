@@ -1,6 +1,6 @@
 {
   "eventId": "my-call-in",
-  "eyebrow": "CALL-IN",
+  "eyebrow": "Call-in",
   "title": "You are here. Ask away.",
   "description": "Scan the QR code to share the difficulty, ask a question, or send a reaction.",
   "dashboardTitle": "Live audience",

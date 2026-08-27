@@ -8,14 +8,15 @@
 - Chinese line: **讓你的分享，可以即時叩應**
 - Canonical URL: `https://call-in.mashbean.net`
 
-Use `Call-in` in prose and `CALL-IN` for the compact wordmark. Do not use Live Deck or Live Desk for new public copy; those names remain only in documented compatibility identifiers.
+Use `Call-in` in prose and for the compact wordmark. Do not use Live Deck or Live Desk for new public copy; those names remain only in documented compatibility identifiers.
 
 ## Mark
 
 The mark is one abstract Gaussian bell curve. Its single peak represents the room's aggregate signal without adding a literal character, eye, node, loop, or interface metaphor.
 
-- `public/brand/call-in-mark-light.png`: shared violet-to-cyan curve for light surfaces.
-- `public/brand/call-in-mark-dark.png`: shared violet-to-cyan curve for dark surfaces.
+- `public/brand/call-in-mark.svg`: primary tightly cropped violet-to-cyan curve for all surfaces.
+- `public/brand/call-in-mark-light.png`: legacy raster mark for light surfaces.
+- `public/brand/call-in-mark-dark.png`: legacy raster mark for dark surfaces.
 - `public/brand/call-in-favicon.png`: compact dark-surface mark.
 
 Keep clear space around the mark and do not add dots, nodes, loops, eyes, speech bubbles, presentation frames, microphones, chart axes, or a literal bell.

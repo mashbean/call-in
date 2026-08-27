@@ -9,9 +9,11 @@ const presentHtml = await readFile(new URL("../public/present/index.html", impor
 const presentJs = await readFile(new URL("../public/present/present.js", import.meta.url), "utf8");
 const presentCss = await readFile(new URL("../public/present/present.css", import.meta.url), "utf8");
 const eventContextJs = await readFile(new URL("../public/event-context.js", import.meta.url), "utf8");
-const newHtml = await readFile(new URL("../public/new/index.html", import.meta.url), "utf8");
-const newJs = await readFile(new URL("../public/new/new.js", import.meta.url), "utf8");
-const newCss = await readFile(new URL("../public/new/new.css", import.meta.url), "utf8");
+const landingHtml = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+const englishLandingHtml = await readFile(new URL("../public/en/index.html", import.meta.url), "utf8");
+const landingJs = await readFile(new URL("../public/landing/landing.js", import.meta.url), "utf8");
+const landingCss = await readFile(new URL("../public/landing/landing.css", import.meta.url), "utf8");
+const creatorJs = await readFile(new URL("../public/new/new.js", import.meta.url), "utf8");
 
 test("setup wizard keeps the admin token session-scoped and writes protected config", () => {
   assert.match(setupHtml, /lang="zh-Hant-TW"/);
@@ -41,20 +43,25 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentCss, /@media \(max-width: 720px\)/);
 });
 
-test("hosted creator asks only for the talk and returns public and private links", () => {
-  assert.match(newHtml, /lang="zh-Hant-TW"/);
-  assert.match(newHtml, /上傳 PDF/);
-  assert.match(newHtml, /最大 20MB/);
-  assert.match(newHtml, /data-create-form/);
-  assert.match(newHtml, /data-presenter-link/);
-  assert.match(newHtml, /data-audience-qr/);
-  assert.match(newHtml, /data-setup-link/);
-  assert.match(newHtml, /data-moderator-link/);
-  assert.doesNotMatch(newHtml, /Cloudflare|GitHub|Durable Object|token/i);
-  assert.match(newJs, /fetch\("\/api\/events"/);
-  assert.match(newJs, /new FormData\(form\)/);
-  assert.match(newJs, /result\.presenterUrl/);
-  assert.match(newJs, /result\.setupUrl/);
-  assert.match(newJs, /result\.moderatorUrl/);
-  assert.match(newCss, /@media \(max-width:640px\)/);
+test("hosted creator replaces the landing-page demo and returns public and private links", () => {
+  assert.match(landingHtml, /lang="zh-Hant-TW"/);
+  assert.match(landingHtml, /點一下，換成你的簡報/);
+  assert.match(landingHtml, /data-open-creator/);
+  assert.match(landingHtml, /data-create-form/);
+  assert.match(landingHtml, /上傳 PDF/);
+  assert.match(landingHtml, /最大 20MB/);
+  assert.match(landingHtml, /data-presenter-link/);
+  assert.match(landingHtml, /data-audience-qr/);
+  assert.match(landingHtml, /data-setup-link/);
+  assert.match(landingHtml, /data-moderator-link/);
+  assert.match(englishLandingHtml, /Click to use your slides/);
+  assert.doesNotMatch(landingHtml, /Call-in 只保留完成本場活動所需的資料/);
+  assert.doesNotMatch(landingHtml, />CALL-IN</);
+  assert.match(landingJs, /openCreator/);
+  assert.match(creatorJs, /fetch\("\/api\/events"/);
+  assert.match(creatorJs, /new FormData\(form\)/);
+  assert.match(creatorJs, /result\.presenterUrl/);
+  assert.match(creatorJs, /result\.setupUrl/);
+  assert.match(creatorJs, /result\.moderatorUrl/);
+  assert.match(landingCss, /@media \(max-width: 620px\)/);
 });

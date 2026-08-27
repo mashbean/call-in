@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#f7f7fb" />
-    <link rel="icon" type="image/png" href="/brand/call-in-favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/brand/call-in-mark.svg" />
     <meta name="description" content="Call-in brings live audience understanding, questions, and reactions into your online talk. Upload a PDF or paste a deck URL and start in one minute." />
     <link rel="canonical" href="https://call-in.mashbean.net/en/" />
     <link rel="alternate" hreflang="zh-Hant-TW" href="https://call-in.mashbean.net/" />
@@ -15,9 +15,8 @@
   <body>
     <header class="site-header">
       <a class="brand" href="/en/" aria-label="Call-in home">
-        <img class="brand-mark-light" src="/brand/call-in-mark-light.png" alt="" />
-        <img class="brand-mark-dark" src="/brand/call-in-mark-dark.png" alt="" />
-        <span class="brand-copy"><strong>CALL-IN</strong><span>FOR YOUR SLIDES</span></span>
+        <img src="/brand/call-in-mark.svg" alt="" />
+        <span class="brand-copy"><strong>Call<span>-in</span></strong><small>FOR YOUR SLIDES</small></span>
       </a>
       <nav class="header-actions" aria-label="Site tools">
         <a class="language-link" href="/" lang="zh-Hant-TW" hreflang="zh-Hant-TW">中文</a>
@@ -32,8 +31,8 @@
           <h1>Let your audience<br /><span class="gradient-text">call in, live.</span></h1>
           <p>Bring people back from a silent grid. Upload a PDF or paste your deck URL and get a presenter view, audience QR code, and moderator link in one minute.</p>
           <div class="hero-actions">
-            <a class="button primary" href="/en/new/">Start a call-in <span aria-hidden="true">→</span></a>
-            <a class="button" href="#prompt">Build with one prompt</a>
+            <a class="button primary" href="#try">Try it with your deck <span aria-hidden="true">↓</span></a>
+            <a class="button" href="#prompt">Ask your agent</a>
           </div>
           <ul class="trust-line" aria-label="Product highlights"><li>No account</li><li>PDF up to 20MB</li><li>Deletes after 7 days</li><li>Open source</li></ul>
         </div>
@@ -43,7 +42,7 @@
           <div class="product-stage">
             <div class="slide-preview"><small>06 / SHARED QUESTIONS</small><h2>Bring audience response<br />back into the room</h2><div class="slide-line"></div></div>
             <div class="response-panel">
-              <div class="mini-brand"><img src="/brand/call-in-mark-dark.png" alt="" /> CALL-IN</div>
+              <div class="mini-brand"><img src="/brand/call-in-mark.svg" alt="" /> Call-in</div>
               <div class="response-card"><span>How easy is this to follow?</span><strong>Just right</strong><div class="bell-curve"><svg viewBox="0 0 220 74" role="img" aria-label="Understanding follows a bell-shaped distribution"><defs><linearGradient id="curve-en" x1="0" x2="1"><stop stop-color="#914cff"/><stop offset="1" stop-color="#1bd7ee"/></linearGradient></defs><path d="M2 68 C55 68 60 6 110 6 C160 6 165 68 218 68" fill="none" stroke="url(#curve-en)" stroke-width="5" stroke-linecap="round"/><circle cx="110" cy="6" r="5" fill="#ff6577"/></svg></div></div>
               <div class="reactions" aria-label="Live reactions"><i>👏</i><i>💡</i><i>❤️</i><i>🤔</i></div>
               <div class="question-chip">💬 How could this work in my context?</div>
@@ -61,15 +60,68 @@
         </div>
       </section>
 
+      <section class="try-section" id="try">
+        <div class="try-inner">
+          <div class="try-heading"><div><div class="eyebrow">Try it here</div><h2>This could be<br />your next talk.</h2></div><p>See how Call-in keeps your slides and audience response together. Click the demo slide to replace it with your own PDF or deck URL.</p></div>
+
+          <div class="demo-shell" data-demo-shell>
+            <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><span>Call-in · Presenter demo</span><span class="live-pulse">● LIVE</span></div>
+            <div class="demo-stage">
+              <button class="demo-deck" type="button" data-open-creator aria-controls="create">
+                <small>06 / SHARED QUESTIONS</small>
+                <strong>Bring audience response<br />back into the room</strong>
+                <span class="demo-slide-line"></span>
+                <span class="replace-hint"><i aria-hidden="true">↗</i><b>Click to use your slides</b><small>PDF or deck URL</small></span>
+              </button>
+              <aside class="demo-responses" aria-label="Call-in live response demo">
+                <div class="mini-brand"><img src="/brand/call-in-mark.svg" alt="" /> Call-in</div>
+                <div class="response-card"><span>How easy is this to follow?</span><strong>Just right</strong><div class="bell-curve"><svg viewBox="0 0 220 74" role="img" aria-label="Understanding follows a bell-shaped distribution"><defs><linearGradient id="demo-curve-en" x1="0" x2="1"><stop stop-color="#914cff"/><stop offset="1" stop-color="#1bd7ee"/></linearGradient></defs><path d="M2 68 C55 68 60 6 110 6 C160 6 165 68 218 68" fill="none" stroke="url(#demo-curve-en)" stroke-width="5" stroke-linecap="round"/></svg></div></div>
+                <div class="demo-reaction-row"><span>👏 12</span><span>💡 8</span><span>❤️ 6</span><span>🤔 3</span></div>
+                <div class="question-chip">💬 How could this work in my context?</div>
+              </aside>
+            </div>
+          </div>
+
+          <section class="creator-shell" id="create" data-create-panel hidden>
+            <div class="creator-topline"><div><span>Use your own slides</span><h3>Start a call-in</h3><p>No account and no page change.</p></div><button class="quiet-button" type="button" data-close-creator>Back to demo</button></div>
+            <form data-create-form>
+              <input type="hidden" name="locale" value="en" />
+              <label>Event title<input name="title" maxlength="160" required placeholder="For example: AI and public participation" autocomplete="off" /></label>
+              <fieldset class="deck-source">
+                <legend>Your slides</legend>
+                <div class="source-tabs" role="tablist" aria-label="Choose a slide source"><button type="button" role="tab" aria-selected="true" data-source-tab="upload">Upload PDF</button><button type="button" role="tab" aria-selected="false" data-source-tab="url">Paste URL</button></div>
+                <div class="source-panel" data-source-panel="upload"><label class="drop-zone" data-drop-zone><input name="deckFile" type="file" accept="application/pdf,.pdf" /><span class="drop-icon" aria-hidden="true">↥</span><strong data-file-label>Choose a PDF or drop it here</strong><small>Up to 20MB · automatically deleted after seven days</small></label></div>
+                <div class="source-panel" data-source-panel="url" hidden><label>Deck URL<input name="deckUrl" type="url" maxlength="2048" placeholder="https://…" inputmode="url" autocomplete="url" /><small>Google Slides, Canva, public web decks, and PDF URLs are supported.</small></label></div>
+              </fieldset>
+              <label>One line for your audience <span>Optional</span><textarea name="description" maxlength="500" rows="3" placeholder="Tell people they can ask, react, and report how easy the talk is to follow."></textarea></label>
+              <aside class="data-note"><strong>How is the data handled?</strong><p>The uploaded deck, event, and anonymous audience responses are deleted together after seven days. Responses may be used to operate and improve Call-in. Decks are not used for training and their copyright remains yours. Do not enter sensitive data.</p></aside>
+              <div class="create-action"><p>By creating an event, you acknowledge the data use above.</p><button type="submit">Start call-in <span>→</span></button></div>
+              <div class="form-message" data-create-message aria-live="polite"></div>
+            </form>
+          </section>
+
+          <section class="receipt" data-receipt hidden aria-live="polite">
+            <div class="receipt-ready"><span>READY</span><h2 data-receipt-title>Your call-in is ready</h2><p>You can start now. Keep this page: the two private links below only appear here.</p></div>
+            <article class="start-card"><div><span>FOR THE SPEAKER</span><h3>Start presenting</h3><p>Your slides and live audience response appear together.</p></div><a data-presenter-link target="_blank" rel="noreferrer">Open presenter view →</a></article>
+            <div class="receipt-grid">
+              <article class="audience-card"><img data-audience-qr alt="QR code for joining the call-in" /><div><span>FOR THE AUDIENCE</span><h3>Audience link</h3><a data-audience-link target="_blank" rel="noreferrer"></a><button type="button" data-copy="audience">Copy link</button></div></article>
+              <article class="private-card"><span>PRIVATE SPEAKER LINK</span><h3>Edit event settings</h3><p>Change titles, reactions, and polls. Anyone with this link can edit.</p><a data-setup-link target="_blank" rel="noreferrer">Open settings</a><button type="button" data-copy="setup">Copy private link</button></article>
+              <article class="private-card"><span>PRIVATE COLLABORATOR LINK</span><h3>Moderate questions</h3><p>Share with a moderator. This link cannot export or reset data.</p><a data-moderator-link target="_blank" rel="noreferrer">Open moderation</a><button type="button" data-copy="moderator">Copy private link</button></article>
+            </div>
+            <p class="expiry" data-expiry></p><a class="create-another" href="#create" data-create-another>Start another call-in</a>
+          </section>
+        </div>
+      </section>
+
       <section class="prompt-section" id="prompt">
         <div class="prompt-inner">
-          <div><div class="eyebrow">Claude · Codex · AI agents</div><h2>Skip setup.<br />Ask your agent.</h2><p>Call-in remains open source and deployable. Give this one line to Claude or Codex and describe the outcome you want.</p></div>
-          <div class="prompt-box"><code data-prompt>Use Call-in to add live audience responses to this slide deck. Keep the original slides and return the presenter, audience QR, and moderator links.</code><button class="button small copy-prompt" type="button" data-copy-prompt data-copied="Prompt copied" data-failed="Select the prompt above to copy">Copy prompt</button></div>
+          <div><div class="eyebrow">Claude · Codex · AI agents</div><h2>Skip setup.<br />Ask your agent.</h2><p>If your agent can use a browser and access your deck, it can complete the same hosted creator flow for you.</p></div>
+          <div class="prompt-box"><code data-prompt>Open https://call-in.mashbean.net/en/#create and use my attached PDF to create a Call-in event. Return the presenter, audience, and moderator links. Treat the moderator link as private.</code><button class="button small copy-prompt" type="button" data-copy-prompt data-copied="Prompt copied" data-failed="Select the prompt above to copy">Copy prompt</button></div>
         </div>
       </section>
 
       <section class="section" id="privacy">
-        <div class="section-header"><div><div class="eyebrow">Clear data boundaries</div><h2>Your slides<br />remain yours.</h2></div><p>Call-in keeps only what is needed to run the event and says plainly how that data is used.</p></div>
+        <div class="section-header privacy-header"><div><div class="eyebrow">Clear data boundaries</div><h2>Your slides<br />remain yours.</h2></div></div>
         <div class="principles">
           <article class="principle"><div class="icon" aria-hidden="true">⌛</div><h3>Your deck disappears</h3><p>An uploaded PDF is stored only for this event and automatically deleted after seven days. Call-in does not train on your deck or claim its copyright. Your copyright remains yours.</p></article>
           <article class="principle"><div class="icon" aria-hidden="true">◎</div><h3>Responses are recorded</h3><p>Events created through call-in.mashbean.net record anonymous audience responses to operate and improve the project. Event, deck, and response data are deleted together after seven days. Do not enter sensitive or confidential information.</p></article>
@@ -81,7 +133,8 @@
       </section>
     </main>
 
-    <footer><div><div class="footer-brand">CALL-IN · FOR YOUR SLIDES</div><p>Let your audience call in, live.</p></div><div class="footer-links"><a href="/en/new/">Start an event</a><a href="https://github.com/mashbean/call-in">GitHub</a><a href="/" lang="zh-Hant-TW">繁體中文</a></div></footer>
+    <footer><div><div class="footer-brand">Call-in · FOR YOUR SLIDES</div><p>Let your audience call in, live.</p></div><div class="footer-links"><a href="#create">Start an event</a><a href="https://github.com/mashbean/call-in">GitHub</a><a href="/" lang="zh-Hant-TW">繁體中文</a></div></footer>
     <script type="module" src="/landing/landing.js"></script>
+    <script type="module" src="/new/new.js"></script>
   </body>
 </html>

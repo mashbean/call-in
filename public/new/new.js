@@ -5,6 +5,7 @@ const receipt = document.querySelector("[data-receipt]");
 const fileInput = form.querySelector('input[name="deckFile"]');
 const urlInput = form.querySelector('input[name="deckUrl"]');
 const fileLabel = document.querySelector("[data-file-label]");
+const fileLabelDefault = fileLabel.textContent;
 const dropZone = document.querySelector("[data-drop-zone]");
 const english = document.documentElement.lang.startsWith("en");
 const receiptLinks = {};
@@ -72,6 +73,21 @@ document.querySelectorAll("[data-copy]").forEach((button) => {
     } catch {
       button.textContent = english ? "Copy the link above" : "請長按上方連結複製";
     }
+  });
+});
+
+document.querySelectorAll("[data-create-another]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    form.reset();
+    fileLabel.textContent = fileLabelDefault;
+    message.textContent = "";
+    setSourceMode("upload");
+    receipt.hidden = true;
+    createPanel.hidden = false;
+    history.pushState(null, "", "#create");
+    createPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    form.querySelector('input[name="title"]')?.focus({ preventScroll: true });
   });
 });
 

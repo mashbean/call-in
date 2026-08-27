@@ -6,6 +6,15 @@ import { isAuthorized } from "../src/index";
 const jsonHeaders = { "Content-Type": "application/json" };
 
 describe("Call-in Worker", () => {
+  it("redirects the retired creator URLs into the landing-page creator", async () => {
+    const zh = await SELF.fetch("https://example.com/new/", { redirect: "manual" });
+    const en = await SELF.fetch("https://example.com/en/new/", { redirect: "manual" });
+    expect(zh.status).toBe(308);
+    expect(zh.headers.get("location")).toBe("https://example.com/#create");
+    expect(en.status).toBe(308);
+    expect(en.headers.get("location")).toBe("https://example.com/en/#create");
+  });
+
   it("serves the public event configuration", async () => {
     const response = await SELF.fetch("https://example.com/api/config");
     expect(response.status).toBe(200);

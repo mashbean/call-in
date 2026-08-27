@@ -1,13 +1,12 @@
 # Call-in · 簡單叩應
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./public/brand/call-in-mark-dark.png">
-  <img src="./public/brand/call-in-mark-light.png" width="128" alt="Call-in abstract bell-curve mark">
+  <img src="./public/brand/call-in-mark.svg" width="128" alt="Call-in abstract bell-curve mark">
 </picture>
 
 **Call-in for your slides. 讓你的分享，可以即時叩應。**
 
-[Start a hosted event](https://call-in.mashbean.net/new/) · [English](https://call-in.mashbean.net/en/) · [Source](https://github.com/mashbean/call-in)
+[Start a hosted event](https://call-in.mashbean.net/#create) · [English](https://call-in.mashbean.net/en/) · [Source](https://github.com/mashbean/call-in)
 
 Call-in adds a live audience layer beside an existing slide deck. A speaker uploads a PDF (up to 20MB) or pastes a browser-playable deck URL, then immediately receives:
 
@@ -20,8 +19,8 @@ No account, repository, or Cloudflare setup is required for the hosted flow.
 
 ## Start in one minute
 
-1. Open [call-in.mashbean.net/new](https://call-in.mashbean.net/new/).
-2. Upload a PDF or paste the deck URL and name the event.
+1. Open [call-in.mashbean.net](https://call-in.mashbean.net/#try) and click the demo slide to replace it.
+2. Upload a PDF or paste the deck URL, then name the event on the same page.
 3. Open **Presenter view** and show the audience QR code.
 
 The presenter toolbar and response panel can both be hidden. Uploaded decks, event data, and audience responses expire after seven days.
@@ -30,7 +29,7 @@ The presenter toolbar and response panel can both be hidden. Uploaded decks, eve
 
 Give Claude, Codex, or another coding agent this prompt:
 
-> Use Call-in to add live audience responses to this slide deck. Keep the original slides and return the presenter, audience QR, and moderator links.
+> Open https://call-in.mashbean.net/#create and use my attached PDF to create a Call-in event. Return the presenter, audience, and moderator links. Treat the moderator link as private.
 
 The agent should prefer the hosted creator unless the user explicitly asks to self-host, needs a different retention policy, or requires source-level integration.
 

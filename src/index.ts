@@ -33,6 +33,10 @@ export default {
       }
 
       if (!url.pathname.startsWith("/api/")) {
+        const creatorRedirect = creatorRedirectTarget(url.pathname);
+        if (creatorRedirect && ["GET", "HEAD"].includes(request.method)) {
+          return Response.redirect(new URL(creatorRedirect, url.origin).toString(), 308);
+        }
         const hostedPage = parseHostedPage(url.pathname);
         if (!hostedPage) return env.ASSETS.fetch(request);
         const stub = env.LIVE_SESSION.getByName(`hosted:${hostedPage.eventId}`);
@@ -385,7 +389,7 @@ function hostedEventConfig(
   return validateEventConfig({
     ...structuredClone(EVENT_CONFIG),
     eventId,
-    eyebrow: "CALL-IN",
+    eyebrow: "Call-in",
     title,
     description:
       description ||
@@ -468,6 +472,12 @@ function hostedEventConfig(
         ],
     polls: [],
   });
+}
+
+function creatorRedirectTarget(pathname: string): string | null {
+  if (/^\/new\/?$/.test(pathname)) return "/#create";
+  if (/^\/en\/new\/?$/.test(pathname)) return "/en/#create";
+  return null;
 }
 
 function parseHostedApi(pathname: string): { eventId: string; path: string } | null {
