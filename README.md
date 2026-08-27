@@ -23,6 +23,8 @@ No account, repository, or Cloudflare setup is required for the hosted flow.
 2. Upload a PDF or paste the deck URL, then name the event on the same page.
 3. Open **Presenter view** and show the audience QR code.
 
+No deck at hand? Copy the public sample deck URL `https://mashbean.net/decks/isf-0427/` from the demo section and paste it under **Paste URL**.
+
 The presenter toolbar and response panel can both be hidden. Uploaded decks, event data, and audience responses expire after seven days.
 
 ## One-prompt agent workflow
@@ -42,6 +44,8 @@ On `call-in.mashbean.net`:
 - anonymous audience responses are recorded to operate and improve the project, then deleted with the event after seven days;
 - speakers should not upload or enter sensitive or confidential material.
 
+Hosted events must not contain illegal material, copyright or privacy infringement, fraud, hate or harassment, impersonation, malware, or content that threatens people or service security. mashbean may remove violating decks, events, and interaction pages immediately and without prior notice.
+
 Each hosted event uses an isolated Durable Object. Access secrets live in URL fragments and tab-scoped session storage; they are not part of public event URLs.
 
 ## Self-host on Cloudflare
@@ -60,6 +64,10 @@ npm run deploy
 ```
 
 Self-hosters should change or remove the `call-in.mashbean.net` custom-domain route in `wrangler.jsonc` before deploying. The Worker service name remains `live-deck-kit` for production Durable Object continuity; it is an internal deployment identifier, not the product name.
+
+Or give a coding agent this prompt:
+
+> Get the source from https://github.com/mashbean/call-in, read the README and wrangler.jsonc, and deploy an independent Call-in service to my Cloudflare account. Do not overwrite any existing Worker, Durable Object, or domain. Run the tests first, then return the public URL, required configuration, and update process. If login, API-token creation, or custom-domain changes require my action, stop and tell me exactly what I need to do.
 
 ## Add Call-in inside an HTML deck
 

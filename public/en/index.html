@@ -63,6 +63,7 @@
       <section class="try-section" id="try">
         <div class="try-inner">
           <div class="try-heading"><div><div class="eyebrow">Try it here</div><h2>This could be<br />your next talk.</h2></div><p>See how Call-in keeps your slides and audience response together. Click the demo slide to replace it with your own PDF or deck URL.</p></div>
+          <div class="demo-example" data-copy-scope><div><span>No deck at hand?</span><strong>Copy this public deck URL, then paste it under “Paste URL” to try the full flow.</strong><code data-copy-value>https://mashbean.net/decks/isf-0427/</code></div><button class="button small" type="button" data-copy-text data-copied="Copied; open the demo and paste it" data-failed="Select the URL to copy">Copy sample URL</button></div>
 
           <div class="demo-shell" data-demo-shell>
             <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><span>Call-in · Presenter demo</span><span class="live-pulse">● LIVE</span></div>
@@ -95,7 +96,7 @@
               </fieldset>
               <label>One line for your audience <span>Optional</span><textarea name="description" maxlength="500" rows="3" placeholder="Tell people they can ask, react, and report how easy the talk is to follow."></textarea></label>
               <aside class="data-note"><strong>How is the data handled?</strong><p>The uploaded deck, event, and anonymous audience responses are deleted together after seven days. Responses may be used to operate and improve Call-in. Decks are not used for training and their copyright remains yours. Do not enter sensitive data.</p></aside>
-              <div class="create-action"><p>By creating an event, you acknowledge the data use above.</p><button type="submit">Start call-in <span>→</span></button></div>
+              <div class="create-action"><p>By creating an event, you acknowledge the data use and <a href="#acceptable-use">acceptable-use rules</a>.</p><button type="submit">Start call-in <span>→</span></button></div>
               <div class="form-message" data-create-message aria-live="polite"></div>
             </form>
           </section>
@@ -116,7 +117,7 @@
       <section class="prompt-section" id="prompt">
         <div class="prompt-inner">
           <div><div class="eyebrow">Claude · Codex · AI agents</div><h2>Skip setup.<br />Ask your agent.</h2><p>If your agent can use a browser and access your deck, it can complete the same hosted creator flow for you.</p></div>
-          <div class="prompt-box"><code data-prompt>Open https://call-in.mashbean.net/en/#create and use my attached PDF to create a Call-in event. Return the presenter, audience, and moderator links. Treat the moderator link as private.</code><button class="button small copy-prompt" type="button" data-copy-prompt data-copied="Prompt copied" data-failed="Select the prompt above to copy">Copy prompt</button></div>
+          <div class="prompt-box" data-copy-scope><code data-copy-value>Open https://call-in.mashbean.net/en/#create and use my attached PDF to create a Call-in event. Return the presenter, audience, and moderator links. Treat the moderator link as private.</code><button class="button small copy-prompt" type="button" data-copy-text data-copied="Prompt copied" data-failed="Select the prompt above to copy">Copy prompt</button></div>
         </div>
       </section>
 
@@ -125,7 +126,9 @@
         <div class="principles">
           <article class="principle"><div class="icon" aria-hidden="true">⌛</div><h3>Your deck disappears</h3><p>An uploaded PDF is stored only for this event and automatically deleted after seven days. Call-in does not train on your deck or claim its copyright. Your copyright remains yours.</p></article>
           <article class="principle"><div class="icon" aria-hidden="true">◎</div><h3>Responses are recorded</h3><p>Events created through call-in.mashbean.net record anonymous audience responses to operate and improve the project. Event, deck, and response data are deleted together after seven days. Do not enter sensitive or confidential information.</p></article>
+          <article class="principle principle-host"><div class="icon" aria-hidden="true">⌂</div><h3>Or host it yourself</h3><p>Call-in is open source. If you want decks and responses to pass only through your own service, deploy an independent Call-in from source.</p><a class="source-link" href="https://github.com/mashbean/call-in" target="_blank" rel="noreferrer">View source ↗</a><div class="mini-prompt" data-copy-scope><code data-copy-value>Get the source from https://github.com/mashbean/call-in, read the README and wrangler.jsonc, and deploy an independent Call-in service to my Cloudflare account. Do not overwrite any existing Worker, Durable Object, or domain. Run the tests first, then return the public URL, required configuration, and update process. If login, API-token creation, or custom-domain changes require my action, stop and tell me exactly what I need to do.</code><button class="button small" type="button" data-copy-text data-copied="Self-host prompt copied" data-failed="Select the prompt to copy">Copy self-host prompt</button></div></article>
         </div>
+        <aside class="use-policy" id="acceptable-use"><strong>Acceptable use</strong><p>If an uploaded deck or supplied URL is illegal, infringes copyright or privacy, enables fraud, hate or harassment, impersonation, malware, or otherwise threatens people or service security, mashbean may remove the deck, event, and interaction page immediately and without prior notice.</p></aside>
       </section>
 
       <section class="section support" id="support">

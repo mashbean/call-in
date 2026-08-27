@@ -14,13 +14,13 @@ themeButton?.addEventListener("click", () => {
   localStorage.setItem("call-in-theme", next);
 });
 
-document.querySelectorAll("[data-copy-prompt]").forEach((button) => {
+document.querySelectorAll("[data-copy-text]").forEach((button) => {
   button.addEventListener("click", async () => {
-    const prompt = document.querySelector("[data-prompt]")?.textContent?.trim();
-    if (!prompt) return;
+    const copyValue = button.closest("[data-copy-scope]")?.querySelector("[data-copy-value]")?.textContent?.trim();
+    if (!copyValue) return;
     const original = button.textContent;
     try {
-      await navigator.clipboard.writeText(prompt);
+      await navigator.clipboard.writeText(copyValue);
       button.textContent = button.dataset.copied || "Copied";
     } catch {
       button.textContent = button.dataset.failed || "Select the prompt to copy";
