@@ -1,10 +1,36 @@
 # Live Deck Kit
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mashbean/live-deck-kit)
+
 Add realtime difficulty feedback, audience questions, emoji reactions, quick polls, and a QR entry point to any web slide deck.
 
 Audience members join from their phones. The presenter sees a live dashboard beside the deck and can collapse it at any time. Desktop layouts can use a 75/25 split, while phones and tablets get a touch-friendly drawer.
 
 ![Live Deck Kit running on a presenter laptop and an audience phone](./docs/hero-mockup-v2.jpg)
+
+## Deploy to Cloudflare
+
+Use the button above for the shortest path. Cloudflare copies this public repository into your GitHub or GitLab account, provisions the Durable Object, deploys the Worker, and connects future pushes to Workers Builds.
+
+After Cloudflare shows the new `workers.dev` URL
+
+1. Open the audience page at `/` and the presenter dashboard at `/dashboard/`.
+2. Edit [`public/event.config.json`](./public/event.config.json) in the copied repository with your event name, deck URL, language, questions, reactions, and polls.
+3. Push the change. Workers Builds deploys it automatically.
+
+The starter keeps admin export, reset, and moderation controls locked until you configure tokens. Before using those controls for a real event, clone your copied repository and run
+
+```bash
+npm ci
+npm run admin-token
+npm run moderator-token
+npm run check
+git add wrangler.jsonc
+git commit -m "Configure protected live deck controls"
+git push
+```
+
+The two plaintext token files remain local and Git-ignored. Only their SHA-256 hashes are committed. Give event assistants the moderator token, never the admin token.
 
 ## Start with one prompt
 
@@ -47,7 +73,7 @@ Audience phones ── audience page ──────────────�
 
 Each event uses one Worker deployment and one Durable Object by default. Events do not share state, which keeps failures isolated and makes free-tier capacity easier to reason about.
 
-## Quick start
+## Deploy from a terminal
 
 Requirements are Node.js 22 or later and a Cloudflare account.
 
