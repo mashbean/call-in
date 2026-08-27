@@ -34,11 +34,18 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentHtml, /data-dashboard-toggle/);
   assert.match(presentHtml, /data-toolbar-toggle/);
   assert.match(presentHtml, /data-toolbar-peek/);
+  assert.match(presentHtml, /data-toolbar-peek-label/);
   assert.match(presentHtml, /src="\/dashboard\/"/);
+  assert.doesNotMatch(presentHtml, /data-audience-qr/);
   assert.match(presentJs, /eventContext\.apiBase}\/config/);
   assert.match(presentJs, /\["http:", "https:"\]/);
   assert.match(presentJs, /!parsed\.username && !parsed\.password/);
+  assert.match(presentJs, /isHostedPdf\(deckUrl\)/);
+  assert.match(presentJs, /deckFrame\.removeAttribute\("sandbox"\)/);
+  assert.match(presentJs, /parsed\.pathname === `\$\{eventContext\.apiBase\}\/deck\.pdf`/);
   assert.match(presentJs, /toolbar-collapsed/);
+  assert.match(presentCss, /right:14px/);
+  assert.doesNotMatch(presentCss, /left:50%/);
   assert.match(presentCss, /@media \(max-width: 1024px\)/);
   assert.match(presentCss, /@media \(max-width: 720px\)/);
 });

@@ -20,13 +20,12 @@
         <button type="button" data-fullscreen>全螢幕</button>
         <button type="button" data-toolbar-toggle aria-expanded="true">收起工具列</button>
       </nav>
-      <img data-audience-qr src="/api/qr.svg" alt="觀眾加入行動條碼" />
     </header>
-    <button class="toolbar-peek" type="button" data-toolbar-peek aria-label="顯示講者工具列" title="顯示講者工具列">⌄</button>
+    <button class="toolbar-peek" type="button" data-toolbar-peek aria-label="顯示講者工具列" title="顯示講者工具列"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="m3.5 5.75 4.5 4.5 4.5-4.5" /></svg><span data-toolbar-peek-label>工具列</span></button>
     <main class="present-stage">
       <section class="deck-pane" aria-label="簡報">
         <iframe data-deck-frame title="簡報" allow="fullscreen; autoplay; clipboard-write" allowfullscreen sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-        <p class="embed-note">簡報區若保持空白，原網站可能禁止內嵌；請使用上方「另開簡報」。</p>
+        <p class="embed-note" data-embed-note>簡報區若保持空白，原網站可能禁止內嵌；請使用上方「另開簡報」。</p>
       </section>
       <section class="dashboard-pane" aria-label="現場互動">
         <iframe data-dashboard-frame src="/dashboard/" title="現場互動 dashboard" allow="clipboard-write"></iframe>
