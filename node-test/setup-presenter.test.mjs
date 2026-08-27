@@ -62,6 +62,8 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentJs, /toolbar-collapsed/);
   assert.match(presentCss, /--dashboard-pane-width/);
   assert.doesNotMatch(presentCss, /left:50%/);
+  assert.match(presentCss, /font-family:inherit; font-size:11px; font-weight:800; line-height:1/);
+  assert.doesNotMatch(presentCss, /font:\s*800 11px\/1 inherit/);
   assert.match(presentCss, /@media \(max-width: 1024px\)/);
   assert.match(presentCss, /@media \(max-width: 720px\)/);
   assert.match(pdfViewerHtml, /data-pdf-canvas/);

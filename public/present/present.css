@@ -13,7 +13,7 @@ body { width: 100%; height: 100%; margin: 0; }
 .present-status { color: #91a2c5; font: 750 11px/1.2 ui-monospace, monospace; }
 .present-toolbar nav { display: flex; gap: 7px; }
 .present-toolbar a,
-.present-toolbar button { min-height: 38px; border: 1px solid #35d9ff4d; border-radius: 999px; padding: 9px 12px; background: #0c1931; color: #d8e1f5; font: 800 11px/1 inherit; text-decoration: none; cursor: pointer; }
+.present-toolbar button { display:inline-flex; align-items:center; justify-content:center; min-height:38px; border:1px solid #35d9ff4d; border-radius:999px; padding:9px 12px; background:#0c1931; color:#d8e1f5; font-family:inherit; font-size:11px; font-weight:800; line-height:1; white-space:nowrap; text-decoration:none; cursor:pointer; }
 .present-toolbar a:hover,
 .present-toolbar button:hover,
 .present-toolbar a:focus-visible,
