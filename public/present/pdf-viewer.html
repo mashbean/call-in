@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#030711" />
+    <title>Call-in PDF 簡報</title>
+    <link rel="stylesheet" href="/present/pdf-viewer.css" />
+  </head>
+  <body>
+    <main class="pdf-viewer" data-pdf-viewer>
+      <div class="pdf-stage" data-pdf-stage tabindex="0" aria-label="PDF 簡報">
+        <canvas data-pdf-canvas hidden></canvas>
+        <div class="pdf-status" data-pdf-status role="status" aria-live="polite">正在準備簡報…</div>
+      </div>
+      <nav class="pdf-controls" aria-label="PDF 翻頁工具" data-pdf-controls hidden>
+        <button type="button" data-pdf-prev aria-label="上一頁" title="上一頁（←）"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="m10.5 3.5-4.5 4.5 4.5 4.5" /></svg></button>
+        <span><b data-pdf-current>1</b><i>/</i><span data-pdf-total>1</span></span>
+        <button type="button" data-pdf-next aria-label="下一頁" title="下一頁（→ 或空白鍵）"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="m5.5 3.5 4.5 4.5-4.5 4.5" /></svg></button>
+      </nav>
+    </main>
+    <script type="module" src="/present/pdf-viewer.js"></script>
+  </body>
+</html>

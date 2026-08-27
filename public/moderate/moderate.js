@@ -23,7 +23,11 @@ let refreshTimer;
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const nextToken = String(new FormData(loginForm).get("token") || "");
+  const nextToken = moderatorToken(String(new FormData(loginForm).get("token") || ""));
+  if (!nextToken) {
+    loginMessage.textContent = t("Paste the full private moderation link or token", "請貼上完整的主持私密連結或存取碼");
+    return;
+  }
   token = nextToken;
   loginMessage.textContent = t("Checking", "驗證中");
   try {
@@ -82,7 +86,6 @@ async function runAction(button, path, body) {
 }
 
 async function loadState() {
-  if (!token) return;
   state = await request("/api/moderator/state");
   loginPanel.hidden = true;
   app.hidden = false;
@@ -96,7 +99,7 @@ async function request(path, options = {}) {
   const response = await fetch(requestPath, {
     ...options,
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.body ? { "Content-Type": "application/json" } : {}),
     },
   });
@@ -188,7 +191,7 @@ function connect() {
     statusEl.textContent = t("Moderator connected", "主持控制台已連線");
   });
   socket.addEventListener("message", (event) => {
-    if (!token || document.visibilityState !== "visible") return;
+    if (!state || document.visibilityState !== "visible") return;
     try {
       const message = JSON.parse(event.data);
       if (message.type === "snapshot" || message.type === "moderation-activity") scheduleRefresh();
@@ -213,7 +216,34 @@ function escapeHtml(value) {
   );
 }
 
-if (token) void loadState().catch(() => {
-  token = "";
-  sessionStorage.removeItem(tokenKey);
-});
+function moderatorToken(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  try {
+    const parsed = new URL(trimmed, location.origin);
+    const access = new URLSearchParams(parsed.hash.slice(1)).get("access");
+    if (access) return access.length >= 24 && access.length <= 256 ? access : "";
+  } catch {
+    // A bare token is handled below.
+  }
+  return trimmed.length >= 24 && trimmed.length <= 256 ? trimmed : "";
+}
+
+async function bootstrap() {
+  if (token) {
+    try {
+      await loadState();
+      return;
+    } catch {
+      token = "";
+      sessionStorage.removeItem(tokenKey);
+    }
+  }
+  try {
+    await loadState();
+  } catch {
+    loginPanel.hidden = false;
+  }
+}
+
+void bootstrap();

@@ -18,14 +18,11 @@ const embedNote = document.querySelector("[data-embed-note]");
 const dashboardPane = document.querySelector(".dashboard-pane");
 const english = config.locale?.toLowerCase().startsWith("en");
 const labels = english
-  ? { presenter: "Presenter", loading: "Loading slides…", loaded: "Slide load requested", open: "Open deck", audience: "Audience", moderate: "Moderate", hideDashboard: "Hide responses", showDashboard: "Show responses", fullscreen: "Fullscreen", hideToolbar: "Hide toolbar", showToolbar: "Show presenter toolbar", toolbar: "Toolbar" }
-  : { presenter: "講者頁", loading: "正在載入簡報…", loaded: "已送出簡報載入要求", open: "另開簡報", audience: "觀眾頁", moderate: "管理", hideDashboard: "隱藏互動", showDashboard: "顯示互動", fullscreen: "全螢幕", hideToolbar: "收起工具列", showToolbar: "顯示講者工具列", toolbar: "工具列" };
+  ? { presenter: "Presenter", loading: "Loading slides…", loaded: "Slide load requested", pdfPage: (page, pages) => `PDF ${page} / ${pages}`, open: "Open deck", audience: "Audience", moderate: "Moderate", hideDashboard: "Hide responses", showDashboard: "Show responses", fullscreen: "Fullscreen", hideToolbar: "Hide toolbar", showToolbar: "Show presenter toolbar", toolbar: "Toolbar" }
+  : { presenter: "講者頁", loading: "正在載入簡報…", loaded: "已送出簡報載入要求", pdfPage: (page, pages) => `PDF ${page} / ${pages}`, open: "另開簡報", audience: "觀眾頁", moderate: "主持", hideDashboard: "隱藏互動", showDashboard: "顯示互動", fullscreen: "全螢幕", hideToolbar: "收起工具列", showToolbar: "顯示講者工具列", toolbar: "工具列" };
 
 const hostedPdf = isHostedPdf(deckUrl);
 if (hostedPdf) {
-  // Chrome's built-in PDF viewer cannot run inside a sandboxed iframe.
-  // Uploaded decks are signature-checked and served from Call-in itself.
-  deckFrame.removeAttribute("sandbox");
   embedNote.hidden = true;
 }
 
@@ -46,12 +43,20 @@ toolbarToggle.textContent = labels.hideToolbar;
 toolbarPeek.setAttribute("aria-label", labels.showToolbar);
 toolbarPeek.title = labels.showToolbar;
 toolbarPeekLabel.textContent = labels.toolbar;
-deckFrame.src = deckUrl;
+deckFrame.src = hostedPdf
+  ? `/present/pdf-viewer.html?file=${encodeURIComponent(deckUrl)}&lang=${english ? "en" : "zh"}`
+  : deckUrl;
 openDeck.href = deckUrl;
 syncToolbarPeekPosition();
 new ResizeObserver(syncToolbarPeekPosition).observe(dashboardPane);
 deckFrame.addEventListener("load", () => {
   status.textContent = labels.loaded;
+});
+window.addEventListener("message", (event) => {
+  if (!hostedPdf || event.origin !== location.origin || event.source !== deckFrame.contentWindow) return;
+  if (event.data?.type === "call-in:pdf-page") {
+    status.textContent = labels.pdfPage(event.data.page, event.data.pages);
+  }
 });
 
 toggle.addEventListener("click", () => {

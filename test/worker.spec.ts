@@ -84,6 +84,11 @@ describe("Call-in Worker", () => {
       }),
     });
     expect(createdResponse.status).toBe(201);
+    const moderatorCookie = createdResponse.headers.get("set-cookie");
+    expect(moderatorCookie).toContain("call_in_moderator=");
+    expect(moderatorCookie).toContain("HttpOnly");
+    expect(moderatorCookie).toContain("Secure");
+    expect(moderatorCookie).toContain("SameSite=Strict");
     const created = await createdResponse.json<{
       eventId: string;
       audienceUrl: string;
@@ -136,6 +141,14 @@ describe("Call-in Worker", () => {
       headers: { Authorization: `Bearer ${moderatorToken}` },
     });
     expect(moderatorResponse.status).toBe(200);
+    const moderatorCookiePair = moderatorCookie?.split(";")[0] || "";
+    expect(moderatorCookie).toContain(`Path=/api/events/${created.eventId}/moderator`);
+    expect((await SELF.fetch(`${apiBase}/moderator/state`, {
+      headers: { Cookie: moderatorCookiePair },
+    })).status).toBe(200);
+    expect((await SELF.fetch(`${apiBase}/admin/config`, {
+      headers: { Cookie: moderatorCookiePair },
+    })).status).toBe(404);
     expect((await SELF.fetch(`${apiBase}/moderator/state`, {
       headers: { Authorization: `Bearer ${setupToken}` },
     })).status).toBe(404);

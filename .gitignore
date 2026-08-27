@@ -8,4 +8,5 @@ node_modules/
 .call-in-moderator-token
 dist/
 coverage/
+public/vendor/pdfjs/
 .DS_Store

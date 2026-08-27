@@ -155,20 +155,24 @@ async function createHostedEvent(request: Request, env: Env): Promise<Response> 
   }
 
   const base = `${publicOrigin}/e/${eventId}`;
+  const response = Response.json(
+    {
+      eventId,
+      title,
+      expiresAt,
+      audienceUrl: `${base}/`,
+      presenterUrl: `${base}/present/`,
+      setupUrl: `${base}/setup/#access=${adminToken}`,
+      moderatorUrl: `${base}/moderate/#access=${moderatorToken}`,
+      deckMode: deckFile ? "upload" : "url",
+    },
+    {
+      status: 201,
+      headers: { "Set-Cookie": moderatorAccessCookie(eventId, moderatorToken, expiresAt) },
+    },
+  );
   return noStore(
-    Response.json(
-      {
-        eventId,
-        title,
-        expiresAt,
-        audienceUrl: `${base}/`,
-        presenterUrl: `${base}/present/`,
-        setupUrl: `${base}/setup/#access=${adminToken}`,
-        moderatorUrl: `${base}/moderate/#access=${moderatorToken}`,
-        deckMode: deckFile ? "upload" : "url",
-      },
-      { status: 201 },
-    ),
+    response,
   );
 }
 
@@ -371,7 +375,10 @@ async function isRoleAuthorized(
   context: SessionApiContext,
   role: "admin" | "moderator",
 ): Promise<boolean> {
-  if (context.hostedEventId) return context.stub.isHostedAuthorized(role, bearerToken(request));
+  if (context.hostedEventId) {
+    const token = bearerToken(request) || (role === "moderator" ? cookieToken(request, "call_in_moderator") : "");
+    return context.stub.isHostedAuthorized(role, token);
+  }
   return role === "admin"
     ? isAuthorized(request, env.ADMIN_TOKEN_SHA256, env.ADMIN_TOKEN)
     : isAuthorized(request, env.MODERATOR_TOKEN_SHA256, env.MODERATOR_TOKEN);
@@ -566,6 +573,20 @@ async function hashToken(token: string): Promise<string> {
 function bearerToken(request: Request): string {
   const authorization = request.headers.get("authorization") ?? "";
   return authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+}
+
+function cookieToken(request: Request, name: string): string {
+  const prefix = `${name}=`;
+  for (const value of (request.headers.get("cookie") || "").split(";")) {
+    const cookie = value.trim();
+    if (cookie.startsWith(prefix)) return cookie.slice(prefix.length);
+  }
+  return "";
+}
+
+function moderatorAccessCookie(eventId: string, token: string, expiresAt: number): string {
+  const maxAge = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+  return `call_in_moderator=${token}; Path=/api/events/${eventId}/moderator; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Strict`;
 }
 
 export async function isAuthorized(

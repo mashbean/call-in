@@ -36,6 +36,12 @@ The question-lens design and post-event export contract interoperate with
 QR Code generation uses [`soldair/node-qrcode`](https://github.com/soldair/node-qrcode),
 available under the MIT License. Its full license is included in the installed package.
 
+## Mozilla PDF.js
+
+Uploaded PDF presentation rendering uses [`mozilla/pdf.js`](https://github.com/mozilla/pdf.js),
+available under the Apache License 2.0. Call-in uses the PDF.js display layer with its own
+single-page presenter controls rather than embedding the unmodified generic viewer.
+
 ## devices.css
 
 The documentation device mockup uses [`picturepan2/devices.css`](https://github.com/picturepan2/devices.css),

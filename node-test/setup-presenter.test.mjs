@@ -8,6 +8,11 @@ const setupCss = await readFile(new URL("../public/setup/setup.css", import.meta
 const presentHtml = await readFile(new URL("../public/present/index.html", import.meta.url), "utf8");
 const presentJs = await readFile(new URL("../public/present/present.js", import.meta.url), "utf8");
 const presentCss = await readFile(new URL("../public/present/present.css", import.meta.url), "utf8");
+const pdfViewerHtml = await readFile(new URL("../public/present/pdf-viewer.html", import.meta.url), "utf8");
+const pdfViewerJs = await readFile(new URL("../public/present/pdf-viewer.js", import.meta.url), "utf8");
+const pdfViewerCss = await readFile(new URL("../public/present/pdf-viewer.css", import.meta.url), "utf8");
+const moderatorHtml = await readFile(new URL("../public/moderate/index.html", import.meta.url), "utf8");
+const moderatorJs = await readFile(new URL("../public/moderate/moderate.js", import.meta.url), "utf8");
 const eventContextJs = await readFile(new URL("../public/event-context.js", import.meta.url), "utf8");
 const landingHtml = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const englishLandingHtml = await readFile(new URL("../public/en/index.html", import.meta.url), "utf8");
@@ -41,7 +46,8 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentJs, /\["http:", "https:"\]/);
   assert.match(presentJs, /!parsed\.username && !parsed\.password/);
   assert.match(presentJs, /isHostedPdf\(deckUrl\)/);
-  assert.match(presentJs, /deckFrame\.removeAttribute\("sandbox"\)/);
+  assert.match(presentJs, /\/present\/pdf-viewer\.html\?file=/);
+  assert.match(presentJs, /call-in:pdf-page/);
   assert.match(presentJs, /parsed\.pathname === `\$\{eventContext\.apiBase\}\/deck\.pdf`/);
   assert.match(presentJs, /new ResizeObserver\(syncToolbarPeekPosition\)/);
   assert.match(presentJs, /toolbar-collapsed/);
@@ -49,6 +55,26 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.doesNotMatch(presentCss, /left:50%/);
   assert.match(presentCss, /@media \(max-width: 1024px\)/);
   assert.match(presentCss, /@media \(max-width: 720px\)/);
+  assert.match(pdfViewerHtml, /data-pdf-canvas/);
+  assert.match(pdfViewerHtml, /data-pdf-prev/);
+  assert.match(pdfViewerHtml, /data-pdf-next/);
+  assert.match(pdfViewerJs, /from "\/vendor\/pdfjs\/pdf\.mjs"/);
+  assert.match(pdfViewerJs, /getDocument\(\{ url: fileUrl\.href, isEvalSupported: false \}\)/);
+  assert.match(pdfViewerJs, /pdf\.getPage\(pageNumber\)/);
+  assert.match(pdfViewerJs, /\["ArrowRight", "PageDown", " "\]/);
+  assert.ok(pdfViewerJs.includes('/^\\/api\\/events\\/[a-f0-9]{32}\\/deck\\.pdf$/'));
+  assert.match(pdfViewerCss, /place-items: center/);
+  assert.match(pdfViewerCss, /max-height: 100%/);
+});
+
+test("moderator access is automatic for creators and accepts a full private link", () => {
+  assert.match(moderatorHtml, /主持私密連結或存取碼/);
+  assert.match(moderatorHtml, /不需要自己尋找存取碼/);
+  assert.match(moderatorHtml, /主持權限不在公開講者網址裡/);
+  assert.match(moderatorJs, /function moderatorToken\(value\)/);
+  assert.match(moderatorJs, /new URLSearchParams\(parsed\.hash\.slice\(1\)\)\.get\("access"\)/);
+  assert.match(moderatorJs, /\.\.\.\(token \? \{ Authorization: `Bearer \$\{token\}` \} : \{\}\)/);
+  assert.match(moderatorJs, /async function bootstrap\(\)/);
 });
 
 test("hosted creator replaces the landing-page demo and returns public and private links", () => {
@@ -87,5 +113,7 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.match(creatorJs, /result\.presenterUrl/);
   assert.match(creatorJs, /result\.setupUrl/);
   assert.match(creatorJs, /result\.moderatorUrl/);
+  assert.match(landingHtml, /建立者可直接開啟/);
+  assert.match(landingHtml, /複製主持私密連結/);
   assert.match(landingCss, /@media \(max-width: 620px\)/);
 });

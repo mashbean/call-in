@@ -1,6 +1,6 @@
 {
   "name": "@mashbean/call-in",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "description": "Call-in for your slides: prompt-ready realtime audience response",
   "type": "module",
   "license": "Apache-2.0",
@@ -28,9 +28,14 @@
     "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
+    "vendor:pdfjs": "node scripts/vendor-pdfjs.mjs",
+    "predev": "npm run vendor:pdfjs",
     "dev": "wrangler dev",
+    "predeploy": "npm run vendor:pdfjs",
     "deploy": "wrangler deploy",
+    "predeploy:dry": "npm run vendor:pdfjs",
     "deploy:dry": "wrangler deploy --dry-run",
+    "prepack": "npm run vendor:pdfjs",
     "typecheck": "tsc --noEmit",
     "types": "wrangler types",
     "test": "vitest run && node --test node-test/*.test.mjs",
@@ -44,6 +49,7 @@
     "seed-demo": "node scripts/seed-demo.mjs"
   },
   "dependencies": {
+    "pdfjs-dist": "6.2.108",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
@@ -55,6 +61,6 @@
     "wrangler": "^4.123.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13"
   }
 }

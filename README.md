@@ -25,7 +25,7 @@ No account, repository, or Cloudflare setup is required for the hosted flow.
 
 No deck at hand? Copy the public sample deck URL `https://mashbean.net/decks/isf-0427/` from the demo section and paste it under **Paste URL**.
 
-The presenter toolbar and response panel can both be hidden. Uploaded decks, event data, and audience responses expire after seven days.
+The presenter toolbar and response panel can both be hidden. Uploaded PDFs open in a focused one-page viewer that fits each slide to the available stage; use the on-screen controls, arrow/Page Up/Page Down keys, Space, Home/End, or a horizontal swipe to move through the deck. Uploaded decks, event data, and audience responses expire after seven days.
 
 ## One-prompt agent workflow
 
@@ -46,7 +46,7 @@ On `call-in.mashbean.net`:
 
 Hosted events must not contain illegal material, copyright or privacy infringement, fraud, hate or harassment, impersonation, malware, or content that threatens people or service security. mashbean may remove violating decks, events, and interaction pages immediately and without prior notice.
 
-Each hosted event uses an isolated Durable Object. Access secrets live in URL fragments and tab-scoped session storage; they are not part of public event URLs.
+Each hosted event uses an isolated Durable Object. Private links carry access secrets in URL fragments and move them into tab-scoped session storage. Creating an event also sets a restricted HttpOnly cookie for that event's moderation API, so the creator can open **Moderate** from the presenter toolbar without entering a code. The cookie is not available to page scripts, is not sent to setup or admin routes, and expires with the event. No moderator credential is included in a public presenter URL.
 
 ## Self-host on Cloudflare
 
@@ -93,7 +93,7 @@ The old `live-deck-panel` element and script entry point remain as compatibility
 
 ## Configuration and moderation
 
-Hosted events use the private setup link returned by `/new/`. Source-configured self-hosted events use [`public/event.config.json`](./public/event.config.json); see [`skills/call-in/references/configuration.md`](./skills/call-in/references/configuration.md).
+Hosted events use the private setup link returned by the creator on the landing page. The same creator browser is automatically authorized for moderation; share the complete private moderation link with a collaborator instead of extracting a token. Events created before this browser authorization was introduced still need their original private moderation link. Source-configured self-hosted events use [`public/event.config.json`](./public/event.config.json); see [`skills/call-in/references/configuration.md`](./skills/call-in/references/configuration.md).
 
 ```sh
 npm run admin-token

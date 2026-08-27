@@ -52,6 +52,9 @@
   color: var(--muted);
   line-height: 1.55;
 }
+.access-help { display:grid; gap:5px; margin-top:16px; padding:14px 16px; border:1px solid #35d9ff44; border-radius:14px; background:#35d9ff0a; }
+.access-help strong { color:var(--sage); font-size:12px; }
+.access-help span { font-size:11px; }
 .moderator-login form {
   display: grid;
   gap: 12px;
@@ -66,6 +69,7 @@
   color: var(--ink);
   padding: 13px;
 }
+.moderator-login input::placeholder { color:#73809c; }
 .mode-grid,
 .moderator-actions {
   display: grid;
