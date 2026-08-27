@@ -115,6 +115,9 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.doesNotMatch(landingHtml, />CALL-IN</);
   assert.match(landingHtml, /https:\/\/buymeacoffee\.com\/mashbean/);
   assert.match(landingHtml, /請作者喝杯咖啡/);
+  assert.match(landingHtml, /<li>無需註冊<\/li><li>支援 PDF、Google 簡報與網址<\/li><li>開源專案<\/li>/);
+  assert.match(englishLandingHtml, /<li>No registration required<\/li><li>Supports PDF, Google Slides, and URLs<\/li><li>Open-source project<\/li>/);
+  assert.match(landingCss, /\.button\.primary \{ color: #fff; border: 0;/);
   assert.match(landingHtml, /href="\/demo\/"/);
   assert.match(landingHtml, /直接進 Demo/);
   assert.match(landingHtml, /<b>45<\/b> 筆難度/);

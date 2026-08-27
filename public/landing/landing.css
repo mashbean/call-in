@@ -130,7 +130,7 @@ h1 { max-width: 780px; margin: 0; font-size: clamp(48px, 6vw, 92px); line-height
   font-weight: 800;
   cursor: pointer;
 }
-.button.primary { color: #fff; border-color: transparent; background: linear-gradient(110deg, #7547ff, #355fff 56%, #00bcd9); box-shadow: 0 15px 40px rgba(86, 72, 255, .28); }
+.button.primary { color: #fff; border: 0; background: linear-gradient(110deg, #7547ff, #355fff 56%, #00bcd9); box-shadow: 0 15px 40px rgba(86, 72, 255, .28); }
 .button.small { min-height: 44px; padding: 0 18px; font-size: 14px; }
 .trust-line { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 24px 0 0; padding: 0; color: var(--muted); font-size: 13px; list-style: none; }
 .trust-line li::before { content: "✓"; margin-right: 7px; color: var(--cyan); font-weight: 900; }
