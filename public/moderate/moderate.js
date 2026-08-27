@@ -1,9 +1,9 @@
-import { accessTokenKey, consumeAccessToken, eventContext } from "../event-context.js";
+import { accessTokenKey, consumeAccessToken, eventApi, eventContext } from "../event-context.js";
 import { createLocale } from "../i18n.js";
 
 const tokenKey = accessTokenKey("moderator");
 const apiBase = eventContext.apiBase;
-const config = await fetch(`${apiBase}/config`).then((response) => response.json());
+const config = await fetch(eventApi("/config")).then((response) => response.json());
 const locale = createLocale(config);
 const t = locale.text;
 locale.apply();

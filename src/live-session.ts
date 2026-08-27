@@ -407,6 +407,30 @@ export class LiveSession extends DurableObject<Env> {
     return { config, updatedAt };
   }
 
+  async ensureDemoSession(
+    value: unknown,
+    now: number,
+    resetAfterMs: number,
+  ): Promise<{ resetAt: number }> {
+    const config = validateEventConfig(value);
+    if (config.eventId !== EVENT_CONFIG.eventId) throw new Error("invalid demo eventId");
+    if (!Number.isInteger(now) || !Number.isInteger(resetAfterMs) || resetAfterMs < 60_000) {
+      throw new Error("invalid demo reset interval");
+    }
+
+    const current = this.getEventConfig();
+    if (JSON.stringify(current) !== JSON.stringify(config)) await this.updateEventConfig(config);
+
+    let resetAt = await this.ctx.storage.get<number>("demoResetAt");
+    if (!resetAt || resetAt <= now) {
+      await this.reset();
+      resetAt = now + resetAfterMs;
+      await this.ctx.storage.put("demoResetAt", resetAt);
+      await this.scheduleNextAlarm();
+    }
+    return { resetAt };
+  }
+
   async snapshot(): Promise<SessionSnapshot> {
     if (this.snapshotCache) return this.snapshotCache;
 
@@ -1030,6 +1054,18 @@ export class LiveSession extends DurableObject<Env> {
     this.reactionWindows.clear();
     this.snapshotCache = null;
     const snapshot = await this.broadcastSnapshot(await this.snapshot());
+    const participantReset = JSON.stringify({
+      type: "participant",
+      data: { participant: null, questions: [] },
+    });
+    for (const socket of this.ctx.getWebSockets()) {
+      try {
+        const attachment = socket.deserializeAttachment() as { voterId?: unknown } | null;
+        if (typeof attachment?.voterId === "string") socket.send(participantReset);
+      } catch (error) {
+        console.error(JSON.stringify({ message: "participant reset broadcast failed", error: String(error) }));
+      }
+    }
     await this.scheduleNextAlarm();
     return snapshot;
   }
@@ -1079,6 +1115,13 @@ export class LiveSession extends DurableObject<Env> {
 
   async alarm(): Promise<void> {
     const now = Date.now();
+    const demoResetAt = await this.ctx.storage.get<number>("demoResetAt");
+    if (demoResetAt && demoResetAt <= now) {
+      await this.reset();
+      await this.ctx.storage.put("demoResetAt", now + 60 * 60 * 1000);
+      await this.scheduleNextAlarm();
+      return;
+    }
     const hosted = this.getHostedEvent();
     if (hosted && hosted.expires_at <= now) {
       for (const socket of this.ctx.getWebSockets()) socket.close(1001, "event expired");
@@ -1371,7 +1414,8 @@ export class LiveSession extends DurableObject<Env> {
       )
       .toArray()[0];
     const expiry = this.getHostedEvent()?.expires_at;
-    const timestamps = [next?.publish_at, expiry].filter(
+    const demoResetAt = await this.ctx.storage.get<number>("demoResetAt");
+    const timestamps = [next?.publish_at, expiry, demoResetAt].filter(
       (value): value is number => typeof value === "number" && value > Date.now(),
     );
     if (timestamps.length) await this.ctx.storage.setAlarm(Math.min(...timestamps));

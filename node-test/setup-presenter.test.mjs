@@ -46,7 +46,7 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentHtml, /data-toolbar-peek-label/);
   assert.match(presentHtml, /src="\/dashboard\/"/);
   assert.doesNotMatch(presentHtml, /data-audience-qr/);
-  assert.match(presentJs, /eventContext\.apiBase}\/config/);
+  assert.match(presentJs, /fetch\(eventApi\("\/config"\)\)/);
   assert.match(presentJs, /\["http:", "https:"\]/);
   assert.match(presentJs, /!parsed\.username && !parsed\.password/);
   assert.match(presentJs, /isHostedPdf\(deckUrl\)/);
@@ -127,9 +127,15 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.match(landingCss, /\.principle-host \{ grid-column:1 \/ -1;/);
   assert.match(landingCss, /\.demo-launch/);
   assert.match(demoHtml, /https:\/\/mashbean\.net\/decks\/isf-0427\//);
-  assert.match(demoHtml, /展示模式・不記錄資料/);
-  assert.match(englishDemoHtml, /Display mode · no data recorded/);
-  assert.match(demoJs, /data-difficulty/);
-  assert.match(demoJs, /data-reaction/);
+  assert.match(demoHtml, /公開 Demo・每小時重置/);
+  assert.match(demoHtml, /src="\/demo\/dashboard\/"/);
+  assert.match(englishDemoHtml, /Public demo · resets hourly/);
+  assert.match(englishDemoHtml, /src="\/en\/demo\/dashboard\/"/);
+  assert.doesNotMatch(demoHtml, /只會在這個分頁增加|本機展示/);
+  assert.doesNotMatch(demoJs, /data-difficulty|data-reaction/);
+  assert.match(eventContextJs, /apiBase: hostedMatch \? `\/api\/events/);
+  assert.match(eventContextJs, /demoMatch \? "\/api\/demo"/);
+  assert.match(eventContextJs, /demoBase}\/audience\//);
   assert.match(demoCss, /\.demo-layout/);
+  assert.match(demoCss, /display:inline-flex; align-items:center; justify-content:center/);
 });

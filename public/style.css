@@ -870,23 +870,33 @@ html[lang^="zh"] .intent-option input:checked + span::before {
   gap: 8px;
 }
 .reaction-buttons button {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 4px;
   min-height: 68px;
   border: 1px solid var(--line);
   border-radius: 15px;
   background: #081225;
   color: var(--ink);
-  font-size: 28px;
   cursor: pointer;
   touch-action: manipulation;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
-.reaction-buttons button span {
+.reaction-buttons .reaction-emoji {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+}
+.reaction-buttons .reaction-label {
+  display: block;
+  min-height: 1.2em;
   color: var(--muted);
   font-size: 10px;
   font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
 }
 .reaction-buttons button:hover,
 .reaction-buttons button:focus-visible {
@@ -993,9 +1003,11 @@ html[lang^="zh"] .intent-option input:checked + span::before {
   }
   .reaction-buttons button {
     min-height: 62px;
+  }
+  .reaction-buttons .reaction-emoji {
     font-size: 25px;
   }
-  .reaction-buttons button span {
+  .reaction-buttons .reaction-label {
     font-size: 9px;
   }
 }

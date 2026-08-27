@@ -4,11 +4,11 @@ import {
   setDifficultyCopy,
   setDifficultyLabels,
 } from "./difficulty.js";
-import { eventContext, eventPage } from "./event-context.js";
+import { eventApi, eventContext, eventPage } from "./event-context.js";
 import { createLocale } from "./i18n.js";
 
 const apiBase = eventContext.apiBase;
-const config = await fetch(`${apiBase}/config`).then((response) => response.json());
+const config = await fetch(eventApi("/config")).then((response) => response.json());
 const locale = createLocale(config);
 const t = locale.text;
 locale.apply();
@@ -512,7 +512,7 @@ function applyConfig(nextConfig) {
   document.querySelector("[data-reactions]").innerHTML = nextConfig.reactions
     .map(
       (reaction) =>
-        `<button type="button" data-reaction="${escapeHtml(reaction.id)}" aria-label="${escapeHtml(reaction.label)}">${escapeHtml(reaction.emoji)}<span>${escapeHtml(reaction.label)}</span></button>`,
+        `<button type="button" data-reaction="${escapeHtml(reaction.id)}" aria-label="${escapeHtml(reaction.label)}"><span class="reaction-emoji" aria-hidden="true">${escapeHtml(reaction.emoji)}</span><span class="reaction-label">${escapeHtml(reaction.label)}</span></button>`,
     )
     .join("");
   document.querySelector("[data-lenses]").innerHTML = nextConfig.question.lenses

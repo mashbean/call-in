@@ -4,13 +4,13 @@ import {
   setDifficultyCopy,
   setDifficultyLabels,
 } from "../difficulty.js";
-import { eventContext, eventPage } from "../event-context.js";
+import { eventApi, eventContext, eventPage } from "../event-context.js";
 import { createLocale } from "../i18n.js";
 
 document.documentElement.classList.toggle("embedded-dashboard", window.self !== window.top);
 
 const apiBase = eventContext.apiBase;
-const config = await fetch(`${apiBase}/config`).then((response) => response.json());
+const config = await fetch(eventApi("/config")).then((response) => response.json());
 const locale = createLocale(config);
 const t = locale.text;
 const reactionTimes = new Map();
@@ -20,7 +20,7 @@ if (locale.zhHant) {
 }
 applyConfig(config);
 document.querySelectorAll("[data-qr-image]").forEach((image) => {
-  image.src = `${apiBase}/qr.svg`;
+  image.src = eventApi("/qr.svg");
 });
 document.querySelectorAll("[data-audience-url]").forEach((link) => {
   link.href = eventPage("/");

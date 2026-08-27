@@ -23,6 +23,54 @@ describe("Call-in Worker", () => {
     expect(config.difficulty.labels).toHaveLength(5);
   });
 
+  it("runs the permanent demo as a real isolated audience session with a scannable dashboard", async () => {
+    const audiencePage = await SELF.fetch("https://example.com/demo/audience/");
+    const dashboardPage = await SELF.fetch("https://example.com/demo/dashboard/");
+    expect(audiencePage.status).toBe(200);
+    expect(await audiencePage.text()).toContain("Call-in 簡單叩應");
+    expect(dashboardPage.status).toBe(200);
+    expect(await dashboardPage.text()).toContain("data-qr-open");
+
+    const zhConfigResponse = await SELF.fetch(
+      "https://example.com/api/demo/config?locale=zh-Hant-TW",
+    );
+    const enConfigResponse = await SELF.fetch("https://example.com/api/demo/config?locale=en");
+    const zhConfig = await zhConfigResponse.json<{
+      eventId: string;
+      title: string;
+      locale: string;
+      moderation: { codeOfConduct: { version: string } };
+    }>();
+    const enConfig = await enConfigResponse.json<{ eventId: string; title: string; locale: string }>();
+    expect(zhConfig).toMatchObject({ title: "Call-in 常駐 Demo", locale: "zh-Hant-TW" });
+    expect(enConfig).toMatchObject({ eventId: zhConfig.eventId, title: "Call-in permanent demo", locale: "en" });
+
+    const voterId = crypto.randomUUID();
+    const difficulty = await SELF.fetch("https://example.com/api/demo/difficulty", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ score: 4, voterId }),
+    });
+    expect(difficulty.status).toBe(200);
+    const state = await SELF.fetch("https://example.com/api/demo/state").then((response) =>
+      response.json<{ difficulty: { counts: number[]; total: number } }>(),
+    );
+    expect(state.difficulty.total).toBe(1);
+    expect(state.difficulty.counts[3]).toBe(1);
+
+    const reaction = await SELF.fetch("https://example.com/api/demo/reaction", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ kind: "applause", voterId }),
+    });
+    expect(reaction.status).toBe(200);
+
+    const qr = await SELF.fetch("https://example.com/api/demo/qr.svg?locale=zh-Hant-TW");
+    expect(qr.status).toBe(200);
+    expect(qr.headers.get("content-type")).toContain("image/svg+xml");
+    expect(await qr.text()).toContain("<svg");
+  });
+
   it("stores a validated event configuration without changing the event data key", async () => {
     const stub = env.LIVE_SESSION.getByName("my-call-in:default");
     const current = await stub.eventConfig();

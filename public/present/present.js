@@ -1,6 +1,6 @@
-import { eventContext, eventPage } from "../event-context.js";
+import { eventApi, eventContext, eventPage } from "../event-context.js";
 
-const config = await fetch(`${eventContext.apiBase}/config`).then((response) => {
+const config = await fetch(eventApi("/config")).then((response) => {
   if (!response.ok) throw new Error("config unavailable");
   return response.json();
 });

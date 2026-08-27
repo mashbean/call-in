@@ -1,15 +1,28 @@
 const hostedMatch = location.pathname.match(/^\/e\/([a-f0-9]{32})(?:\/|$)/);
+const demoMatch = location.pathname.match(/^\/(en\/)?demo(?:\/|$)/);
+const demoEnglish = Boolean(demoMatch?.[1]);
+const demoBase = demoMatch ? `/${demoEnglish ? "en/" : ""}demo` : "";
 
 export const eventContext = {
   hosted: Boolean(hostedMatch),
-  eventId: hostedMatch?.[1] || null,
-  eventBase: hostedMatch ? `/e/${hostedMatch[1]}` : "",
-  apiBase: hostedMatch ? `/api/events/${hostedMatch[1]}` : "/api",
+  demo: Boolean(demoMatch),
+  demoEnglish,
+  eventId: hostedMatch?.[1] || (demoMatch ? "permanent-demo" : null),
+  eventBase: hostedMatch ? `/e/${hostedMatch[1]}` : demoBase,
+  apiBase: hostedMatch ? `/api/events/${hostedMatch[1]}` : demoMatch ? "/api/demo" : "/api",
 };
 
 export function eventPage(path = "/") {
   const normalized = path.startsWith("/") ? path : `/${path}`;
+  if (eventContext.demo && normalized === "/") return `${demoBase}/audience/`;
   return `${eventContext.eventBase}${normalized}`;
+}
+
+export function eventApi(path = "/") {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const endpoint = `${eventContext.apiBase}${normalized}`;
+  if (!eventContext.demo || !["/config", "/qr.svg"].includes(normalized)) return endpoint;
+  return `${endpoint}?locale=${eventContext.demoEnglish ? "en" : "zh-Hant-TW"}`;
 }
 
 export function accessTokenKey(role) {

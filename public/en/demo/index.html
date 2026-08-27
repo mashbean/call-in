@@ -11,7 +11,7 @@
   <body data-locale="en">
     <header class="demo-toolbar">
       <a class="demo-brand" href="/en/"><img src="/brand/call-in-mark.svg" alt="" /><span><em>Call-in</em><b>Permanent demo</b></span></a>
-      <div class="demo-state"><i></i><span>Display mode · no data recorded</span></div>
+      <div class="demo-state"><i></i><span>Public demo · resets hourly</span></div>
       <nav aria-label="Demo tools">
         <a class="toolbar-primary" href="/en/#create">Use my slides</a>
         <a href="/demo/" lang="zh-Hant-TW">中文</a>
@@ -22,24 +22,8 @@
       <section class="deck-pane" aria-label="Sample deck">
         <iframe src="https://mashbean.net/decks/isf-0427/" title="Call-in sample deck" allow="fullscreen; autoplay" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </section>
-      <aside class="response-pane" aria-label="Sample live responses">
-        <div class="response-head"><div><small>CALL-IN DEMO</small><h1>Sample talk · live response</h1></div><span class="demo-badge">DISPLAY DATA</span></div>
-        <section class="response-card difficulty-card">
-          <div class="card-label"><span>Understanding</span><small>Try selecting one</small></div>
-          <h2 data-difficulty-label>Just right</h2>
-          <svg class="curve" viewBox="0 0 260 92" role="img" aria-label="Understanding follows a bell-shaped distribution"><defs><linearGradient id="demo-curve-en" x1="0" x2="1"><stop stop-color="#8657ff"/><stop offset="1" stop-color="#35dcff"/></linearGradient></defs><path d="M5 82 C58 82 74 10 130 10 C186 10 202 82 255 82" fill="none" stroke="url(#demo-curve-en)" stroke-width="6" stroke-linecap="round"/></svg>
-          <div class="difficulty-options" role="group" aria-label="Choose understanding level"><button type="button" data-difficulty="Too easy">1<span>Too easy</span></button><button type="button" data-difficulty="Easy">2<span>Easy</span></button><button class="active" type="button" data-difficulty="Just right">3<span>Just right</span></button><button type="button" data-difficulty="Difficult">4<span>Difficult</span></button><button type="button" data-difficulty="Lost">5<span>Lost</span></button></div>
-        </section>
-        <section class="response-card">
-          <div class="card-label"><span>Live reactions</span><small>Counts change only in this tab</small></div>
-          <div class="reaction-grid"><button type="button" data-reaction><span>👏</span><b>12</b><small>Well said</small></button><button type="button" data-reaction><span>💡</span><b>8</b><small>Insight</small></button><button type="button" data-reaction><span>❤️</span><b>6</b><small>Resonates</small></button><button type="button" data-reaction><span>🤔</span><b>3</b><small>Let me think</small></button></div>
-        </section>
-        <section class="response-card question-card">
-          <div class="card-label"><span>Question pool</span><small>Local display</small></div>
-          <div class="demo-question" data-demo-question>How could this work in my context?</div>
-          <form data-demo-question-form><label for="demo-question" class="sr-only">Enter a sample question</label><input id="demo-question" maxlength="120" placeholder="Write a question…" /><button type="submit">Add</button></form>
-        </section>
-        <p class="privacy-note">This permanent demo does not create an event or send data. Refreshing restores the sample content.</p>
+      <aside class="response-pane" aria-label="Live Call-in demo dashboard">
+        <iframe src="/en/demo/dashboard/" title="Call-in permanent demo dashboard" allow="fullscreen"></iframe>
       </aside>
     </main>
     <script type="module" src="/demo/demo.js"></script>

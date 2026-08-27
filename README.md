@@ -23,7 +23,7 @@ No account, repository, or Cloudflare setup is required for the hosted flow.
 2. Upload a PDF or paste the deck URL, then name the event on the same page.
 3. Open **Presenter view** and show the audience QR code.
 
-No deck at hand? Open the permanent, non-recording [presenter demo](https://call-in.mashbean.net/en/demo/) below the landing-page preview. It uses the public sample deck with display responses, creates no event, and sends no interaction data.
+No deck at hand? Open the [permanent presenter demo](https://call-in.mashbean.net/en/demo/) below the landing-page preview. It uses the public sample deck and the real Call-in flow: scan its QR code, open the audience page, and watch difficulty, questions, and reactions sync to the dashboard. The shared public demo resets every hour; do not enter personal, sensitive, or confidential information.
 
 The presenter toolbar and response panel can both be hidden. Uploaded PDFs open in a focused one-page viewer that fits each slide to the available stage; use the on-screen controls, arrow/Page Up/Page Down keys, Space, Home/End, or a horizontal swipe to move through the deck. Uploaded decks, event data, and audience responses expire after seven days.
 
@@ -42,6 +42,7 @@ On `call-in.mashbean.net`:
 - uploaded PDFs are stored only to serve the event and are deleted after seven days;
 - slide copyright remains with the uploader; Call-in does not use decks for model training;
 - anonymous audience responses are recorded to operate and improve the project, then deleted with the event after seven days;
+- the shared public demo uses a separate room and clears its audience responses every hour;
 - speakers should not upload or enter sensitive or confidential material.
 
 Hosted events must not contain illegal material, copyright or privacy infringement, fraud, hate or harassment, impersonation, malware, or content that threatens people or service security. mashbean may remove violating decks, events, and interaction pages immediately and without prior notice.
@@ -114,7 +115,7 @@ The skill installs to `$CODEX_HOME/skills/call-in` (or `~/.codex/skills/call-in`
 
 ## Support the project
 
-Call-in is a solo-maintained open-source project. Stars, issue reports, documentation fixes, and pull requests are welcome. You can also support ongoing maintenance through [Buy Me a Coffee](https://buymeacoffee.com/mashbean).
+Call-in is a solo-maintained open-source project. Stars, issue reports, documentation fixes, and pull requests are welcome. You can also support ongoing maintenance through [GitHub Sponsors](https://github.com/sponsors/mashbean) or [Buy Me a Coffee](https://buymeacoffee.com/mashbean).
 
 ## Development
 

@@ -17,10 +17,13 @@ export { LiveSession } from "./live-session";
 const hostedEventIdPattern = /^[a-f0-9]{32}$/;
 const hostedEventLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 const maxHostedPdfBytes = 20 * 1024 * 1024;
+const permanentDemoResetMs = 60 * 60 * 1000;
+const permanentDemoCreatedAt = Date.UTC(2026, 7, 27);
 
 type SessionApiContext = {
   stub: DurableObjectStub<LiveSession>;
   hostedEventId?: string;
+  demo?: boolean;
 };
 
 export default {
@@ -38,7 +41,11 @@ export default {
           return Response.redirect(new URL(creatorRedirect, url.origin).toString(), 308);
         }
         const hostedPage = parseHostedPage(url.pathname);
-        if (!hostedPage) return env.ASSETS.fetch(request);
+        if (!hostedPage) {
+          const demoAsset = demoAssetPath(url.pathname);
+          if (!demoAsset) return env.ASSETS.fetch(request);
+          return env.ASSETS.fetch(new Request(new URL(demoAsset, url.origin), request));
+        }
         const stub = env.LIVE_SESSION.getByName(`hosted:${hostedPage.eventId}`);
         if (!(await stub.isHostedEvent())) return new Response("Event not found", { status: 404 });
         const assetUrl = new URL(hostedPage.assetPath, url.origin);
@@ -48,6 +55,21 @@ export default {
       if (url.pathname === "/api/events") {
         if (request.method !== "POST") return jsonError("method not allowed", 405);
         return withCors(await createHostedEvent(request, env), request, env);
+      }
+
+      if (url.pathname.startsWith("/api/demo/")) {
+        const stub = env.LIVE_SESSION.getByName("demo:permanent");
+        await stub.ensureDemoSession(
+          permanentDemoConfig("zh-Hant-TW"),
+          Date.now(),
+          permanentDemoResetMs,
+        );
+        return await handleSessionApi(
+          request,
+          env,
+          url.pathname.slice("/api/demo".length),
+          { stub, demo: true },
+        );
       }
 
       const hostedApi = parseHostedApi(url.pathname);
@@ -182,13 +204,21 @@ async function handleSessionApi(
   path: string,
   context: SessionApiContext,
 ): Promise<Response> {
-  const { stub, hostedEventId } = context;
+  const { stub, hostedEventId, demo } = context;
   const url = new URL(request.url);
   if (path === "/config" && request.method === "GET") {
-    return withCors(Response.json(await stub.eventConfig()), request, env);
+    const config = demo
+      ? permanentDemoConfig(normalizeHostedLocale(url.searchParams.get("locale") || ""))
+      : await stub.eventConfig();
+    return withCors(Response.json(config), request, env);
   }
   if (path === "/qr.svg" && request.method === "GET") {
-    const target = hostedEventId ? `${url.origin}/e/${hostedEventId}/` : `${url.origin}/`;
+    const demoLocale = normalizeHostedLocale(url.searchParams.get("locale") || "");
+    const target = hostedEventId
+      ? `${url.origin}/e/${hostedEventId}/`
+      : demo
+        ? `${url.origin}/${demoLocale === "en" ? "en/" : ""}demo/audience/`
+        : `${url.origin}/`;
     const svg = await QRCode.toString(target, {
       type: "svg",
       color: { dark: "#081225", light: "#f3eee4" },
@@ -481,6 +511,20 @@ function hostedEventConfig(
   });
 }
 
+function permanentDemoConfig(locale: "zh-Hant-TW" | "en"): PublicEventConfig {
+  const english = locale === "en";
+  return hostedEventConfig(
+    EVENT_CONFIG.eventId,
+    english ? "Call-in permanent demo" : "Call-in 常駐 Demo",
+    english
+      ? "Scan the QR code and try the same live interaction flow used in a real event."
+      : "掃描 QR Code，直接體驗正式活動使用的難度、提問與即時反應流程。",
+    "https://mashbean.net/decks/isf-0427/",
+    permanentDemoCreatedAt,
+    locale,
+  );
+}
+
 function creatorRedirectTarget(pathname: string): string | null {
   if (/^\/new\/?$/.test(pathname)) return "/#create";
   if (/^\/en\/new\/?$/.test(pathname)) return "/en/#create";
@@ -508,6 +552,12 @@ function parseHostedPage(pathname: string): { eventId: string; assetPath: string
     moderate: "/moderate/",
   } as Record<string, string>)[page];
   return assetPath ? { eventId, assetPath } : null;
+}
+
+function demoAssetPath(pathname: string): string | null {
+  const match = pathname.match(/^\/(?:en\/)?demo\/(audience|dashboard)\/?$/);
+  if (!match) return null;
+  return match[1] === "audience" ? "/audience/" : "/dashboard/";
 }
 
 function formText(form: FormData, key: string): string {
