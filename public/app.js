@@ -1,7 +1,7 @@
 import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "./difficulty.js";
 
 const apiBase = "/api";
-const config = await fetch("/event.config.json").then((response) => response.json());
+const config = await fetch("/api/config").then((response) => response.json());
 applyConfig(config);
 const voterKey = `${config.eventId}:live-deck-voter`;
 const voterId = localStorage.getItem(voterKey) || crypto.randomUUID();

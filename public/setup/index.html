@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#081225" />
+    <title>設定 Live Deck</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/setup/setup.css" />
+  </head>
+  <body class="setup-page">
+    <header class="setup-header">
+      <div>
+        <div class="eyebrow">LIVE DECK SETUP</div>
+        <h1>把簡報接上現場互動</h1>
+        <p>貼上簡報網址、調整活動內容，儲存後直接使用講者頁。原簡報不需要改程式。</p>
+      </div>
+      <a class="setup-quiet-link" href="/">開啟觀眾頁 ↗</a>
+    </header>
+
+    <main class="setup-main">
+      <section class="setup-card setup-login" data-login-panel>
+        <div class="setup-step">01</div>
+        <div>
+          <h2>登入活動設定</h2>
+          <p>輸入部署時建立的管理 token。它只會保留在這個分頁的 sessionStorage，關閉分頁後可清除。</p>
+          <form data-login-form class="setup-login-form">
+            <label for="admin-token">管理 token</label>
+            <div class="setup-inline">
+              <input id="admin-token" name="token" type="password" minlength="24" required autocomplete="current-password" />
+              <button class="primary" type="submit">載入設定</button>
+            </div>
+            <span class="setup-message" data-login-message aria-live="polite"></span>
+          </form>
+        </div>
+      </section>
+
+      <div data-setup-app hidden>
+        <section class="setup-result" data-result hidden aria-live="polite">
+          <div><div class="eyebrow">READY</div><h2>活動設定已儲存</h2><p>已開啟的觀眾頁與講者頁請重新載入一次。</p></div>
+          <div class="setup-result-links">
+            <a href="/present/" target="_blank" rel="noreferrer">開啟講者頁</a>
+            <a href="/" target="_blank" rel="noreferrer">開啟觀眾頁</a>
+            <a href="/moderate/" target="_blank" rel="noreferrer">開啟管理頁</a>
+          </div>
+        </section>
+
+        <form data-config-form class="setup-form">
+          <section class="setup-card">
+            <div class="setup-step">02</div>
+            <div class="setup-card-body">
+              <div class="setup-section-head"><div><h2>簡報與活動</h2><p>簡報需要是瀏覽器可開啟的公開或嵌入網址。</p></div><span data-event-id></span></div>
+              <div class="setup-grid two-columns">
+                <label>活動名稱<input name="title" maxlength="160" required /></label>
+                <label>講者畫面標題<input name="dashboardTitle" maxlength="160" required /></label>
+                <label class="span-all">簡報網址<input name="deckUrl" maxlength="2048" required placeholder="https://…" /></label>
+                <label>活動眉題<input name="eyebrow" maxlength="80" required /></label>
+                <label>語系<input name="locale" maxlength="35" required placeholder="zh-Hant-TW" /></label>
+                <label class="span-all">活動說明<textarea name="description" maxlength="500" rows="3" required></textarea></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="setup-card">
+            <div class="setup-step">03</div>
+            <div class="setup-card-body">
+              <h2>理解難度與提問</h2>
+              <div class="setup-grid two-columns">
+                <label class="span-all">難度題目<input name="difficultyTitle" maxlength="160" required /></label>
+                <fieldset class="span-all compact-fieldset"><legend>五段難度標籤</legend><div class="setup-grid five-columns" data-difficulty-labels></div></fieldset>
+                <label>問題區標題<input name="questionTitle" maxlength="160" required /></label>
+                <label>每台裝置最多問題數<input name="maxPerDevice" type="number" min="1" max="100" required /></label>
+                <label class="span-all">問題輸入提示<textarea name="questionPlaceholder" maxlength="280" rows="2" required></textarea></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="setup-card">
+            <div class="setup-step">04</div>
+            <div class="setup-card-body">
+              <h2>即時反應</h2>
+              <div class="reaction-editors" data-reactions></div>
+            </div>
+          </section>
+
+          <section class="setup-card">
+            <div class="setup-step">05</div>
+            <div class="setup-card-body">
+              <div class="setup-section-head"><div><h2>現場投票</h2><p>每場投票可有 2–6 個選項，最多 8 場。</p></div><button class="quiet" type="button" data-add-poll>新增投票</button></div>
+              <div class="poll-editors" data-polls></div>
+            </div>
+          </section>
+
+          <details class="setup-card setup-details">
+            <summary><span class="setup-step">06</span><span><b>進階設定</b><small>審核規則與色彩</small></span></summary>
+            <div class="setup-details-body">
+              <label class="setup-check"><input name="moderationEnabled" type="checkbox" /><span>啟用活動守則、提問緩衝與審核功能</span></label>
+              <div class="setup-grid three-columns">
+                <label>提問顯示延遲（秒）<input name="presentationDelaySeconds" type="number" min="0" max="30" /></label>
+                <label>一般冷卻時間（秒）<input name="questionCooldownSeconds" type="number" min="0" max="300" /></label>
+                <label>慢速模式（秒）<input name="slowModeSeconds" type="number" min="10" max="600" /></label>
+                <label class="span-all">守則標題<input name="cocTitle" maxlength="160" /></label>
+                <label class="span-all">守則摘要<textarea name="cocSummary" maxlength="600" rows="3"></textarea></label>
+                <label class="span-all">守則內容，一行一則<textarea name="cocRules" rows="5"></textarea></label>
+              </div>
+              <fieldset class="compact-fieldset"><legend>活動色彩</legend><div class="setup-grid five-columns color-grid" data-theme-colors></div></fieldset>
+            </div>
+          </details>
+
+          <div class="setup-submit-bar">
+            <span class="setup-message" data-save-message aria-live="polite"></span>
+            <button class="quiet" type="button" data-sign-out>清除 token</button>
+            <button class="primary" type="submit">儲存設定</button>
+          </div>
+        </form>
+      </div>
+    </main>
+    <script type="module" src="/setup/setup.js"></script>
+  </body>
+</html>

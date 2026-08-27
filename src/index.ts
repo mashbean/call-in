@@ -21,8 +21,9 @@ export default {
       if (request.method === "OPTIONS") return withCors(new Response(null, { status: 204 }), request, env);
       if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
 
+      const stub = env.LIVE_SESSION.getByName(`${EVENT_CONFIG.eventId}:${env.ROOM_ID}`);
       if (url.pathname === "/api/config" && request.method === "GET") {
-        return withCors(Response.json(EVENT_CONFIG), request, env);
+        return withCors(Response.json(await stub.eventConfig()), request, env);
       }
       if (url.pathname === "/api/qr.svg" && request.method === "GET") {
         const target = `${url.origin}/`;
@@ -42,26 +43,38 @@ export default {
         });
       }
 
-      const stub = env.LIVE_SESSION.getByName(`${EVENT_CONFIG.eventId}:${env.ROOM_ID}`);
       if (url.pathname === "/api/live") return stub.fetch(request);
       if (url.pathname === "/api/state" && request.method === "GET") {
         return withCors(Response.json(await stub.snapshot()), request, env);
       }
 
       if (url.pathname === "/api/moderator/state" && request.method === "GET") {
-        if (!(await isAuthorized(request, env.MODERATOR_TOKEN_SHA256))) {
+        if (!(await isAuthorized(request, env.MODERATOR_TOKEN_SHA256, env.MODERATOR_TOKEN))) {
           return jsonError("not found", 404);
         }
         return noStore(Response.json(await stub.moderatorSnapshot()));
       }
 
       if (url.pathname === "/api/admin/export" && request.method === "GET") {
-        if (!(await isAuthorized(request, env.ADMIN_TOKEN_SHA256))) return jsonError("not found", 404);
+        if (!(await isAuthorized(request, env.ADMIN_TOKEN_SHA256, env.ADMIN_TOKEN))) return jsonError("not found", 404);
         return noStore(Response.json(await stub.exportData()));
       }
       if (url.pathname === "/api/admin/reset" && request.method === "POST") {
-        if (!(await isAuthorized(request, env.ADMIN_TOKEN_SHA256))) return jsonError("not found", 404);
+        if (!(await isAuthorized(request, env.ADMIN_TOKEN_SHA256, env.ADMIN_TOKEN))) return jsonError("not found", 404);
         return noStore(Response.json(await stub.reset()));
+      }
+      if (url.pathname === "/api/admin/config") {
+        if (!(await isAuthorized(request, env.ADMIN_TOKEN_SHA256, env.ADMIN_TOKEN))) {
+          return jsonError("not found", 404);
+        }
+        if (request.method === "GET") {
+          return noStore(Response.json({ config: await stub.eventConfig() }));
+        }
+        if (request.method === "POST") {
+          const config = await readSmallJsonRequest(request, 16_384);
+          return noStore(Response.json(await stub.updateEventConfig(config)));
+        }
+        return jsonError("method not allowed", 405);
       }
 
       if (request.method !== "POST") return withCors(jsonError("method not allowed", 405), request, env);
@@ -91,7 +104,7 @@ export default {
       }
 
       if (url.pathname.startsWith("/api/moderator/")) {
-        if (!(await isAuthorized(request, env.MODERATOR_TOKEN_SHA256))) {
+        if (!(await isAuthorized(request, env.MODERATOR_TOKEN_SHA256, env.MODERATOR_TOKEN))) {
           return jsonError("not found", 404);
         }
         if (url.pathname === "/api/moderator/question") {
@@ -222,13 +235,21 @@ export default {
   },
 } satisfies ExportedHandler<Env>;
 
-async function isAuthorized(request: Request, expectedHash: string): Promise<boolean> {
-  if (!/^[0-9a-f]{64}$/i.test(expectedHash)) return false;
+export async function isAuthorized(
+  request: Request,
+  expectedHash: string,
+  expectedSecret?: string,
+): Promise<boolean> {
   const authorization = request.headers.get("authorization") ?? "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
   if (token.length < 24 || token.length > 256) return false;
   const actual = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
-  const expected = hexToBytes(expectedHash);
+  const expected = /^[0-9a-f]{64}$/i.test(expectedHash)
+    ? hexToBytes(expectedHash)
+    : expectedSecret && expectedSecret.length >= 24 && expectedSecret.length <= 256
+      ? new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(expectedSecret)))
+      : null;
+  if (!expected) return false;
   return timingSafeEqual(new Uint8Array(actual), expected);
 }
 

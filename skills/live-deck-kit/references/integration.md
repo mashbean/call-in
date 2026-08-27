@@ -1,5 +1,11 @@
 # Deck integration
 
+## Standalone presenter view
+
+Use `https://SERVICE/present/` when the speaker already has a public, browser-playable deck URL and does not want to edit its source. Configure the URL in `/setup/`. The presenter view places the deck and dashboard side by side, provides fullscreen and collapse controls, and links to the audience and moderator pages.
+
+Some presentation hosts send headers that prohibit iframe embedding. In that case use **Open deck separately**, or use one of the HTML integration modes below when the deck source is available. A local PowerPoint or Keynote file must first be published to a browser-playable URL.
+
 ## Overlay mode
 
 Use for unknown layouts, Reveal.js, full-screen canvases, or decks that already control the viewport.
@@ -34,6 +40,8 @@ The component updates only the selected root and restores the original inline va
 
 ## Verification
 
+- The `/setup/` token disappears when its browser session is cleared and is never saved in local storage.
+- The `/present/` deck, dashboard, collapse control, fullscreen control, and fallback link work at the presentation viewport.
 - The component marker appears once in the deck HTML.
 - Desktop open and collapsed states do not hide slide controls.
 - Mobile drawer can be opened, scrolled, and closed by touch.

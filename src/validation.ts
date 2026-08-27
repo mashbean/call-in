@@ -1,13 +1,16 @@
 export const MAX_BODY_BYTES = 4096;
 
-export async function readSmallJsonRequest(request: Request): Promise<unknown> {
+export async function readSmallJsonRequest(
+  request: Request,
+  maxBytes = MAX_BODY_BYTES,
+): Promise<unknown> {
   const contentType = request.headers.get("content-type") ?? "";
   const lengthHeader = request.headers.get("content-length");
   if (!contentType.toLowerCase().startsWith("application/json")) throw new Error("invalid request");
   if (lengthHeader !== null) {
     const length = Number(lengthHeader);
     if (!Number.isFinite(length) || length < 0) throw new Error("invalid request");
-    if (length > MAX_BODY_BYTES) throw new Error("request too large");
+    if (length > maxBytes) throw new Error("request too large");
   }
   if (!request.body) throw new Error("invalid request");
   const reader = request.body.getReader();
@@ -17,7 +20,7 @@ export async function readSmallJsonRequest(request: Request): Promise<unknown> {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.byteLength;
-    if (total > MAX_BODY_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel();
       throw new Error("request too large");
     }

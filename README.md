@@ -2,7 +2,7 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mashbean/live-deck-kit)
 
-Add realtime difficulty feedback, audience questions, emoji reactions, quick polls, and a QR entry point to any web slide deck.
+Add realtime difficulty feedback, audience questions, emoji reactions, quick polls, and a QR entry point to any web slide deck. A speaker can deploy it and connect an existing browser-based deck without editing code.
 
 Audience members join from their phones. The presenter sees a live dashboard beside the deck and can collapse it at any time. Desktop layouts can use a 75/25 split, while phones and tablets get a touch-friendly drawer.
 
@@ -12,25 +12,15 @@ Audience members join from their phones. The presenter sees a live dashboard bes
 
 Use the button above for the shortest path. Cloudflare copies this public repository into your GitHub or GitLab account, provisions the Durable Object, deploys the Worker, and connects future pushes to Workers Builds.
 
+During deployment, enter two different random strings of at least 24 characters when Cloudflare asks for `ADMIN_TOKEN` and `MODERATOR_TOKEN`. Save them in a password manager; Cloudflare stores them as encrypted Worker secrets.
+
 After Cloudflare shows the new `workers.dev` URL
 
-1. Open the audience page at `/` and the presenter dashboard at `/dashboard/`.
-2. Edit [`public/event.config.json`](./public/event.config.json) in the copied repository with your event name, deck URL, language, questions, reactions, and polls.
-3. Push the change. Workers Builds deploys it automatically.
+1. Open `https://YOUR-WORKER.workers.dev/setup/` and enter the admin token.
+2. Paste the public, browser-playable URL for your deck, edit the event copy and polls, then choose **Save settings**.
+3. Present from `/present/`. Share `/` with the audience and `/moderate/` with an assistant.
 
-The starter keeps admin export, reset, and moderation controls locked until you configure tokens. Before using those controls for a real event, clone your copied repository and run
-
-```bash
-npm ci
-npm run admin-token
-npm run moderator-token
-npm run check
-git add wrangler.jsonc
-git commit -m "Configure protected live deck controls"
-git push
-```
-
-The two plaintext token files remain local and Git-ignored. Only their SHA-256 hashes are committed. Give event assistants the moderator token, never the admin token.
+The presenter view places the existing deck beside the live dashboard. It does not modify the deck. Some presentation hosts block iframe embedding; in that case use the presenter toolbar's **Open deck separately** link, or use the deeper HTML integration below. Give event assistants the moderator token, never the admin token.
 
 ## Start with one prompt
 
@@ -47,6 +37,8 @@ The skill configures the event, deploys the realtime service, embeds the dashboa
 - Four configurable emoji reactions with presenter-side popup animations
 - Up to eight quick polls with vote counts
 - An always-available dashboard QR code that points to the audience page
+- A no-code `/setup/` wizard that stores event configuration in the event's Durable Object
+- A standalone `/present/` view that combines an existing web deck and the live dashboard
 - Hibernation WebSockets so the Durable Object can sleep while idle
 - A configurable per-device question limit, defaulting to 20
 - A code-of-conduct gate with a fixed event alias and stable participant badge
@@ -60,7 +52,9 @@ The skill configures the event, deploys the realtime service, embeds the dashboa
 ## Architecture
 
 ```text
-Web slide deck ── live-deck-panel ── iframe ── presenter dashboard
+Existing web deck ── iframe ── /present/ ── presenter dashboard
+       or                                           │
+Web slide deck ── live-deck-panel ──────────────────┤
                                                    │
 Audience phones ── audience page ──────────────────┤
                                                    ▼
@@ -139,7 +133,7 @@ The skill is installed to `$CODEX_HOME/skills/live-deck-kit`. When `CODEX_HOME` 
 
 ## Event configuration
 
-Public copy, colors, difficulty labels, reactions, question lenses, and polls live in [`public/event.config.json`](./public/event.config.json). The complete field reference is in [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md).
+The deployed `/setup/` wizard is the primary way to change public copy, colors, difficulty labels, reactions, and polls. Its saved configuration lives in the event's Durable Object. [`public/event.config.json`](./public/event.config.json) remains the version-controlled default and fallback for fresh deployments. The complete field reference is in [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md).
 
 `eventId` participates in the Durable Object name. Keep it stable after a production event begins collecting data unless you intentionally want a new, empty event.
 
@@ -160,6 +154,8 @@ unset LIVE_DECK_ADMIN_TOKEN
 ```
 
 Resetting state cannot be undone by the service. Export first and verify the exact event URL before resetting anything.
+
+The setup wizard uses the same admin token with `GET` and `POST /api/admin/config`. The browser keeps the token in `sessionStorage`, not persistent local storage. Configuration updates do not reset responses, and `eventId` cannot be changed through the wizard.
 
 ## Live moderation
 

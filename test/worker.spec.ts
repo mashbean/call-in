@@ -1,5 +1,7 @@
 import { env, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import { validateEventConfig } from "../src/config";
+import { isAuthorized } from "../src/index";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
@@ -10,6 +12,56 @@ describe("Live Deck Kit Worker", () => {
     const config = await response.json<{ eventId: string; difficulty: { labels: string[] } }>();
     expect(config.eventId).toBe("my-live-deck");
     expect(config.difficulty.labels).toHaveLength(5);
+  });
+
+  it("stores a validated event configuration without changing the event data key", async () => {
+    const stub = env.LIVE_SESSION.getByName("my-live-deck:default");
+    const current = await stub.eventConfig();
+    const next = structuredClone(current);
+    next.title = "A configured event";
+    next.deckUrl = "https://example.com/my-slides";
+    next.polls = [
+      {
+        id: "opening-question",
+        prompt: "Warm-up",
+        question: "What should we discuss first?",
+        options: ["Safety", "Workflow"],
+      },
+    ];
+
+    const saved = await stub.updateEventConfig(next);
+    expect(saved.config.title).toBe("A configured event");
+    const response = await SELF.fetch("https://example.com/api/config");
+    const publicConfig = await response.json<typeof next>();
+    expect(publicConfig.deckUrl).toBe("https://example.com/my-slides");
+    expect(publicConfig.polls.map((poll) => poll.id)).toEqual(["opening-question"]);
+    await stub.updateEventConfig(current);
+
+    expect(() => validateEventConfig({ ...next, deckUrl: "javascript:alert(1)" })).toThrow(
+      "deckUrl must use HTTP or HTTPS",
+    );
+  });
+
+  it("accepts either a token hash or a Worker secret without exposing a default credential", async () => {
+    const token = "a-secure-test-token-that-is-long-enough";
+    const request = new Request("https://example.com/api/admin/config", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+    const hash = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+
+    await expect(isAuthorized(request, hash)).resolves.toBe(true);
+    await expect(isAuthorized(request, "", token)).resolves.toBe(true);
+    await expect(isAuthorized(request, "", "")).resolves.toBe(false);
+    await expect(
+      isAuthorized(
+        new Request("https://example.com/api/admin/config", {
+          headers: { Authorization: "Bearer the-wrong-token-that-is-long-enough" },
+        }),
+        "",
+        token,
+      ),
+    ).resolves.toBe(false);
   });
 
   it("records difficulty and keeps only the latest score per device", async () => {

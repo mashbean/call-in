@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { anonymousLabelFor } from "./anon-labels";
-import { EVENT_CONFIG, QUESTION_LENSES, REACTION_KINDS } from "./config";
+import { EVENT_CONFIG, QUESTION_LENSES, REACTION_KINDS, validateEventConfig } from "./config";
 import type {
   AudienceQuestion,
   DifficultySnapshot,
@@ -13,6 +13,7 @@ import type {
   ParticipantProfile,
   ParticipantQuestionState,
   ParticipantState,
+  PublicEventConfig,
   QuestionLens,
   QuestionSubmission,
   QuestionVisibility,
@@ -81,6 +82,7 @@ type ReactionRow = {
 
 type ExportData = {
   exportedAt: number;
+  config: PublicEventConfig;
   snapshot: SessionSnapshot;
   questions: QuestionRow[];
   participants: ParticipantRow[];
@@ -89,10 +91,9 @@ type ExportData = {
   reactions: ReactionRow[];
 };
 
-const moderation = EVENT_CONFIG.moderation;
-
 export class LiveSession extends DurableObject<Env> {
   private snapshotCache: SessionSnapshot | null = null;
+  private eventConfigCache: PublicEventConfig | null = null;
   private readonly reactionWindows = new Map<string, number[]>();
 
   constructor(ctx: DurableObjectState, env: Env) {
@@ -224,12 +225,47 @@ export class LiveSession extends DurableObject<Env> {
         INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (5, ${Date.now()});
       `);
     }
+    if (version < 6) {
+      this.ctx.storage.sql.exec(`
+        CREATE TABLE event_config (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          config_json TEXT NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (6, ${Date.now()});
+      `);
+    }
+  }
+
+  eventConfig(): PublicEventConfig {
+    return this.getEventConfig();
+  }
+
+  async updateEventConfig(value: unknown): Promise<{ config: PublicEventConfig; updatedAt: number }> {
+    const config = validateEventConfig(value);
+    if (config.eventId !== EVENT_CONFIG.eventId) {
+      throw new Error("eventId cannot change after deployment");
+    }
+    const updatedAt = Date.now();
+    this.ctx.storage.sql.exec(
+      `INSERT INTO event_config (id, config_json, updated_at)
+       VALUES (1, ?, ?)
+       ON CONFLICT (id) DO UPDATE
+       SET config_json = excluded.config_json, updated_at = excluded.updated_at`,
+      JSON.stringify(config),
+      updatedAt,
+    );
+    this.eventConfigCache = config;
+    this.snapshotCache = null;
+    await this.broadcastSnapshot();
+    return { config, updatedAt };
   }
 
   async snapshot(): Promise<SessionSnapshot> {
     if (this.snapshotCache) return this.snapshotCache;
 
-    const polls = EVENT_CONFIG.polls.map((poll) => {
+    const config = this.getEventConfig();
+    const polls = config.polls.map((poll) => {
       const counts = new Array<number>(poll.options.length).fill(0);
       const rows = this.ctx.storage.sql
         .exec<{ option_index: number; count: number }>(
@@ -299,6 +335,7 @@ export class LiveSession extends DurableObject<Env> {
     voterId: string,
   ): Promise<ParticipantState> {
     assertVoterId(voterId);
+    const moderation = this.getEventConfig().moderation;
     if (!moderation?.enabled) return { participant: null, questions: [] };
     const cleanedAlias = cleanText(alias, 24);
     if (cleanedAlias.length < 2) throw new Error("alias too short");
@@ -356,7 +393,7 @@ export class LiveSession extends DurableObject<Env> {
   }
 
   async vote(pollId: string, optionIndex: number, voterId: string): Promise<SessionSnapshot> {
-    const poll = EVENT_CONFIG.polls.find((candidate) => candidate.id === pollId);
+    const poll = this.getEventConfig().polls.find((candidate) => candidate.id === pollId);
     if (
       !poll ||
       !Number.isInteger(optionIndex) ||
@@ -431,6 +468,8 @@ export class LiveSession extends DurableObject<Env> {
     if (cleanedText.length < 4) throw new Error("question too short");
     if (!QUESTION_LENSES.has(lens)) throw new Error("invalid question lens");
     assertDifficulty(difficulty);
+    const config = this.getEventConfig();
+    const moderation = config.moderation;
 
     const sessionMode = this.getSessionMode();
     if (sessionMode === "paused") throw new Error("questions are paused");
@@ -447,7 +486,7 @@ export class LiveSession extends DurableObject<Env> {
     const prior = this.ctx.storage.sql
       .exec<{ count: number }>("SELECT COUNT(*) AS count FROM questions WHERE voter_id = ?", voterId)
       .one();
-    if (prior.count >= EVENT_CONFIG.question.maxPerDevice) {
+    if (prior.count >= config.question.maxPerDevice) {
       throw new Error("question limit reached");
     }
 
@@ -615,6 +654,7 @@ export class LiveSession extends DurableObject<Env> {
     voterId: string,
   ): Promise<{ ok: true; held: boolean }> {
     assertVoterId(voterId);
+    const moderation = this.getEventConfig().moderation;
     if (!isUuid(questionId)) throw new Error("invalid question");
     if (!moderation?.enabled || !moderation.flags.enabled) throw new Error("flagging is disabled");
     if (!["harassment", "disruption", "off_topic", "privacy"].includes(reason)) {
@@ -879,6 +919,7 @@ export class LiveSession extends DurableObject<Env> {
       .toArray();
     return {
       exportedAt: Date.now(),
+      config: this.getEventConfig(),
       snapshot: await this.snapshot(),
       questions,
       participants,
@@ -957,6 +998,15 @@ export class LiveSession extends DurableObject<Env> {
       .one().mode;
   }
 
+  private getEventConfig(): PublicEventConfig {
+    if (this.eventConfigCache) return this.eventConfigCache;
+    const row = this.ctx.storage.sql
+      .exec<{ config_json: string }>("SELECT config_json FROM event_config WHERE id = 1")
+      .toArray()[0];
+    this.eventConfigCache = row ? validateEventConfig(JSON.parse(row.config_json)) : EVENT_CONFIG;
+    return this.eventConfigCache;
+  }
+
   private getParticipantRow(voterId: string): ParticipantRow | undefined {
     return this.ctx.storage.sql
       .exec<ParticipantRow>(
@@ -1001,6 +1051,7 @@ export class LiveSession extends DurableObject<Env> {
   }
 
   private flagThreshold(): number {
+    const moderation = this.getEventConfig().moderation;
     if (!moderation?.enabled || !moderation.flags.enabled) return 0;
     const participants = this.ctx.storage.sql
       .exec<{ count: number }>(

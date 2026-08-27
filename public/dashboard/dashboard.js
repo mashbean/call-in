@@ -3,7 +3,7 @@ import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "..
 document.documentElement.classList.toggle("embedded-dashboard", window.self !== window.top);
 
 const apiBase = "/api";
-const config = await fetch("/event.config.json").then((response) => response.json());
+const config = await fetch("/api/config").then((response) => response.json());
 const reactionTimes = new Map();
 applyConfig(config);
 const pollsRoot = document.querySelector("#dashboard-polls");

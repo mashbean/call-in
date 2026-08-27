@@ -77,8 +77,11 @@ export async function doctor() {
     "src/live-session.ts",
     "public/index.html",
     "public/dashboard/index.html",
+    "public/present/index.html",
+    "public/setup/index.html",
     "public/moderate/index.html",
     "public/embed/live-deck-panel.js",
+    ".dev.vars.example",
     "skills/live-deck-kit/SKILL.md",
   ];
   const missing = [];

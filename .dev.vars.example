@@ -1,0 +1,6 @@
+# Create a unique random value of at least 24 characters. This unlocks /setup/
+# and the protected export/reset endpoints. Never give it to event assistants.
+ADMIN_TOKEN=
+
+# Create a different random value of at least 24 characters for /moderate/.
+MODERATOR_TOKEN=
