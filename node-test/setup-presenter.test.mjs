@@ -138,6 +138,10 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.match(landingCss, /@media \(max-width: 620px\)/);
   assert.match(landingCss, /\.principle-host \{ grid-column:1 \/ -1;/);
   assert.match(landingCss, /\.demo-launch/);
+  assert.match(landingCss, /\.demo-launch-copy > span:first-child/);
+  assert.match(landingCss, /\.demo-launch-button \.button-arrow/);
+  assert.doesNotMatch(landingCss, /\.demo-launch span:first-child/);
+  assert.match(landingHtml, /class="button-arrow" aria-hidden="true">↗<\/span>/);
   assert.match(demoHtml, /https:\/\/mashbean\.net\/decks\/isf-0427\//);
   assert.match(demoHtml, /公開 Demo・每日重置/);
   assert.match(demoHtml, /src="\/demo\/dashboard\/"/);
