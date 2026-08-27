@@ -1,4 +1,6 @@
-const tokenKey = "live-deck:admin-token";
+import { accessTokenKey, consumeAccessToken, eventContext, eventPage } from "../event-context.js";
+
+const tokenKey = accessTokenKey("admin");
 const loginPanel = document.querySelector("[data-login-panel]");
 const loginForm = document.querySelector("[data-login-form]");
 const loginMessage = document.querySelector("[data-login-message]");
@@ -7,8 +9,19 @@ const form = document.querySelector("[data-config-form]");
 const saveMessage = document.querySelector("[data-save-message]");
 const result = document.querySelector("[data-result]");
 const pollsRoot = document.querySelector("[data-polls]");
-let token = sessionStorage.getItem(tokenKey) || "";
+let token = consumeAccessToken("admin");
 let config = null;
+
+document.querySelectorAll("[data-audience-link]").forEach((link) => {
+  link.href = eventPage("/");
+});
+document.querySelector("[data-presenter-link]").href = eventPage("/present/");
+const moderatorLink = document.querySelector("[data-moderator-link]");
+moderatorLink.href = eventPage("/moderate/");
+if (eventContext.hosted) moderatorLink.hidden = true;
+if (eventContext.hosted && !token) {
+  loginMessage.textContent = "請使用建立活動後取得的私密設定連結。";
+}
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -23,7 +36,7 @@ form.addEventListener("submit", async (event) => {
   result.hidden = true;
   try {
     const next = readConfigFromForm();
-    const saved = await request("/api/admin/config", {
+    const saved = await request(`${eventContext.apiBase}/admin/config`, {
       method: "POST",
       body: JSON.stringify(next),
     });
@@ -63,7 +76,7 @@ document.querySelector("[data-sign-out]").addEventListener("click", () => {
 async function loadConfig() {
   if (!token) return;
   try {
-    const data = await request("/api/admin/config");
+    const data = await request(`${eventContext.apiBase}/admin/config`);
     config = data.config;
     sessionStorage.setItem(tokenKey, token);
     loginPanel.hidden = true;

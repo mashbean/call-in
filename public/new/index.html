@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#070d1c" />
+    <title>建立 Live Deck 活動</title>
+    <link rel="stylesheet" href="/new/new.css" />
+  </head>
+  <body>
+    <header class="create-header">
+      <a class="brand" href="/new/"><span>LIVE DECK</span><b>讓觀眾跟得上你的簡報</b></a>
+      <span class="pilot-badge">公開測試</span>
+    </header>
+
+    <main>
+      <section class="create-intro">
+        <div class="eyebrow">60 秒開始</div>
+        <h1>貼上簡報，<br />直接開始互動。</h1>
+        <p>不需要部署、不需要註冊，也不用修改簡報。建立後會得到講者畫面、觀眾 QR Code 和兩條私密管理連結。</p>
+      </section>
+
+      <section class="create-card" data-create-panel>
+        <div class="step">01</div>
+        <form data-create-form>
+          <div class="section-head">
+            <div><h2>建立一場活動</h2><p>目前支援可由瀏覽器開啟的簡報網址與 PDF 網址。</p></div>
+            <span>約 1 分鐘</span>
+          </div>
+          <label>
+            活動名稱
+            <input name="title" maxlength="160" required placeholder="例如：AI 與公共參與" autocomplete="off" />
+          </label>
+          <label>
+            簡報網址
+            <input name="deckUrl" type="url" maxlength="2048" required placeholder="https://…" inputmode="url" autocomplete="url" />
+            <small>Google Slides、Canva、公開網頁簡報，或瀏覽器能開啟的 PDF。</small>
+          </label>
+          <label>
+            給觀眾的一句話 <span>選填</span>
+            <textarea name="description" maxlength="500" rows="3" placeholder="告訴觀眾可以在這裡提問、投票和回報理解程度。"></textarea>
+          </label>
+          <div class="create-action">
+            <p>測試版活動保留 7 天，之後會自動刪除。</p>
+            <button type="submit">建立活動 <span>→</span></button>
+          </div>
+          <div class="form-message" data-create-message aria-live="polite"></div>
+        </form>
+      </section>
+
+      <section class="receipt" data-receipt hidden aria-live="polite">
+        <div class="receipt-ready"><span>READY</span><h2 data-receipt-title>活動已建立</h2><p>可以直接開始。請把這一頁留著，下面兩條私密連結只會在這裡出現。</p></div>
+
+        <article class="start-card">
+          <div><span>講者使用</span><h3>開始簡報</h3><p>簡報與即時互動畫面會放在一起。</p></div>
+          <a data-presenter-link target="_blank" rel="noreferrer">開啟講者畫面 →</a>
+        </article>
+
+        <div class="receipt-grid">
+          <article class="audience-card">
+            <img data-audience-qr alt="觀眾加入活動的 QR Code" />
+            <div><span>給觀眾</span><h3>觀眾加入網址</h3><a data-audience-link target="_blank" rel="noreferrer"></a><button type="button" data-copy="audience">複製網址</button></div>
+          </article>
+          <article class="private-card">
+            <span>講者私密連結</span><h3>修改活動設定</h3><p>可以更改標題、反應與投票。只有拿到這條連結的人能修改。</p><a data-setup-link target="_blank" rel="noreferrer">開啟設定</a><button type="button" data-copy="setup">複製私密連結</button>
+          </article>
+          <article class="private-card">
+            <span>協作者私密連結</span><h3>管理現場問題</h3><p>交給協助主持的人，不會提供匯出或重設權限。</p><a data-moderator-link target="_blank" rel="noreferrer">開啟管理頁</a><button type="button" data-copy="moderator">複製私密連結</button>
+          </article>
+        </div>
+        <p class="expiry" data-expiry></p>
+        <a class="create-another" href="/new/">再建立一場活動</a>
+      </section>
+
+      <section class="how-it-works">
+        <div><span>01</span><b>貼上簡報網址</b><p>不碰你的原始檔案。</p></div>
+        <div><span>02</span><b>建立活動</b><p>系統自動準備所有權限。</p></div>
+        <div><span>03</span><b>顯示 QR Code</b><p>觀眾用手機直接加入。</p></div>
+      </section>
+    </main>
+    <footer>Live Deck 公開測試版 · 請勿輸入敏感或機密資料</footer>
+    <script type="module" src="/new/new.js"></script>
+  </body>
+</html>

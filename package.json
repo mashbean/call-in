@@ -1,6 +1,6 @@
 {
   "name": "@mashbean/live-deck-kit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Prompt-ready realtime audience interaction for web slide decks",
   "type": "module",
   "license": "Apache-2.0",
@@ -10,21 +10,10 @@
   },
   "homepage": "https://github.com/mashbean/live-deck-kit#readme",
   "bugs": "https://github.com/mashbean/live-deck-kit/issues",
-  "cloudflare": {
-    "bindings": {
-      "ADMIN_TOKEN": {
-        "description": "Create a unique random string of at least 24 characters. You will enter it at `/setup/`; keep it private."
-      },
-      "MODERATOR_TOKEN": {
-        "description": "Create a different random string of at least 24 characters for event assistants to use at `/moderate/`."
-      }
-    }
-  },
   "bin": {
     "live-deck-kit": "./scripts/cli.mjs"
   },
   "files": [
-    ".dev.vars.example",
     "public",
     "scripts",
     "skills",

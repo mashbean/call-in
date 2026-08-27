@@ -45,8 +45,6 @@ template.innerHTML = `
     }
     button::before { content: "●"; color: #b9f24a; font-size: 9px; }
     :host([collapsed]) aside { transform: translateX(102%); opacity: 0; pointer-events: none; }
-    :host(:not([collapsed])) button span::before { content: "Hide dashboard"; }
-    :host([collapsed]) button span::before { content: "Live audience"; }
     .scrim { display: none; }
     @media (max-width: 900px) {
       :host { width: min(94vw, 500px); }
@@ -62,7 +60,7 @@ template.innerHTML = `
     }
     @media (prefers-reduced-motion: reduce) { aside { transition: none; } }
   </style>
-  <button type="button" aria-expanded="true" aria-label="Hide live audience dashboard"><span></span></button>
+  <button type="button" aria-expanded="true" aria-label="Hide live audience dashboard"><span>Hide dashboard</span></button>
   <div class="scrim" aria-hidden="true"></div>
   <aside aria-label="Live audience dashboard">
     <iframe title="Live audience dashboard" loading="eager" allow="clipboard-write"></iframe>
@@ -76,6 +74,7 @@ class LiveDeckPanel extends HTMLElement {
   #target;
   #savedTargetRight;
   #savedBodyPadding;
+  #zhHant = false;
 
   constructor() {
     super();
@@ -88,6 +87,13 @@ class LiveDeckPanel extends HTMLElement {
   connectedCallback() {
     const serviceUrl = normalizeUrl(this.getAttribute("service-url") || location.origin);
     const dashboardUrl = this.getAttribute("dashboard-url") || `${serviceUrl}/dashboard/`;
+    this.#zhHant = (this.getAttribute("locale") || document.documentElement.lang)
+      .toLowerCase()
+      .startsWith("zh");
+    if (this.#zhHant) {
+      this.shadowRoot.querySelector("aside").setAttribute("aria-label", "現場互動儀表板");
+      this.#frame.title = "現場互動儀表板";
+    }
     this.style.setProperty("--panel-width", this.getAttribute("desktop-width") || "min(25vw, 520px)");
     this.#frame.src = dashboardUrl;
     this.#button.addEventListener("click", this.#toggle);
@@ -121,7 +127,23 @@ class LiveDeckPanel extends HTMLElement {
     const compact = matchMedia("(max-width: 900px)").matches;
     const collapsed = this.hasAttribute("collapsed");
     this.#button.setAttribute("aria-expanded", String(!collapsed));
-    this.#button.setAttribute("aria-label", collapsed ? "Open live audience dashboard" : "Hide live audience dashboard");
+    this.#button.setAttribute(
+      "aria-label",
+      collapsed
+        ? this.#zhHant
+          ? "開啟現場互動儀表板"
+          : "Open live audience dashboard"
+        : this.#zhHant
+          ? "隱藏現場互動儀表板"
+          : "Hide live audience dashboard",
+    );
+    this.#button.querySelector("span").textContent = collapsed
+      ? this.#zhHant
+        ? "現場互動"
+        : "Live audience"
+      : this.#zhHant
+        ? "收起互動"
+        : "Hide dashboard";
     if (this.getAttribute("mode") !== "split" || compact || collapsed) {
       this.#restoreLayout();
       return;

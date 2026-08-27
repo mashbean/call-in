@@ -1,26 +1,25 @@
 # Live Deck Kit
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mashbean/live-deck-kit)
+[Start a hosted event](https://live-deck-kit.mashbean.workers.dev/new/)
 
-Add realtime difficulty feedback, audience questions, emoji reactions, quick polls, and a QR entry point to any web slide deck. A speaker can deploy it and connect an existing browser-based deck without editing code.
+Add realtime difficulty feedback, audience questions, emoji reactions, quick polls, and a QR entry point to any web slide deck. A speaker can connect an existing browser-based deck without deploying infrastructure or editing code.
 
 Audience members join from their phones. The presenter sees a live dashboard beside the deck and can collapse it at any time. Desktop layouts can use a 75/25 split, while phones and tablets get a touch-friendly drawer.
 
 ![Live Deck Kit running on a presenter laptop and an audience phone](./docs/hero-mockup-v2.jpg)
 
-## Deploy to Cloudflare
+## Start a hosted event
 
-Use the button above for the shortest path. Cloudflare copies this public repository into your GitHub or GitLab account, provisions the Durable Object, deploys the Worker, and connects future pushes to Workers Builds.
+Open [`/new/`](https://live-deck-kit.mashbean.workers.dev/new/), paste the title and browser-playable deck URL, and choose **Create event**. The service immediately returns
 
-During deployment, enter two different random strings of at least 24 characters when Cloudflare asks for `ADMIN_TOKEN` and `MODERATOR_TOKEN`. Save them in a password manager; Cloudflare stores them as encrypted Worker secrets.
+- a presenter view with the deck and dashboard together
+- an audience URL and QR code
+- a private setup link for the speaker
+- a separate private moderation link for an assistant
 
-After Cloudflare shows the new `workers.dev` URL
+There is no account, cloud deployment, or token selection in the speaker flow. Access credentials are generated automatically and carried in URL fragments, which are not sent in HTTP requests. The public beta limits new-event creation globally and deletes hosted event data after seven days. Do not use the beta for sensitive or confidential material.
 
-1. Open `https://YOUR-WORKER.workers.dev/setup/` and enter the admin token.
-2. Paste the public, browser-playable URL for your deck, edit the event copy and polls, then choose **Save settings**.
-3. Present from `/present/`. Share `/` with the audience and `/moderate/` with an assistant.
-
-The presenter view places the existing deck beside the live dashboard. It does not modify the deck. Some presentation hosts block iframe embedding; in that case use the presenter toolbar's **Open deck separately** link, or use the deeper HTML integration below. Give event assistants the moderator token, never the admin token.
+Some presentation hosts block iframe embedding. The presenter toolbar therefore keeps an **Open deck separately** fallback. Google Slides sharing URLs are converted to embed URLs automatically.
 
 ## Start with one prompt
 
@@ -37,6 +36,7 @@ The skill configures the event, deploys the realtime service, embeds the dashboa
 - Four configurable emoji reactions with presenter-side popup animations
 - Up to eight quick polls with vote counts
 - An always-available dashboard QR code that points to the audience page
+- A hosted `/new/` flow that creates an isolated event and private capability links in one form submission
 - A no-code `/setup/` wizard that stores event configuration in the event's Durable Object
 - A standalone `/present/` view that combines an existing web deck and the live dashboard
 - Hibernation WebSockets so the Durable Object can sleep while idle
@@ -52,7 +52,7 @@ The skill configures the event, deploys the realtime service, embeds the dashboa
 ## Architecture
 
 ```text
-Existing web deck ── iframe ── /present/ ── presenter dashboard
+Existing web deck ── iframe ── hosted /present/ ── presenter dashboard
        or                                           │
 Web slide deck ── live-deck-panel ──────────────────┤
                                                    │
@@ -60,14 +60,20 @@ Audience phones ── audience page ──────────────�
                                                    ▼
                                       Cloudflare Worker API
                                                    │
-                                      Durable Object + SQLite
+                                  one Durable Object per event
                                                    │
                                       Hibernation WebSockets
 ```
 
-Each event uses one Worker deployment and one Durable Object by default. Events do not share state, which keeps failures isolated and makes free-tier capacity easier to reason about.
+Hosted events share the Worker code but receive separate Durable Objects, SQLite state, random event identifiers, and access hashes. The service does not store raw IP addresses. Self-hosted deployments can still use the original single-event root routes.
 
-## Deploy from a terminal
+## Self-host
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mashbean/live-deck-kit)
+
+Self-hosting is optional. The deploy button copies the repository, provisions the Durable Object, and deploys the Worker. After deployment, open `/new/`; event access links are generated automatically. Use the terminal path below only for a source-configured permanent event or deeper HTML integration.
+
+## Self-host from a terminal
 
 Requirements are Node.js 22 or later and a Cloudflare account.
 
@@ -133,7 +139,7 @@ The skill is installed to `$CODEX_HOME/skills/live-deck-kit`. When `CODEX_HOME` 
 
 ## Event configuration
 
-The deployed `/setup/` wizard is the primary way to change public copy, colors, difficulty labels, reactions, and polls. Its saved configuration lives in the event's Durable Object. [`public/event.config.json`](./public/event.config.json) remains the version-controlled default and fallback for fresh deployments. The complete field reference is in [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md).
+For hosted events, the private setup link returned by `/new/` is the primary way to change public copy, colors, difficulty labels, reactions, and polls. Its access secret is consumed from the URL fragment and retained only for that browser tab. [`public/event.config.json`](./public/event.config.json) remains the version-controlled default and fallback for source-configured self-hosted events. The complete field reference is in [`skills/live-deck-kit/references/configuration.md`](./skills/live-deck-kit/references/configuration.md).
 
 `eventId` participates in the Durable Object name. Keep it stable after a production event begins collecting data unless you intentionally want a new, empty event.
 

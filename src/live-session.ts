@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { timingSafeEqual } from "node:crypto";
 import { anonymousLabelFor } from "./anon-labels";
 import { EVENT_CONFIG, QUESTION_LENSES, REACTION_KINDS, validateEventConfig } from "./config";
 import type {
@@ -78,6 +79,14 @@ type QuestionFlagExport = {
 type ReactionRow = {
   kind: string;
   created_at: number;
+};
+
+type HostedEventRow = {
+  event_id: string;
+  admin_hash: string;
+  moderator_hash: string;
+  created_at: number;
+  expires_at: number;
 };
 
 type ExportData = {
@@ -235,15 +244,105 @@ export class LiveSession extends DurableObject<Env> {
         INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (6, ${Date.now()});
       `);
     }
+    if (version < 7) {
+      this.ctx.storage.sql.exec(`
+        CREATE TABLE hosted_event (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          event_id TEXT NOT NULL UNIQUE,
+          admin_hash TEXT NOT NULL,
+          moderator_hash TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          expires_at INTEGER NOT NULL
+        );
+        CREATE TABLE hosted_creation_limits (
+          bucket TEXT PRIMARY KEY,
+          count INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+        INSERT INTO _sql_schema_migrations (id, applied_at) VALUES (7, ${Date.now()});
+      `);
+    }
   }
 
   eventConfig(): PublicEventConfig {
     return this.getEventConfig();
   }
 
+  isHostedEvent(): boolean {
+    const hosted = this.getHostedEvent();
+    return Boolean(hosted && hosted.expires_at > Date.now());
+  }
+
+  async initializeHostedEvent(
+    configValue: unknown,
+    adminHash: string,
+    moderatorHash: string,
+    createdAt: number,
+    expiresAt: number,
+  ): Promise<PublicEventConfig> {
+    const config = validateEventConfig(configValue);
+    if (!/^[a-f0-9]{32}$/.test(config.eventId)) throw new Error("invalid hosted event id");
+    if (!/^[a-f0-9]{64}$/.test(adminHash) || !/^[a-f0-9]{64}$/.test(moderatorHash)) {
+      throw new Error("invalid hosted event access");
+    }
+    if (!Number.isInteger(createdAt) || !Number.isInteger(expiresAt) || expiresAt <= createdAt) {
+      throw new Error("invalid hosted event lifetime");
+    }
+    if (this.getHostedEvent()) throw new Error("hosted event already exists");
+    this.ctx.storage.sql.exec(
+      `INSERT INTO hosted_event
+        (id, event_id, admin_hash, moderator_hash, created_at, expires_at)
+       VALUES (1, ?, ?, ?, ?, ?)`,
+      config.eventId,
+      adminHash,
+      moderatorHash,
+      createdAt,
+      expiresAt,
+    );
+    this.ctx.storage.sql.exec(
+      `INSERT INTO event_config (id, config_json, updated_at)
+       VALUES (1, ?, ?)
+       ON CONFLICT (id) DO UPDATE
+       SET config_json = excluded.config_json, updated_at = excluded.updated_at`,
+      JSON.stringify(config),
+      createdAt,
+    );
+    this.eventConfigCache = config;
+    await this.ctx.storage.setAlarm(expiresAt);
+    return config;
+  }
+
+  async isHostedAuthorized(role: "admin" | "moderator", token: string): Promise<boolean> {
+    if (token.length < 24 || token.length > 256) return false;
+    const hosted = this.getHostedEvent();
+    if (!hosted || hosted.expires_at <= Date.now()) return false;
+    const expectedHash = role === "admin" ? hosted.admin_hash : hosted.moderator_hash;
+    const actual = new Uint8Array(
+      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token)),
+    );
+    return timingSafeEqual(actual, hexToBytes(expectedHash));
+  }
+
+  reserveHostedEvent(createdAt: number): { minuteCount: number; dayCount: number } {
+    if (!Number.isInteger(createdAt)) throw new Error("invalid creation time");
+    const minuteBucket = `minute:${Math.floor(createdAt / 60_000)}`;
+    const dayBucket = `day:${new Date(createdAt).toISOString().slice(0, 10)}`;
+    const minuteCount = this.creationCount(minuteBucket);
+    const dayCount = this.creationCount(dayBucket);
+    if (minuteCount >= 6 || dayCount >= 100) throw new Error("hosted event creation limit reached");
+    this.incrementCreationCount(minuteBucket, createdAt);
+    this.incrementCreationCount(dayBucket, createdAt);
+    this.ctx.storage.sql.exec(
+      "DELETE FROM hosted_creation_limits WHERE updated_at < ?",
+      createdAt - 2 * 24 * 60 * 60 * 1000,
+    );
+    return { minuteCount: minuteCount + 1, dayCount: dayCount + 1 };
+  }
+
   async updateEventConfig(value: unknown): Promise<{ config: PublicEventConfig; updatedAt: number }> {
     const config = validateEventConfig(value);
-    if (config.eventId !== EVENT_CONFIG.eventId) {
+    const expectedEventId = this.getHostedEvent()?.event_id ?? EVENT_CONFIG.eventId;
+    if (config.eventId !== expectedEventId) {
       throw new Error("eventId cannot change after deployment");
     }
     const updatedAt = Date.now();
@@ -569,7 +668,7 @@ export class LiveSession extends DurableObject<Env> {
       });
       snapshot.questions = snapshot.questions.slice(0, 100);
     }
-    if (publishAt) await this.scheduleNextPublication();
+    if (publishAt) await this.scheduleNextAlarm();
     const nextSnapshot = await this.broadcastSnapshot(this.touch(snapshot));
     const result = {
       snapshot: nextSnapshot,
@@ -883,7 +982,9 @@ export class LiveSession extends DurableObject<Env> {
     await this.ctx.storage.deleteAlarm();
     this.reactionWindows.clear();
     this.snapshotCache = null;
-    return this.broadcastSnapshot(await this.snapshot());
+    const snapshot = await this.broadcastSnapshot(await this.snapshot());
+    await this.scheduleNextAlarm();
+    return snapshot;
   }
 
   async exportData(): Promise<ExportData> {
@@ -931,6 +1032,26 @@ export class LiveSession extends DurableObject<Env> {
 
   async alarm(): Promise<void> {
     const now = Date.now();
+    const hosted = this.getHostedEvent();
+    if (hosted && hosted.expires_at <= now) {
+      for (const socket of this.ctx.getWebSockets()) socket.close(1001, "event expired");
+      this.ctx.storage.sql.exec("DELETE FROM moderation_actions");
+      this.ctx.storage.sql.exec("DELETE FROM question_flags");
+      this.ctx.storage.sql.exec("DELETE FROM question_votes");
+      this.ctx.storage.sql.exec("DELETE FROM questions");
+      this.ctx.storage.sql.exec("DELETE FROM participants");
+      this.ctx.storage.sql.exec("DELETE FROM reactions");
+      this.ctx.storage.sql.exec("DELETE FROM anon_labels");
+      this.ctx.storage.sql.exec("DELETE FROM difficulty_votes");
+      this.ctx.storage.sql.exec("DELETE FROM votes");
+      this.ctx.storage.sql.exec("DELETE FROM event_config");
+      this.ctx.storage.sql.exec("DELETE FROM hosted_event");
+      await this.ctx.storage.deleteAlarm();
+      this.eventConfigCache = null;
+      this.snapshotCache = null;
+      this.reactionWindows.clear();
+      return;
+    }
     const affectedVoters = this.ctx.storage.sql
       .exec<{ voter_id: string }>(
         `SELECT DISTINCT voter_id FROM questions
@@ -947,7 +1068,7 @@ export class LiveSession extends DurableObject<Env> {
     this.snapshotCache = null;
     await this.broadcastSnapshot();
     for (const row of affectedVoters) await this.broadcastParticipantState(row.voter_id);
-    await this.scheduleNextPublication();
+    await this.scheduleNextAlarm();
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -1005,6 +1126,35 @@ export class LiveSession extends DurableObject<Env> {
       .toArray()[0];
     this.eventConfigCache = row ? validateEventConfig(JSON.parse(row.config_json)) : EVENT_CONFIG;
     return this.eventConfigCache;
+  }
+
+  private getHostedEvent(): HostedEventRow | undefined {
+    return this.ctx.storage.sql
+      .exec<HostedEventRow>(
+        `SELECT event_id, admin_hash, moderator_hash, created_at, expires_at
+         FROM hosted_event WHERE id = 1`,
+      )
+      .toArray()[0];
+  }
+
+  private creationCount(bucket: string): number {
+    return this.ctx.storage.sql
+      .exec<{ count: number }>(
+        "SELECT count FROM hosted_creation_limits WHERE bucket = ?",
+        bucket,
+      )
+      .toArray()[0]?.count ?? 0;
+  }
+
+  private incrementCreationCount(bucket: string, updatedAt: number): void {
+    this.ctx.storage.sql.exec(
+      `INSERT INTO hosted_creation_limits (bucket, count, updated_at)
+       VALUES (?, 1, ?)
+       ON CONFLICT (bucket) DO UPDATE
+       SET count = count + 1, updated_at = excluded.updated_at`,
+      bucket,
+      updatedAt,
+    );
   }
 
   private getParticipantRow(voterId: string): ParticipantRow | undefined {
@@ -1090,7 +1240,7 @@ export class LiveSession extends DurableObject<Env> {
     );
   }
 
-  private async scheduleNextPublication(): Promise<void> {
+  private async scheduleNextAlarm(): Promise<void> {
     const next = this.ctx.storage.sql
       .exec<{ publish_at: number }>(
         `SELECT MIN(publish_at) AS publish_at
@@ -1098,7 +1248,11 @@ export class LiveSession extends DurableObject<Env> {
          WHERE visibility = 'pending' AND publish_at IS NOT NULL`,
       )
       .toArray()[0];
-    if (next?.publish_at) await this.ctx.storage.setAlarm(next.publish_at);
+    const expiry = this.getHostedEvent()?.expires_at;
+    const timestamps = [next?.publish_at, expiry].filter(
+      (value): value is number => typeof value === "number" && value > Date.now(),
+    );
+    if (timestamps.length) await this.ctx.storage.setAlarm(Math.min(...timestamps));
     else await this.ctx.storage.deleteAlarm();
   }
 
@@ -1178,6 +1332,14 @@ export class LiveSession extends DurableObject<Env> {
 
 function shortBadge(voterId: string): string {
   return voterId.replaceAll("-", "").slice(-4).toUpperCase();
+}
+
+function hexToBytes(value: string): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(value.length / 2);
+  for (let index = 0; index < bytes.length; index += 1) {
+    bytes[index] = Number.parseInt(value.slice(index * 2, index * 2 + 2), 16);
+  }
+  return bytes;
 }
 
 function statusLabel(visibility: QuestionVisibility): string {

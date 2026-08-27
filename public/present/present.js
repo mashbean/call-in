@@ -1,4 +1,6 @@
-const config = await fetch("/api/config").then((response) => {
+import { eventContext, eventPage } from "../event-context.js";
+
+const config = await fetch(`${eventContext.apiBase}/config`).then((response) => {
   if (!response.ok) throw new Error("config unavailable");
   return response.json();
 });
@@ -10,12 +12,17 @@ const openDeck = document.querySelector("[data-open-deck]");
 const status = document.querySelector("[data-present-status]");
 const toggle = document.querySelector("[data-dashboard-toggle]");
 
+document.querySelector("[data-audience-link]").href = eventPage("/");
+document.querySelector("[data-moderator-link]").href = eventPage("/moderate/");
+document.querySelector("[data-audience-qr]").src = `${eventContext.apiBase}/qr.svg`;
+document.querySelector("[data-dashboard-frame]").src = eventPage("/dashboard/");
+
 document.title = `${config.title} · 講者頁`;
 document.querySelector("[data-event-title]").textContent = config.title;
 deckFrame.src = deckUrl;
 openDeck.href = deckUrl;
 deckFrame.addEventListener("load", () => {
-  status.textContent = "簡報已載入";
+  status.textContent = "已送出簡報載入要求";
 });
 
 toggle.addEventListener("click", () => {

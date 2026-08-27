@@ -2,7 +2,7 @@
 
 ## Standalone presenter view
 
-Use `https://SERVICE/present/` when the speaker already has a public, browser-playable deck URL and does not want to edit its source. Configure the URL in `/setup/`. The presenter view places the deck and dashboard side by side, provides fullscreen and collapse controls, and links to the audience and moderator pages.
+Use the `/e/:eventId/present/` URL returned by the hosted creator when the speaker already has a public, browser-playable deck URL and does not want to edit its source. The presenter view places the deck and dashboard side by side, provides fullscreen and collapse controls, and links to the audience page. The private moderation link is returned separately and must not be reconstructed from the public presenter URL.
 
 Some presentation hosts send headers that prohibit iframe embedding. In that case use **Open deck separately**, or use one of the HTML integration modes below when the deck source is available. A local PowerPoint or Keynote file must first be published to a browser-playable URL.
 

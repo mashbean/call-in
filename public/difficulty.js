@@ -1,7 +1,16 @@
 export let difficultyLabels = ["Too easy", "Easy", "OK", "Difficult", "Lost"];
+let difficultyCopy = {
+  responses: "responses",
+  average: "average",
+  waiting: "Waiting for the first response",
+};
 
 export function setDifficultyLabels(labels) {
   if (Array.isArray(labels) && labels.length === 5) difficultyLabels = [...labels];
+}
+
+export function setDifficultyCopy(copy) {
+  difficultyCopy = { ...difficultyCopy, ...copy };
 }
 
 export function renderDifficultyChart(root, difficulty = {}) {
@@ -59,7 +68,7 @@ export function renderDifficultyChart(root, difficulty = {}) {
   const totalRoot = root.querySelector("[data-difficulty-total]");
   if (totalRoot) {
     totalRoot.textContent = total
-      ? `${total} responses · average ${Number.isFinite(average) ? average.toFixed(1) : "-"}`
-      : "Waiting for the first response";
+      ? `${total} ${difficultyCopy.responses} · ${difficultyCopy.average} ${Number.isFinite(average) ? average.toFixed(1) : "-"}`
+      : difficultyCopy.waiting;
   }
 }

@@ -1,11 +1,30 @@
-import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "../difficulty.js";
+import {
+  difficultyLabels,
+  renderDifficultyChart,
+  setDifficultyCopy,
+  setDifficultyLabels,
+} from "../difficulty.js";
+import { eventContext, eventPage } from "../event-context.js";
+import { createLocale } from "../i18n.js";
 
 document.documentElement.classList.toggle("embedded-dashboard", window.self !== window.top);
 
-const apiBase = "/api";
-const config = await fetch("/api/config").then((response) => response.json());
+const apiBase = eventContext.apiBase;
+const config = await fetch(`${apiBase}/config`).then((response) => response.json());
+const locale = createLocale(config);
+const t = locale.text;
 const reactionTimes = new Map();
+locale.apply();
+if (locale.zhHant) {
+  setDifficultyCopy({ responses: "筆回覆", average: "平均", waiting: "等待第一筆回覆" });
+}
 applyConfig(config);
+document.querySelectorAll("[data-qr-image]").forEach((image) => {
+  image.src = `${apiBase}/qr.svg`;
+});
+document.querySelectorAll("[data-audience-url]").forEach((link) => {
+  link.href = eventPage("/");
+});
 const pollsRoot = document.querySelector("#dashboard-polls");
 const questionsRoot = document.querySelector("#dashboard-questions");
 const statusEl = document.querySelector("[data-status]");
@@ -17,29 +36,39 @@ const lensLabels = Object.fromEntries(config.question.lenses.map((lens) => [lens
 function render(state) {
   const mode = state.session?.mode || "open";
   const modeEl = document.querySelector("[data-session-mode]");
-  modeEl.textContent = mode.toUpperCase();
+  modeEl.textContent = locale.zhHant
+    ? ({ open: "開放", slow: "慢速", approval: "需審核", paused: "暫停", closed: "關閉" })[
+        mode
+      ] || mode
+    : mode.toUpperCase();
   modeEl.dataset.mode = mode;
   renderDifficultyChart(document.querySelector(".dashboard-difficulty"), state.difficulty);
-  document.querySelector("[data-poll-total]").textContent = `${state.polls.length} polls`;
+  document.querySelector("[data-poll-total]").textContent = t(
+    `${state.polls.length} polls`,
+    `${state.polls.length} 場`,
+  );
   pollsRoot.innerHTML = state.polls
     .map(
       (poll, index) => `
         <article class="dashboard-poll">
-          <div class="dashboard-poll-head"><b>${String(index + 1).padStart(2, "0")}</b><span>${poll.total} votes</span></div>
+          <div class="dashboard-poll-head"><b>${String(index + 1).padStart(2, "0")}</b><span>${poll.total} ${t("votes", "票")}</span></div>
           <h3>${escapeHtml(poll.question)}</h3>
           ${poll.options
             .map((option, optionIndex) => {
               const percent = poll.total
                 ? Math.round((poll.counts[optionIndex] / poll.total) * 100)
                 : 0;
-              return `<div class="dashboard-result-row"><span>${escapeHtml(option)}</span><div><i style="--pct:${percent}%"></i></div><b>${poll.counts[optionIndex]} votes</b></div>`;
+              return `<div class="dashboard-result-row"><span>${escapeHtml(option)}</span><div><i style="--pct:${percent}%"></i></div><b>${poll.counts[optionIndex]} ${t("votes", "票")}</b></div>`;
             })
             .join("")}
         </article>`,
     )
     .join("");
 
-  document.querySelector("[data-question-count]").textContent = `${state.questions.length} questions`;
+  document.querySelector("[data-question-count]").textContent = t(
+    `${state.questions.length} questions`,
+    `${state.questions.length} 個問題`,
+  );
   const rankedQuestions = [...state.questions].sort(
     (first, second) =>
       second.upvotes - first.upvotes || Number(second.createdAt) - Number(first.createdAt),
@@ -54,14 +83,14 @@ function render(state) {
         .map(
           (question, index) => `
             <article>
-              <div class="dashboard-question-head"><b>${question.id === newestId ? "NEW" : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · Me too ${question.upvotes}</span></div>
+              <div class="dashboard-question-head"><b>${question.id === newestId ? t("NEW", "最新") : String(index + 1).padStart(2, "0")}</b><span><time>${formatTime(question.createdAt)}</time> · ${t("Me too", "我也想問")} ${question.upvotes}</span></div>
               <div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div>
               <p>${escapeHtml(question.text)}</p>
               <small>${escapeHtml(question.nickname)}</small>
             </article>`,
         )
         .join("")
-    : `<div class="empty">Waiting for the first question</div>`;
+    : `<div class="empty">${t("Waiting for the first question", "等待第一個問題")}</div>`;
 }
 
 function setDashboardTab(name) {
@@ -93,7 +122,7 @@ function formatTime(value) {
         minute: "2-digit",
         hour12: false,
       }).format(date)
-    : "just now";
+    : t("just now", "剛剛");
 }
 
 function connect() {
@@ -145,7 +174,9 @@ function showReaction(reaction) {
 
 function setStatus(online) {
   statusEl.classList.toggle("online", online);
-  statusEl.lastChild.textContent = online ? "Live" : "Reconnecting";
+  statusEl.lastChild.textContent = online
+    ? t("Live", "即時連線")
+    : t("Reconnecting", "重新連線中");
 }
 
 function escapeHtml(value) {
@@ -214,7 +245,10 @@ if (qrModal && qrOpenButton) {
     previousFocus?.focus();
   }
 
-  qrModal.querySelector("[data-qr-url]").textContent = location.origin.replace(/^https?:\/\//, "");
+  const audienceUrl = `${location.origin}${eventPage("/")}`;
+  const qrUrl = qrModal.querySelector("[data-qr-url]");
+  qrUrl.textContent = audienceUrl.replace(/^https?:\/\//, "");
+  qrUrl.href = eventPage("/");
   qrOpenButton.addEventListener("click", () => {
     previousFocus = document.activeElement;
     modalBackground.forEach((element) => {

@@ -64,6 +64,80 @@ describe("Live Deck Kit Worker", () => {
     ).resolves.toBe(false);
   });
 
+  it("creates an isolated hosted event and protects its private links", async () => {
+    const createdResponse = await SELF.fetch("https://example.com/api/events", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        title: "第一次公開測試",
+        deckUrl: "https://example.com/slides",
+        description: "不用部署就開始互動。",
+      }),
+    });
+    expect(createdResponse.status).toBe(201);
+    const created = await createdResponse.json<{
+      eventId: string;
+      audienceUrl: string;
+      presenterUrl: string;
+      setupUrl: string;
+      moderatorUrl: string;
+      expiresAt: number;
+    }>();
+    expect(created.eventId).toMatch(/^[a-f0-9]{32}$/);
+    expect(created.audienceUrl).toBe(`https://example.com/e/${created.eventId}/`);
+    expect(created.presenterUrl).toBe(`https://example.com/e/${created.eventId}/present/`);
+    expect(created.expiresAt).toBeGreaterThan(Date.now());
+
+    const audiencePage = await SELF.fetch(created.audienceUrl);
+    const presenterPage = await SELF.fetch(created.presenterUrl);
+    expect(audiencePage.status).toBe(200);
+    expect(await audiencePage.text()).toContain("Live Deck Kit");
+    expect(presenterPage.status).toBe(200);
+    expect(await presenterPage.text()).toContain("Live Deck 講者頁");
+
+    const apiBase = `https://example.com/api/events/${created.eventId}`;
+    const publicConfigResponse = await SELF.fetch(`${apiBase}/config`);
+    const publicConfig = await publicConfigResponse.json<{
+      eventId: string;
+      title: string;
+      locale: string;
+      polls: unknown[];
+    }>();
+    expect(publicConfig).toMatchObject({
+      eventId: created.eventId,
+      title: "第一次公開測試",
+      locale: "zh-Hant-TW",
+      polls: [],
+    });
+
+    const setupToken = new URLSearchParams(new URL(created.setupUrl).hash.slice(1)).get("access");
+    const moderatorToken = new URLSearchParams(new URL(created.moderatorUrl).hash.slice(1)).get("access");
+    expect(setupToken).toMatch(/^[a-f0-9]{64}$/);
+    expect(moderatorToken).toMatch(/^[a-f0-9]{64}$/);
+    expect(setupToken).not.toBe(moderatorToken);
+
+    expect((await SELF.fetch(`${apiBase}/admin/config`)).status).toBe(404);
+    const adminResponse = await SELF.fetch(`${apiBase}/admin/config`, {
+      headers: { Authorization: `Bearer ${setupToken}` },
+    });
+    expect(adminResponse.status).toBe(200);
+    expect((await adminResponse.json<{ config: { title: string } }>()).config.title).toBe("第一次公開測試");
+
+    const moderatorResponse = await SELF.fetch(`${apiBase}/moderator/state`, {
+      headers: { Authorization: `Bearer ${moderatorToken}` },
+    });
+    expect(moderatorResponse.status).toBe(200);
+    expect((await SELF.fetch(`${apiBase}/moderator/state`, {
+      headers: { Authorization: `Bearer ${setupToken}` },
+    })).status).toBe(404);
+
+    const qrResponse = await SELF.fetch(`${apiBase}/qr.svg`);
+    expect(qrResponse.status).toBe(200);
+    expect(qrResponse.headers.get("content-type")).toContain("image/svg+xml");
+    expect(await qrResponse.text()).toContain("<svg");
+    expect((await SELF.fetch("https://example.com/e/00000000000000000000000000000000/")).status).toBe(404);
+  });
+
   it("records difficulty and keeps only the latest score per device", async () => {
     const voterId = crypto.randomUUID();
     await post("/api/difficulty", { voterId, score: 2 });

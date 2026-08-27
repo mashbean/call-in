@@ -723,6 +723,9 @@ footer a {
     800 10px/1 ui-monospace,
     monospace;
 }
+html[lang^="zh"] .intent-option input:checked + span::before {
+  content: "已選擇";
+}
 .sr-only {
   position: absolute !important;
   width: 1px !important;

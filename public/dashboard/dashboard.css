@@ -350,10 +350,10 @@ body.dashboard-page {
   backdrop-filter: blur(12px);
 }
 html.embedded-dashboard .dashboard-page {
-  padding-bottom: 124px;
+  padding-bottom: 72px;
 }
 html.embedded-dashboard .dashboard-open {
-  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 52px);
+  display: none;
 }
 .reaction-stage {
   position: fixed;

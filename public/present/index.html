@@ -13,20 +13,20 @@
       <div class="present-status" data-present-status>正在載入簡報…</div>
       <nav aria-label="講者工具">
         <a data-open-deck href="#" target="_blank" rel="noreferrer">另開簡報</a>
-        <a href="/" target="_blank" rel="noreferrer">觀眾頁</a>
-        <a href="/moderate/" target="_blank" rel="noreferrer">管理</a>
+        <a data-audience-link href="/" target="_blank" rel="noreferrer">觀眾頁</a>
+        <a data-moderator-link href="/moderate/" target="_blank" rel="noreferrer">管理</a>
         <button type="button" data-dashboard-toggle>隱藏互動</button>
         <button type="button" data-fullscreen>全螢幕</button>
       </nav>
-      <img src="/api/qr.svg" alt="觀眾加入行動條碼" />
+      <img data-audience-qr src="/api/qr.svg" alt="觀眾加入行動條碼" />
     </header>
     <main class="present-stage">
       <section class="deck-pane" aria-label="簡報">
-        <iframe data-deck-frame title="簡報" allow="fullscreen; autoplay; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <iframe data-deck-frame title="簡報" allow="fullscreen; autoplay; clipboard-write" allowfullscreen sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation" referrerpolicy="strict-origin-when-cross-origin"></iframe>
         <p class="embed-note">簡報區若保持空白，原網站可能禁止內嵌；請使用上方「另開簡報」。</p>
       </section>
       <section class="dashboard-pane" aria-label="現場互動">
-        <iframe src="/dashboard/" title="現場互動 dashboard" allow="clipboard-write"></iframe>
+        <iframe data-dashboard-frame src="/dashboard/" title="現場互動 dashboard" allow="clipboard-write"></iframe>
       </section>
     </main>
     <script type="module" src="/present/present.js"></script>

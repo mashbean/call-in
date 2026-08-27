@@ -1,8 +1,22 @@
-import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "./difficulty.js";
+import {
+  difficultyLabels,
+  renderDifficultyChart,
+  setDifficultyCopy,
+  setDifficultyLabels,
+} from "./difficulty.js";
+import { eventContext, eventPage } from "./event-context.js";
+import { createLocale } from "./i18n.js";
 
-const apiBase = "/api";
-const config = await fetch("/api/config").then((response) => response.json());
+const apiBase = eventContext.apiBase;
+const config = await fetch(`${apiBase}/config`).then((response) => response.json());
+const locale = createLocale(config);
+const t = locale.text;
+locale.apply();
+if (locale.zhHant) {
+  setDifficultyCopy({ responses: "筆回覆", average: "平均", waiting: "等待第一筆回覆" });
+}
 applyConfig(config);
+const storagePrefix = `${config.eventId}:live-deck`;
 const voterKey = `${config.eventId}:live-deck-voter`;
 const voterId = localStorage.getItem(voterKey) || crypto.randomUUID();
 localStorage.setItem(voterKey, voterId);
@@ -34,7 +48,7 @@ let state = {
 };
 let socket;
 let difficultyTimer;
-const savedDifficulty = Number(localStorage.getItem("difficulty:current"));
+const savedDifficulty = Number(localStorage.getItem(`${storagePrefix}:difficulty:current`));
 let currentDifficulty =
   Number.isInteger(savedDifficulty) && savedDifficulty >= 1 && savedDifficulty <= 5
     ? savedDifficulty
@@ -47,14 +61,14 @@ identityForm?.addEventListener("submit", async (event) => {
   const data = new FormData(identityForm);
   const button = identityForm.querySelector("button[type=submit]");
   button.disabled = true;
-  identityMessageEl.textContent = "Saving your event name";
+  identityMessageEl.textContent = t("Saving your event name", "正在儲存活動暱稱");
   try {
     participantState = await post("/api/participant", {
       alias: String(data.get("alias") || ""),
       cocVersion: config.moderation.codeOfConduct.version,
       voterId,
     });
-    identityMessageEl.textContent = "Saved for this event";
+    identityMessageEl.textContent = t("Saved for this event", "已儲存於這場活動");
     renderParticipant();
   } catch (error) {
     identityMessageEl.textContent = humanError(error);
@@ -66,19 +80,22 @@ identityForm?.addEventListener("submit", async (event) => {
 updateDifficultySelection(currentDifficulty);
 difficultyInput.addEventListener("input", () => {
   currentDifficulty = Number(difficultyInput.value);
-  localStorage.setItem("difficulty:current", String(currentDifficulty));
+  localStorage.setItem(`${storagePrefix}:difficulty:current`, String(currentDifficulty));
   updateDifficultySelection(currentDifficulty);
-  difficultyMessageEl.textContent = "Updating";
+  difficultyMessageEl.textContent = t("Updating", "更新中");
   clearTimeout(difficultyTimer);
   difficultyTimer = setTimeout(() => {
     post("/api/difficulty", { score: currentDifficulty, voterId })
       .then((nextState) => {
         state = nextState;
-        difficultyMessageEl.textContent = "Synced with the presenter";
+        difficultyMessageEl.textContent = t("Synced with the presenter", "已同步到講者畫面");
         render();
       })
       .catch(() => {
-        difficultyMessageEl.textContent = "Sync failed. Please adjust it again";
+        difficultyMessageEl.textContent = t(
+          "Sync failed. Please adjust it again",
+          "同步失敗，請再調整一次",
+        );
       });
   }, 220);
 });
@@ -102,15 +119,18 @@ document.querySelectorAll("[data-reaction]").forEach((button) => {
     button.disabled = true;
     try {
       await post("/api/reaction", { kind, voterId });
-      reactionMessageEl.textContent = `${button.firstChild.textContent.trim()} sent`;
+      reactionMessageEl.textContent = t(
+        `${button.firstChild.textContent.trim()} sent`,
+        `${button.firstChild.textContent.trim()} 已送出`,
+      );
       button.classList.remove("sent");
       void button.offsetWidth;
       button.classList.add("sent");
       setTimeout(() => button.classList.remove("sent"), 700);
     } catch (error) {
       reactionMessageEl.textContent = String(error?.message || "").includes("rate limit")
-        ? "Reacting fast! Give it a few seconds"
-        : "The reaction was not sent. Please try again";
+        ? t("Reacting fast! Give it a few seconds", "反應太快了，請稍等幾秒")
+        : t("The reaction was not sent. Please try again", "反應未送出，請再試一次");
     } finally {
       setTimeout(() => {
         button.disabled = false;
@@ -138,7 +158,7 @@ form.addEventListener("submit", async (event) => {
   const data = new FormData(form);
   const button = form.querySelector("button[type=submit]");
   button.disabled = true;
-  messageEl.textContent = "Sending";
+  messageEl.textContent = t("Sending", "送出中");
   try {
     const result = await post("/api/question", {
       text: String(data.get("question") || ""),
@@ -154,8 +174,8 @@ form.addEventListener("submit", async (event) => {
     form.querySelector("textarea").value = "";
     messageEl.textContent =
       result.submission.visibility === "public"
-        ? "Added to the question pool"
-        : "Received. It is waiting before public display";
+        ? t("Added to the question pool", "已加入問題池")
+        : t("Received. It is waiting before public display", "已收到，正在等待公開");
     render();
     renderParticipant();
   } catch (error) {
@@ -167,16 +187,16 @@ form.addEventListener("submit", async (event) => {
 
 async function vote(pollId, optionIndex) {
   state = await post("/api/vote", { pollId, optionIndex, voterId });
-  localStorage.setItem(`vote:${pollId}`, String(optionIndex));
+  localStorage.setItem(`${storagePrefix}:vote:${pollId}`, String(optionIndex));
   render();
 }
 
 async function upvote(questionId) {
   state = await post("/api/upvote", { questionId, voterId });
-  if (localStorage.getItem(`upvote:${questionId}`)) {
-    localStorage.removeItem(`upvote:${questionId}`);
+  if (localStorage.getItem(`${storagePrefix}:upvote:${questionId}`)) {
+    localStorage.removeItem(`${storagePrefix}:upvote:${questionId}`);
   } else {
-    localStorage.setItem(`upvote:${questionId}`, "1");
+    localStorage.setItem(`${storagePrefix}:upvote:${questionId}`, "1");
   }
   render();
 }
@@ -184,7 +204,7 @@ async function upvote(questionId) {
 async function flagQuestion(questionId, reason) {
   if (!participantState.participant) throw new Error("code of conduct must be accepted");
   const result = await post("/api/flag", { questionId, reason, voterId });
-  localStorage.setItem(`flag:${questionId}`, reason);
+  localStorage.setItem(`${storagePrefix}:flag:${questionId}`, reason);
   if (result.held) state.questions = state.questions.filter((question) => question.id !== questionId);
   render();
 }
@@ -204,11 +224,11 @@ function render() {
   renderDifficultyChart(document.querySelector(".difficulty-card"), state.difficulty);
   pollsRoot.innerHTML = state.polls
     .map((poll, index) => {
-      const selected = Number(localStorage.getItem(`vote:${poll.id}`));
+      const selected = Number(localStorage.getItem(`${storagePrefix}:vote:${poll.id}`));
       const hasVote = Number.isInteger(selected) && selected >= 0;
       return `
       <article class="poll-card">
-        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${poll.total} votes</span></div>
+        <div class="poll-meta"><span>${escapeHtml(poll.prompt)}</span><span>${poll.total} ${t("votes", "票")}</span></div>
         <h2><span>${String(index + 1).padStart(2, "0")}</span>${escapeHtml(poll.question)}</h2>
         <div class="options">
           ${poll.options
@@ -219,7 +239,7 @@ function render() {
               return `<button class="option ${hasVote && selected === optionIndex ? "selected" : ""}" data-poll="${poll.id}" data-option="${optionIndex}">
               <span class="bar" style="--pct:${percent}%"></span>
               <span class="option-copy"><b>${String.fromCharCode(65 + optionIndex)}</b>${escapeHtml(option)}</span>
-              <span class="percent">${poll.counts[optionIndex]} votes</span>
+              <span class="percent">${poll.counts[optionIndex]} ${t("votes", "票")}</span>
             </button>`;
             })
             .join("")}
@@ -237,7 +257,10 @@ function render() {
   });
 
   document.querySelectorAll("[data-question-count]").forEach((el) => {
-    el.textContent = `${state.questions.length} questions`;
+    el.textContent = t(
+      `${state.questions.length} questions`,
+      `${state.questions.length} 個問題`,
+    );
   });
   const rankedQuestions = [...state.questions].sort(
     (first, second) =>
@@ -252,14 +275,14 @@ function render() {
       <div><div class="question-tags"><span class="question-lens">${escapeHtml(lensLabels[question.lens] || lensLabels.clarify)}</span><span class="question-difficulty difficulty-${question.difficulty}">${question.difficulty} · ${escapeHtml(difficultyLabels[question.difficulty - 1] || difficultyLabels[2])}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
       <div class="question-actions">
         ${participantState.questions.some((item) => item.id === question.id)
-          ? `<span class="flagged-label">Your question</span>`
-          : `<button class="upvote ${localStorage.getItem(`upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="I have this question too">Me too <b>${question.upvotes}</b></button>`}
+          ? `<span class="flagged-label">${t("Your question", "你的問題")}</span>`
+          : `<button class="upvote ${localStorage.getItem(`${storagePrefix}:upvote:${question.id}`) ? "selected" : ""}" data-upvote="${question.id}" aria-label="${t("I have this question too", "我也想問這個問題")}">${t("Me too", "我也想問")} <b>${question.upvotes}</b></button>`}
         ${renderFlagControl(question)}
       </div>
     </article>`,
         )
         .join("")
-    : `<div class="empty">The first question can change the Q&amp;A route</div>`;
+    : `<div class="empty">${t("The first question can change the Q&amp;A route", "第一個問題可以帶大家走向新的討論")}</div>`;
   questionsRoot.querySelectorAll("[data-upvote]").forEach((button) => {
     button.addEventListener("click", () =>
       upvote(button.dataset.upvote).catch((error) => alert(humanError(error))),
@@ -280,15 +303,15 @@ function render() {
 function renderFlagControl(question) {
   if (!config.moderation?.flags?.enabled) return "";
   if (participantState.questions.some((item) => item.id === question.id)) return "";
-  const reported = localStorage.getItem(`flag:${question.id}`);
-  if (reported) return `<span class="flagged-label">Reported</span>`;
+  const reported = localStorage.getItem(`${storagePrefix}:flag:${question.id}`);
+  if (reported) return `<span class="flagged-label">${t("Reported", "已檢舉")}</span>`;
   return `<details class="flag-control">
-    <summary>Report</summary>
-    <div class="flag-menu" role="group" aria-label="Report this question">
-      <button type="button" data-question-id="${question.id}" data-flag-reason="harassment">Harassment or attack</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="disruption">Deliberate disruption</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="off_topic">Seriously off topic</button>
-      <button type="button" data-question-id="${question.id}" data-flag-reason="privacy">Private information</button>
+    <summary>${t("Report", "檢舉")}</summary>
+    <div class="flag-menu" role="group" aria-label="${t("Report this question", "檢舉這個問題")}">
+      <button type="button" data-question-id="${question.id}" data-flag-reason="harassment">${t("Harassment or attack", "騷擾或攻擊")}</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="disruption">${t("Deliberate disruption", "蓄意干擾")}</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="off_topic">${t("Seriously off topic", "嚴重離題")}</button>
+      <button type="button" data-question-id="${question.id}" data-flag-reason="privacy">${t("Private information", "私人資訊")}</button>
     </div>
   </details>`;
 }
@@ -308,18 +331,31 @@ function renderParticipant() {
   if (participant) participantLabelEl.textContent = participant.publicLabel;
   const held = participantState.questions.filter((question) => question.visibility !== "public");
   mySubmissionsEl.hidden = held.length === 0;
-  if (held.length === 0 && messageEl.textContent.includes("waiting before public display")) {
-    messageEl.textContent = "Published to the question pool";
+  if (
+    held.length === 0 &&
+    (messageEl.textContent.includes("waiting before public display") ||
+      messageEl.textContent.includes("等待公開"))
+  ) {
+    messageEl.textContent = t("Published to the question pool", "已公開到問題池");
   }
   ownQuestionsRoot.innerHTML = held
     .map(
       (question) => `<article class="question-card own-question">
-        <div class="question-rank">${escapeHtml(question.visibility === "pending" ? "WAIT" : "HELD")}</div>
-        <div><div class="question-tags"><span class="question-status">${escapeHtml(question.statusLabel)}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
+        <div class="question-rank">${escapeHtml(question.visibility === "pending" ? t("WAIT", "等待") : t("HELD", "保留"))}</div>
+        <div><div class="question-tags"><span class="question-status">${escapeHtml(localizedQuestionStatus(question))}</span></div><p>${escapeHtml(question.text)}</p><span>${escapeHtml(question.nickname)}</span></div>
       </article>`,
     )
     .join("");
   syncQuestionAvailability();
+}
+
+function localizedQuestionStatus(question) {
+  if (!locale.zhHant) return question.statusLabel;
+  return question.visibility === "public"
+    ? "已公開"
+    : question.visibility === "pending"
+      ? "等待審核"
+      : "暫不公開";
 }
 
 function syncQuestionAvailability() {
@@ -330,9 +366,16 @@ function syncQuestionAvailability() {
   const button = form.querySelector("button[type=submit]");
   if (button) button.disabled = blockedBySession || blockedByModerator;
   if (blockedBySession) {
-    messageEl.textContent = mode === "closed" ? "This session is closed" : "Questions are temporarily paused";
+    messageEl.textContent =
+      mode === "closed"
+        ? t("This session is closed", "本場活動已關閉")
+        : t("Questions are temporarily paused", "目前暫停提問");
   }
-  if (blockedByModerator) messageEl.textContent = "Question access is limited for this event";
+  if (blockedByModerator)
+    messageEl.textContent = t(
+      "Question access is limited for this event",
+      "你在這場活動的提問權限受到限制",
+    );
 }
 
 function updateDifficultySelection(score) {
@@ -367,25 +410,39 @@ function connect() {
 
 function setStatus(online) {
   statusEl.classList.toggle("online", online);
-  statusEl.lastChild.textContent = online ? "Live" : "Reconnecting";
+  statusEl.lastChild.textContent = online
+    ? t("Live", "即時連線")
+    : t("Reconnecting", "重新連線中");
 }
 
 function humanError(error) {
   const message = String(error?.message || error);
-  if (message.includes("limit")) return "This device has reached the question limit";
-  if (message.includes("cooldown")) return "Please wait before sending another question";
-  if (message.includes("paused")) return "Questions are temporarily paused";
-  if (message.includes("closed")) return "This session is closed";
-  if (message.includes("code of conduct")) return "Please accept the code of conduct first";
-  if (message.includes("upvote your own question")) return "You cannot upvote your own question";
-  if (message.includes("flag your own question")) return "You cannot report your own question";
-  if (message.includes("flag limit")) return "This device has reached the report limit";
-  if (message.includes("question not found")) return "This question is no longer public";
-  if (message.includes("access is limited")) return "Question access is limited for this event";
+  if (message.includes("limit"))
+    return t("This device has reached the question limit", "這台裝置已達提問上限");
+  if (message.includes("cooldown"))
+    return t("Please wait before sending another question", "請稍等再送出下一個問題");
+  if (message.includes("paused")) return t("Questions are temporarily paused", "目前暫停提問");
+  if (message.includes("closed")) return t("This session is closed", "本場活動已關閉");
+  if (message.includes("code of conduct"))
+    return t("Please accept the code of conduct first", "請先同意討論規則");
+  if (message.includes("upvote your own question"))
+    return t("You cannot upvote your own question", "不能替自己的問題按我也想問");
+  if (message.includes("flag your own question"))
+    return t("You cannot report your own question", "不能檢舉自己的問題");
+  if (message.includes("flag limit"))
+    return t("This device has reached the report limit", "這台裝置已達檢舉上限");
+  if (message.includes("question not found"))
+    return t("This question is no longer public", "這個問題已不再公開");
+  if (message.includes("access is limited"))
+    return t("Question access is limited for this event", "你在這場活動的提問權限受到限制");
   if (message.includes("question too short"))
-    return "A question needs at least 4 characters so the room can tell what you are asking";
-  if (message.includes("alias")) return "Choose an event name with at least two characters";
-  return "Sending failed. Please try again later";
+    return t(
+      "A question needs at least 4 characters so the room can tell what you are asking",
+      "問題至少需要 4 個字，讓大家知道你想問什麼",
+    );
+  if (message.includes("alias"))
+    return t("Choose an event name with at least two characters", "活動暱稱至少需要兩個字");
+  return t("Sending failed. Please try again later", "送出失敗，請稍後再試");
 }
 
 function escapeHtml(value) {
@@ -411,11 +468,11 @@ post("/api/me", { voterId })
 post("/api/difficulty", { score: currentDifficulty, voterId })
   .then((data) => {
     state = data;
-    difficultyMessageEl.textContent = "Synced with the presenter";
+    difficultyMessageEl.textContent = t("Synced with the presenter", "已同步到講者畫面");
     render();
   })
   .catch(() => {
-    difficultyMessageEl.textContent = "Drag to update automatically";
+    difficultyMessageEl.textContent = t("Drag to update automatically", "拖曳後會自動更新");
   });
 connect();
 
@@ -440,6 +497,9 @@ function applyConfig(nextConfig) {
   });
   document.querySelectorAll("[data-config-href='deckUrl']").forEach((element) => {
     element.href = nextConfig.deckUrl;
+  });
+  document.querySelectorAll("[data-event-dashboard]").forEach((element) => {
+    element.href = eventPage("/dashboard/");
   });
   document.documentElement.style.setProperty("--forest", nextConfig.theme.background);
   document.documentElement.style.setProperty("--clay", nextConfig.theme.highlight);
