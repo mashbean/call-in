@@ -43,8 +43,9 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentJs, /isHostedPdf\(deckUrl\)/);
   assert.match(presentJs, /deckFrame\.removeAttribute\("sandbox"\)/);
   assert.match(presentJs, /parsed\.pathname === `\$\{eventContext\.apiBase\}\/deck\.pdf`/);
+  assert.match(presentJs, /new ResizeObserver\(syncToolbarPeekPosition\)/);
   assert.match(presentJs, /toolbar-collapsed/);
-  assert.match(presentCss, /right:14px/);
+  assert.match(presentCss, /--dashboard-pane-width/);
   assert.doesNotMatch(presentCss, /left:50%/);
   assert.match(presentCss, /@media \(max-width: 1024px\)/);
   assert.match(presentCss, /@media \(max-width: 720px\)/);

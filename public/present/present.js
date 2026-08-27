@@ -15,6 +15,7 @@ const toolbarToggle = document.querySelector("[data-toolbar-toggle]");
 const toolbarPeek = document.querySelector("[data-toolbar-peek]");
 const toolbarPeekLabel = document.querySelector("[data-toolbar-peek-label]");
 const embedNote = document.querySelector("[data-embed-note]");
+const dashboardPane = document.querySelector(".dashboard-pane");
 const english = config.locale?.toLowerCase().startsWith("en");
 const labels = english
   ? { presenter: "Presenter", loading: "Loading slides…", loaded: "Slide load requested", open: "Open deck", audience: "Audience", moderate: "Moderate", hideDashboard: "Hide responses", showDashboard: "Show responses", fullscreen: "Fullscreen", hideToolbar: "Hide toolbar", showToolbar: "Show presenter toolbar", toolbar: "Toolbar" }
@@ -47,6 +48,8 @@ toolbarPeek.title = labels.showToolbar;
 toolbarPeekLabel.textContent = labels.toolbar;
 deckFrame.src = deckUrl;
 openDeck.href = deckUrl;
+syncToolbarPeekPosition();
+new ResizeObserver(syncToolbarPeekPosition).observe(dashboardPane);
 deckFrame.addEventListener("load", () => {
   status.textContent = labels.loaded;
 });
@@ -89,6 +92,10 @@ function isHostedPdf(value) {
   } catch {
     return false;
   }
+}
+
+function syncToolbarPeekPosition() {
+  document.documentElement.style.setProperty("--dashboard-pane-width", `${dashboardPane.getBoundingClientRect().width}px`);
 }
 
 setToolbarCollapsed(sessionStorage.getItem("call-in-toolbar-collapsed") === "true");
