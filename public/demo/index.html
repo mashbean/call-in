@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#050b17" />
+    <link rel="icon" type="image/svg+xml" href="/brand/call-in-mark.svg" />
+    <title>Call-in 常駐 Demo</title>
+    <link rel="stylesheet" href="/demo/demo.css" />
+  </head>
+  <body data-locale="zh">
+    <header class="demo-toolbar">
+      <a class="demo-brand" href="/"><img src="/brand/call-in-mark.svg" alt="" /><span><em>Call-in</em><b>常駐 Demo</b></span></a>
+      <div class="demo-state"><i></i><span>展示模式・不記錄資料</span></div>
+      <nav aria-label="Demo 工具">
+        <a class="toolbar-primary" href="/#create">換上我的簡報</a>
+        <a href="/en/demo/" lang="en">EN</a>
+        <button type="button" data-fullscreen>全螢幕</button>
+      </nav>
+    </header>
+    <main class="demo-layout">
+      <section class="deck-pane" aria-label="範例簡報">
+        <iframe src="https://mashbean.net/decks/isf-0427/" title="Call-in 範例簡報" allow="fullscreen; autoplay" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </section>
+      <aside class="response-pane" aria-label="展示用現場回應">
+        <div class="response-head"><div><small>CALL-IN DEMO</small><h1>範例分享・現場叩應</h1></div><span class="demo-badge">展示資料</span></div>
+        <section class="response-card difficulty-card">
+          <div class="card-label"><span>理解難度</span><small>點一下試試看</small></div>
+          <h2 data-difficulty-label>剛剛好</h2>
+          <svg class="curve" viewBox="0 0 260 92" role="img" aria-label="理解難度呈鐘型分布"><defs><linearGradient id="demo-curve" x1="0" x2="1"><stop stop-color="#8657ff"/><stop offset="1" stop-color="#35dcff"/></linearGradient></defs><path d="M5 82 C58 82 74 10 130 10 C186 10 202 82 255 82" fill="none" stroke="url(#demo-curve)" stroke-width="6" stroke-linecap="round"/></svg>
+          <div class="difficulty-options" role="group" aria-label="選擇理解難度"><button type="button" data-difficulty="太簡單">1<span>太簡單</span></button><button type="button" data-difficulty="容易">2<span>容易</span></button><button class="active" type="button" data-difficulty="剛剛好">3<span>剛好</span></button><button type="button" data-difficulty="有點難">4<span>有點難</span></button><button type="button" data-difficulty="跟丟了">5<span>跟丟</span></button></div>
+        </section>
+        <section class="response-card">
+          <div class="card-label"><span>即時反應</span><small>只會在這個分頁增加</small></div>
+          <div class="reaction-grid"><button type="button" data-reaction><span>👏</span><b>12</b><small>說得好</small></button><button type="button" data-reaction><span>💡</span><b>8</b><small>有收穫</small></button><button type="button" data-reaction><span>❤️</span><b>6</b><small>有共鳴</small></button><button type="button" data-reaction><span>🤔</span><b>3</b><small>等我一下</small></button></div>
+        </section>
+        <section class="response-card question-card">
+          <div class="card-label"><span>問題池</span><small>本機展示</small></div>
+          <div class="demo-question" data-demo-question>這個方法要怎麼用在我的場景？</div>
+          <form data-demo-question-form><label for="demo-question" class="sr-only">輸入展示問題</label><input id="demo-question" maxlength="120" placeholder="寫下一個問題…" /><button type="submit">加入</button></form>
+        </section>
+        <p class="privacy-note">這個常駐 Demo 不會建立活動或送出資料；重新整理後會回到預設展示內容。</p>
+      </aside>
+    </main>
+    <script type="module" src="/demo/demo.js"></script>
+  </body>
+</html>

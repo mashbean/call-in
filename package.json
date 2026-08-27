@@ -1,6 +1,6 @@
 {
   "name": "@mashbean/call-in",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Call-in for your slides: prompt-ready realtime audience response",
   "type": "module",
   "license": "Apache-2.0",

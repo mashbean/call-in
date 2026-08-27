@@ -65,8 +65,6 @@
       <section class="try-section" id="try">
         <div class="try-inner">
           <div class="try-heading"><div><div class="eyebrow">直接試試看</div><h2>這就是你的<br />下一場分享。</h2></div><p>先看看 Call-in 怎麼把簡報和現場回應放在一起。點一下 Demo 裡的簡報，就能直接換上自己的 PDF 或簡報網址。</p></div>
-          <div class="demo-example" data-copy-scope><div><span>手邊沒有簡報？</span><strong>複製這份公開簡報網址，再貼到「貼上網址」試試看。</strong><code data-copy-value>https://mashbean.net/decks/isf-0427/</code></div><button class="button small" type="button" data-copy-text data-copied="已複製；點 Demo 後貼上" data-failed="請選取網址複製">複製範例網址</button></div>
-
           <div class="demo-shell" data-demo-shell>
             <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><span>Call-in · Presenter demo</span><span class="live-pulse">● LIVE</span></div>
             <div class="demo-stage">
@@ -84,6 +82,8 @@
               </aside>
             </div>
           </div>
+
+          <div class="demo-launch"><div><span>手邊沒有簡報？</span><strong>先進入常駐 Demo，直接看看完整講者畫面。</strong><p>範例簡報與回應都是展示資料，不會建立活動，也不會記錄你的操作。</p></div><a class="button demo-launch-button" href="/demo/" target="_blank" rel="noreferrer">直接進 Demo <span aria-hidden="true">↗</span></a></div>
 
           <section class="creator-shell" id="create" data-create-panel hidden>
             <div class="creator-topline"><div><span>換上你的簡報</span><h3>建立一場叩應</h3><p>不用註冊，也不用離開這個頁面。</p></div><button class="quiet-button" type="button" data-close-creator>返回 Demo</button></div>
@@ -128,7 +128,7 @@
         <div class="principles">
           <article class="principle"><div class="icon" aria-hidden="true">⌛</div><h3>簡報會消滅</h3><p>上傳的 PDF 只為本場活動暫存，活動七天後自動刪除。Call-in 不拿簡報做模型訓練，也不主張任何著作權；著作權仍屬於你。</p></article>
           <article class="principle"><div class="icon" aria-hidden="true">◎</div><h3>回應會被記錄</h3><p>透過 call-in.mashbean.net 建立的活動會記錄匿名群眾回應，用於維運並改善專案；活動、簡報與回應資料會在七天後一起刪除。請勿輸入敏感或機密資料。</p></article>
-          <article class="principle principle-host"><div class="icon" aria-hidden="true">⌂</div><h3>也可以完全自己託管</h3><p>Call-in 是開源軟體。若希望簡報與回應只經過自己的服務，可以從原始碼部署一套獨立的 Call-in。</p><a class="source-link" href="https://github.com/mashbean/call-in" target="_blank" rel="noreferrer">查看原始碼 ↗</a><div class="mini-prompt" data-copy-scope><code data-copy-value>請從 https://github.com/mashbean/call-in 取得原始碼，閱讀 README 與 wrangler.jsonc，將一套獨立的 Call-in 服務部署到我的 Cloudflare 帳號。請不要覆寫既有 Worker、Durable Objects 或網域；先執行測試，部署後回傳公開網址、必要設定與日後更新方式。若需要登入、建立 API Token 或綁定自訂網域，請停下來清楚告訴我需要完成的步驟。</code><button class="button small" type="button" data-copy-text data-copied="已複製自架 Prompt" data-failed="請選取 Prompt 複製">複製自架 Prompt</button></div></article>
+          <article class="principle principle-host"><div class="icon" aria-hidden="true">⌂</div><div class="host-copy"><h3>也可以完全自己託管</h3><p>從開源程式部署獨立服務，讓簡報與回應只經過你自己的 Cloudflare 帳號。</p></div><div class="host-actions"><a class="button source-button" href="https://github.com/mashbean/call-in" target="_blank" rel="noreferrer">查看原始碼 <span aria-hidden="true">↗</span></a><details class="host-prompt" data-copy-scope><summary>交給 Agent 部署 <span aria-hidden="true">＋</span></summary><div class="host-prompt-body"><code data-copy-value>請從 https://github.com/mashbean/call-in 取得原始碼，閱讀 README 與 wrangler.jsonc，將一套獨立的 Call-in 服務部署到我的 Cloudflare 帳號。請不要覆寫既有 Worker、Durable Objects 或網域；先執行測試，部署後回傳公開網址、必要設定與日後更新方式。若需要登入、建立 API Token 或綁定自訂網域，請停下來清楚告訴我需要完成的步驟。</code><button class="button small" type="button" data-copy-text data-copied="已複製自架 Prompt" data-failed="請選取 Prompt 複製">複製 Prompt</button></div></details></div></article>
         </div>
         <aside class="use-policy" id="acceptable-use"><strong>使用規則</strong><p>若上傳的簡報或提供的網址涉及違法、侵害著作權或隱私、詐騙、仇恨或騷擾、冒用、惡意程式，或其他可能傷害他人與服務安全的內容，mashbean 有權不經事前通知，直接刪除該簡報、活動與互動頁面。</p></aside>
       </section>

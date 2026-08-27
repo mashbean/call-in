@@ -23,7 +23,7 @@ No account, repository, or Cloudflare setup is required for the hosted flow.
 2. Upload a PDF or paste the deck URL, then name the event on the same page.
 3. Open **Presenter view** and show the audience QR code.
 
-No deck at hand? Copy the public sample deck URL `https://mashbean.net/decks/isf-0427/` from the demo section and paste it under **Paste URL**.
+No deck at hand? Open the permanent, non-recording [presenter demo](https://call-in.mashbean.net/en/demo/) below the landing-page preview. It uses the public sample deck with display responses, creates no event, and sends no interaction data.
 
 The presenter toolbar and response panel can both be hidden. Uploaded PDFs open in a focused one-page viewer that fits each slide to the available stage; use the on-screen controls, arrow/Page Up/Page Down keys, Space, Home/End, or a horizontal swipe to move through the deck. Uploaded decks, event data, and audience responses expire after seven days.
 

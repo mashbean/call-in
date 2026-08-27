@@ -19,6 +19,10 @@ const englishLandingHtml = await readFile(new URL("../public/en/index.html", imp
 const landingJs = await readFile(new URL("../public/landing/landing.js", import.meta.url), "utf8");
 const landingCss = await readFile(new URL("../public/landing/landing.css", import.meta.url), "utf8");
 const creatorJs = await readFile(new URL("../public/new/new.js", import.meta.url), "utf8");
+const demoHtml = await readFile(new URL("../public/demo/index.html", import.meta.url), "utf8");
+const englishDemoHtml = await readFile(new URL("../public/en/demo/index.html", import.meta.url), "utf8");
+const demoJs = await readFile(new URL("../public/demo/demo.js", import.meta.url), "utf8");
+const demoCss = await readFile(new URL("../public/demo/demo.css", import.meta.url), "utf8");
 
 test("setup wizard keeps the admin token session-scoped and writes protected config", () => {
   assert.match(setupHtml, /lang="zh-Hant-TW"/);
@@ -93,15 +97,19 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.doesNotMatch(landingHtml, />CALL-IN</);
   assert.match(landingHtml, /https:\/\/buymeacoffee\.com\/mashbean/);
   assert.match(landingHtml, /請作者喝杯咖啡/);
-  assert.match(landingHtml, /https:\/\/mashbean\.net\/decks\/isf-0427\//);
-  assert.match(landingHtml, /複製範例網址/);
+  assert.match(landingHtml, /href="\/demo\/"/);
+  assert.match(landingHtml, /直接進 Demo/);
+  assert.doesNotMatch(landingHtml, /複製範例網址/);
   assert.match(landingHtml, /https:\/\/github\.com\/mashbean\/call-in/);
-  assert.match(landingHtml, /複製自架 Prompt/);
+  assert.match(landingHtml, /交給 Agent 部署/);
+  assert.match(landingHtml, /class="host-prompt"/);
   assert.match(landingHtml, /mashbean 有權不經事前通知/);
   assert.match(englishLandingHtml, /https:\/\/buymeacoffee\.com\/mashbean/);
   assert.match(englishLandingHtml, /Buy me a coffee/);
-  assert.match(englishLandingHtml, /Copy sample URL/);
-  assert.match(englishLandingHtml, /Copy self-host prompt/);
+  assert.match(englishLandingHtml, /href="\/en\/demo\/"/);
+  assert.match(englishLandingHtml, /Enter demo/);
+  assert.doesNotMatch(englishLandingHtml, /Copy sample URL/);
+  assert.match(englishLandingHtml, /Ask an agent to deploy/);
   assert.match(englishLandingHtml, /immediately and without prior notice/);
   assert.doesNotMatch(landingHtml, /Sponsors 即將開放|GitHub Sponsors 收款通道正在準備/);
   assert.doesNotMatch(englishLandingHtml, /Sponsors coming soon|GitHub Sponsors payment channel is being prepared/);
@@ -116,4 +124,12 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.match(landingHtml, /建立者可直接開啟/);
   assert.match(landingHtml, /複製主持私密連結/);
   assert.match(landingCss, /@media \(max-width: 620px\)/);
+  assert.match(landingCss, /\.principle-host \{ grid-column:1 \/ -1;/);
+  assert.match(landingCss, /\.demo-launch/);
+  assert.match(demoHtml, /https:\/\/mashbean\.net\/decks\/isf-0427\//);
+  assert.match(demoHtml, /展示模式・不記錄資料/);
+  assert.match(englishDemoHtml, /Display mode · no data recorded/);
+  assert.match(demoJs, /data-difficulty/);
+  assert.match(demoJs, /data-reaction/);
+  assert.match(demoCss, /\.demo-layout/);
 });
