@@ -46,7 +46,7 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentJs, /\["http:", "https:"\]/);
   assert.match(presentJs, /!parsed\.username && !parsed\.password/);
   assert.match(presentJs, /isHostedPdf\(deckUrl\)/);
-  assert.match(presentJs, /\/present\/pdf-viewer\.html\?file=/);
+  assert.match(presentJs, /\/present\/pdf-viewer\?file=/);
   assert.match(presentJs, /call-in:pdf-page/);
   assert.match(presentJs, /parsed\.pathname === `\$\{eventContext\.apiBase\}\/deck\.pdf`/);
   assert.match(presentJs, /new ResizeObserver\(syncToolbarPeekPosition\)/);

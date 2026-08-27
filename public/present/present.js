@@ -44,7 +44,7 @@ toolbarPeek.setAttribute("aria-label", labels.showToolbar);
 toolbarPeek.title = labels.showToolbar;
 toolbarPeekLabel.textContent = labels.toolbar;
 deckFrame.src = hostedPdf
-  ? `/present/pdf-viewer.html?file=${encodeURIComponent(deckUrl)}&lang=${english ? "en" : "zh"}`
+  ? `/present/pdf-viewer?file=${encodeURIComponent(deckUrl)}&lang=${english ? "en" : "zh"}`
   : deckUrl;
 openDeck.href = deckUrl;
 syncToolbarPeekPosition();
