@@ -45,6 +45,7 @@ test("setup wizard keeps the admin token session-scoped and writes protected con
 test("presenter view loads a safe deck URL and exposes responsive dashboard controls", () => {
   assert.match(presentHtml, /lang="zh-Hant-TW"/);
   assert.match(presentHtml, /data-deck-frame/);
+  assert.match(presentHtml, /class="present-brand" data-product-home href="\/"/);
   assert.match(presentHtml, /data-dashboard-toggle/);
   assert.match(presentHtml, /class="dashboard-toggle"/);
   assert.match(presentHtml, /aria-controls="present-dashboard"/);
@@ -55,6 +56,8 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentHtml, /src="\/dashboard\/"/);
   assert.doesNotMatch(presentHtml, /data-audience-qr/);
   assert.match(presentJs, /fetch\(eventApi\("\/config"\)\)/);
+  assert.match(presentJs, /productHome\.href = english \? "\/en\/" : "\/"/);
+  assert.match(presentJs, /productHome\.setAttribute\("aria-label", labels\.home\)/);
   assert.match(presentJs, /\["http:", "https:"\]/);
   assert.match(presentJs, /!parsed\.username && !parsed\.password/);
   assert.match(presentJs, /isHostedPdf\(deckUrl\)/);
@@ -69,6 +72,8 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentCss, /right:calc\(var\(--dashboard-pane-width/);
   assert.doesNotMatch(presentCss, /left:50%/);
   assert.match(presentCss, /font-family:inherit; font-size:11px; font-weight:800; line-height:1/);
+  assert.match(presentCss, /\.present-toolbar nav a,/);
+  assert.match(presentCss, /\.present-brand:focus-visible/);
   assert.doesNotMatch(presentCss, /font:\s*800 11px\/1 inherit/);
   assert.match(presentCss, /@media \(max-width: 1024px\)/);
   assert.match(presentCss, /@media \(max-width: 720px\)/);

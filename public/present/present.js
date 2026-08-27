@@ -8,6 +8,7 @@ const params = new URLSearchParams(location.search);
 const requestedDeck = params.get("deck");
 const deckUrl = validDeckUrl(requestedDeck) ? requestedDeck : config.deckUrl;
 const deckFrame = document.querySelector("[data-deck-frame]");
+const productHome = document.querySelector("[data-product-home]");
 const openDeck = document.querySelector("[data-open-deck]");
 const status = document.querySelector("[data-present-status]");
 const toggle = document.querySelector("[data-dashboard-toggle]");
@@ -19,8 +20,8 @@ const embedNote = document.querySelector("[data-embed-note]");
 const dashboardPane = document.querySelector(".dashboard-pane");
 const english = config.locale?.toLowerCase().startsWith("en");
 const labels = english
-  ? { presenter: "Presenter", loading: "Loading slides…", loaded: "Slide load requested", pdfPage: (page, pages) => `PDF ${page} / ${pages}`, open: "Open deck", audience: "Audience", moderate: "Moderate", hideDashboard: "Hide responses", showDashboard: "Show responses", fullscreen: "Fullscreen", hideToolbar: "Hide toolbar", showToolbar: "Show presenter toolbar", toolbar: "Toolbar" }
-  : { presenter: "講者頁", loading: "正在載入簡報…", loaded: "已送出簡報載入要求", pdfPage: (page, pages) => `PDF ${page} / ${pages}`, open: "另開簡報", audience: "觀眾頁", moderate: "主持", hideDashboard: "隱藏互動", showDashboard: "顯示互動", fullscreen: "全螢幕", hideToolbar: "收起工具列", showToolbar: "顯示講者工具列", toolbar: "工具列" };
+  ? { presenter: "Presenter", home: "Call-in product home", loading: "Loading slides…", loaded: "Slide load requested", pdfPage: (page, pages) => `PDF ${page} / ${pages}`, open: "Open deck", audience: "Audience", moderate: "Moderate", hideDashboard: "Hide responses", showDashboard: "Show responses", fullscreen: "Fullscreen", hideToolbar: "Hide toolbar", showToolbar: "Show presenter toolbar", toolbar: "Toolbar" }
+  : { presenter: "講者頁", home: "Call-in 產品主頁", loading: "正在載入簡報…", loaded: "已送出簡報載入要求", pdfPage: (page, pages) => `PDF ${page} / ${pages}`, open: "另開簡報", audience: "觀眾頁", moderate: "主持", hideDashboard: "隱藏互動", showDashboard: "顯示互動", fullscreen: "全螢幕", hideToolbar: "收起工具列", showToolbar: "顯示講者工具列", toolbar: "工具列" };
 
 const hostedPdf = isHostedPdf(deckUrl);
 if (hostedPdf) {
@@ -33,6 +34,8 @@ document.querySelector("[data-dashboard-frame]").src = eventPage("/dashboard/");
 
 document.documentElement.lang = english ? "en" : "zh-Hant-TW";
 document.title = `${config.title} · ${labels.presenter}`;
+productHome.href = english ? "/en/" : "/";
+productHome.setAttribute("aria-label", labels.home);
 document.querySelector("[data-event-title]").textContent = config.title;
 status.textContent = labels.loading;
 openDeck.textContent = labels.open;

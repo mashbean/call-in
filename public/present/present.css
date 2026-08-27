@@ -3,7 +3,8 @@ html,
 body { width: 100%; height: 100%; margin: 0; }
 .present-page { overflow: hidden; color: #f6f8ff; background: #030711; font-family: Inter, "Noto Sans TC", system-ui, sans-serif; }
 .present-toolbar { position: fixed; inset: 0 0 auto; z-index: 10; display: grid; grid-template-columns: minmax(170px, 1fr) auto auto; gap: 14px; align-items: center; min-height: 66px; padding: 8px 14px 8px 18px; border-bottom: 1px solid #35d9ff38; background: #07101ff2; box-shadow: 0 10px 34px #0008; backdrop-filter: blur(16px); transition: transform .24s ease, opacity .2s ease; }
-.present-brand { display:flex; align-items:center; gap:8px; min-width: 0; }
+.present-brand { display:flex; align-items:center; gap:8px; min-width:0; border-radius:10px; color:inherit; text-decoration:none; }
+.present-brand:focus-visible { outline:2px solid #b9f24a; outline-offset:4px; }
 .present-brand > img { width:30px; height:30px; flex:none; object-fit:contain; }
 .present-brand > span { min-width:0; }
 .present-brand em,
@@ -12,12 +13,12 @@ body { width: 100%; height: 100%; margin: 0; }
 .present-brand b { margin-top: 6px; font-size: 15px; }
 .present-status { color: #91a2c5; font: 750 11px/1.2 ui-monospace, monospace; }
 .present-toolbar nav { display: flex; gap: 7px; }
-.present-toolbar a,
-.present-toolbar button { display:inline-flex; align-items:center; justify-content:center; min-height:38px; border:1px solid #35d9ff4d; border-radius:999px; padding:9px 12px; background:#0c1931; color:#d8e1f5; font-family:inherit; font-size:11px; font-weight:800; line-height:1; white-space:nowrap; text-decoration:none; cursor:pointer; }
-.present-toolbar a:hover,
-.present-toolbar button:hover,
-.present-toolbar a:focus-visible,
-.present-toolbar button:focus-visible { outline: 2px solid #b9f24a; outline-offset: 2px; }
+.present-toolbar nav a,
+.present-toolbar nav button { display:inline-flex; align-items:center; justify-content:center; min-height:38px; border:1px solid #35d9ff4d; border-radius:999px; padding:9px 12px; background:#0c1931; color:#d8e1f5; font-family:inherit; font-size:11px; font-weight:800; line-height:1; white-space:nowrap; text-decoration:none; cursor:pointer; }
+.present-toolbar nav a:hover,
+.present-toolbar nav button:hover,
+.present-toolbar nav a:focus-visible,
+.present-toolbar nav button:focus-visible { outline: 2px solid #b9f24a; outline-offset: 2px; }
 .toolbar-peek { position:fixed; z-index:12; top:10px; right:calc(var(--dashboard-pane-width, 0px) + 14px); display:none; grid-template-columns:auto auto; align-items:center; gap:7px; min-height:38px; margin:0; border:1px solid #35d9ff66; border-radius:999px; padding:8px 13px; background:#07101fe8; color:#d8e1f5; box-shadow:0 8px 28px #0009; font:800 11px/1 Inter,"Noto Sans TC",system-ui,sans-serif; cursor:pointer; backdrop-filter:blur(14px); }
 .toolbar-peek svg { width:14px; height:14px; fill:none; stroke:#b9f24a; stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round; }
 .toolbar-peek:focus-visible,.toolbar-peek:hover { outline:2px solid #b9f24a; outline-offset:2px; }
@@ -48,8 +49,8 @@ body { width: 100%; height: 100%; margin: 0; }
   .present-toolbar { grid-template-columns: minmax(110px, 1fr) auto; min-height: 58px; padding-inline: 10px; }
   .present-toolbar nav a[data-audience-link],
   .present-toolbar nav button[data-fullscreen] { display: none; }
-  .present-toolbar a,
-  .present-toolbar button { min-height: 36px; padding: 8px 10px; }
+  .present-toolbar nav a,
+  .present-toolbar nav button { min-height: 36px; padding: 8px 10px; }
   .present-stage { inset-block-start: 58px; grid-template-columns: 1fr; }
   .deck-pane { display: none; }
   .dashboard-pane { border-left: 0; }
