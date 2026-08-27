@@ -1,4 +1,4 @@
-# Call-in · 簡報叩應
+# Call-in · 簡單叩應
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./public/brand/call-in-mark-dark.png">

@@ -91,7 +91,7 @@ describe("Call-in Worker", () => {
     const audiencePage = await SELF.fetch(created.audienceUrl);
     const presenterPage = await SELF.fetch(created.presenterUrl);
     expect(audiencePage.status).toBe(200);
-    expect(await audiencePage.text()).toContain("Call-in 簡報叩應");
+    expect(await audiencePage.text()).toContain("Call-in 簡單叩應");
     expect(presenterPage.status).toBe(200);
     expect(await presenterPage.text()).toContain("Call-in 講者頁");
 
