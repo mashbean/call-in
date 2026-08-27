@@ -1,5 +1,7 @@
 import { difficultyLabels, renderDifficultyChart, setDifficultyLabels } from "../difficulty.js";
 
+document.documentElement.classList.toggle("embedded-dashboard", window.self !== window.top);
+
 const apiBase = "/api";
 const config = await fetch("/event.config.json").then((response) => response.json());
 const reactionTimes = new Map();

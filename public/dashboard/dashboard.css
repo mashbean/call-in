@@ -349,6 +349,12 @@ body.dashboard-page {
   box-shadow: 0 12px 36px #020612a8;
   backdrop-filter: blur(12px);
 }
+html.embedded-dashboard .dashboard-page {
+  padding-bottom: 124px;
+}
+html.embedded-dashboard .dashboard-open {
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 52px);
+}
 .reaction-stage {
   position: fixed;
   inset: 0;
