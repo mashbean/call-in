@@ -17,13 +17,13 @@ export { LiveSession } from "./live-session";
 const hostedEventIdPattern = /^[a-f0-9]{32}$/;
 const hostedEventLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 const maxHostedPdfBytes = 20 * 1024 * 1024;
-const permanentDemoResetMs = 60 * 60 * 1000;
 const permanentDemoCreatedAt = Date.UTC(2026, 7, 27);
+const permanentDemoSeedVersion = "2026-08-27-v2";
 
 type SessionApiContext = {
   stub: DurableObjectStub<LiveSession>;
   hostedEventId?: string;
-  demo?: boolean;
+  demoLocale?: "zh-Hant-TW" | "en";
 };
 
 export default {
@@ -58,18 +58,19 @@ export default {
       }
 
       if (url.pathname.startsWith("/api/demo/")) {
-        const stub = env.LIVE_SESSION.getByName("demo:permanent");
+        const demoApi = parseDemoApi(url);
+        if (!demoApi) return withCors(jsonError("not found", 404), request, env);
+        const stub = env.LIVE_SESSION.getByName(`demo:permanent:${demoApi.locale}`);
         await stub.ensureDemoSession(
-          permanentDemoConfig("zh-Hant-TW"),
+          permanentDemoConfig(demoApi.locale),
           Date.now(),
-          permanentDemoResetMs,
+          nextTaipeiMidnight(Date.now()),
+          permanentDemoSeedVersion,
         );
-        return await handleSessionApi(
-          request,
-          env,
-          url.pathname.slice("/api/demo".length),
-          { stub, demo: true },
-        );
+        return await handleSessionApi(request, env, demoApi.path, {
+          stub,
+          demoLocale: demoApi.locale,
+        });
       }
 
       const hostedApi = parseHostedApi(url.pathname);
@@ -204,19 +205,18 @@ async function handleSessionApi(
   path: string,
   context: SessionApiContext,
 ): Promise<Response> {
-  const { stub, hostedEventId, demo } = context;
+  const { stub, hostedEventId, demoLocale } = context;
   const url = new URL(request.url);
   if (path === "/config" && request.method === "GET") {
-    const config = demo
-      ? permanentDemoConfig(normalizeHostedLocale(url.searchParams.get("locale") || ""))
+    const config = demoLocale
+      ? permanentDemoConfig(demoLocale)
       : await stub.eventConfig();
     return withCors(Response.json(config), request, env);
   }
   if (path === "/qr.svg" && request.method === "GET") {
-    const demoLocale = normalizeHostedLocale(url.searchParams.get("locale") || "");
     const target = hostedEventId
       ? `${url.origin}/e/${hostedEventId}/`
-      : demo
+      : demoLocale
         ? `${url.origin}/${demoLocale === "en" ? "en/" : ""}demo/audience/`
         : `${url.origin}/`;
     const svg = await QRCode.toString(target, {
@@ -523,6 +523,25 @@ function permanentDemoConfig(locale: "zh-Hant-TW" | "en"): PublicEventConfig {
     permanentDemoCreatedAt,
     locale,
   );
+}
+
+function parseDemoApi(url: URL): { locale: "zh-Hant-TW" | "en"; path: string } | null {
+  const localized = url.pathname.match(/^\/api\/demo\/(zh|en)(\/.*)$/);
+  if (localized) {
+    return { locale: localized[1] === "en" ? "en" : "zh-Hant-TW", path: localized[2]! };
+  }
+  const legacyPath = url.pathname.slice("/api/demo".length);
+  if (!legacyPath.startsWith("/")) return null;
+  return {
+    locale: normalizeHostedLocale(url.searchParams.get("locale") || ""),
+    path: legacyPath,
+  };
+}
+
+function nextTaipeiMidnight(now: number): number {
+  const taipeiOffsetMs = 8 * 60 * 60 * 1000;
+  const dayMs = 24 * 60 * 60 * 1000;
+  return (Math.floor((now + taipeiOffsetMs) / dayMs) + 1) * dayMs - taipeiOffsetMs;
 }
 
 function creatorRedirectTarget(pathname: string): string | null {

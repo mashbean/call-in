@@ -31,10 +31,8 @@ describe("Call-in Worker", () => {
     expect(dashboardPage.status).toBe(200);
     expect(await dashboardPage.text()).toContain("data-qr-open");
 
-    const zhConfigResponse = await SELF.fetch(
-      "https://example.com/api/demo/config?locale=zh-Hant-TW",
-    );
-    const enConfigResponse = await SELF.fetch("https://example.com/api/demo/config?locale=en");
+    const zhConfigResponse = await SELF.fetch("https://example.com/api/demo/zh/config");
+    const enConfigResponse = await SELF.fetch("https://example.com/api/demo/en/config");
     const zhConfig = await zhConfigResponse.json<{
       eventId: string;
       title: string;
@@ -46,26 +44,54 @@ describe("Call-in Worker", () => {
     expect(enConfig).toMatchObject({ eventId: zhConfig.eventId, title: "Call-in permanent demo", locale: "en" });
 
     const voterId = crypto.randomUUID();
-    const difficulty = await SELF.fetch("https://example.com/api/demo/difficulty", {
+    const initialZhState = await SELF.fetch("https://example.com/api/demo/zh/state").then((response) =>
+      response.json<{ difficulty: { counts: number[]; total: number }; questions: Array<{ nickname: string }> }>(),
+    );
+    const initialEnState = await SELF.fetch("https://example.com/api/demo/en/state").then((response) =>
+      response.json<{ difficulty: { total: number }; questions: Array<{ nickname: string }> }>(),
+    );
+    expect(initialZhState.difficulty).toMatchObject({ counts: [2, 5, 29, 7, 2], total: 45 });
+    expect(initialZhState.questions).toHaveLength(6);
+    expect(initialZhState.questions.every((question) => question.nickname.startsWith("示範聽眾 #"))).toBe(true);
+    expect(initialEnState.difficulty.total).toBe(45);
+    expect(initialEnState.questions).toHaveLength(6);
+    expect(initialEnState.questions.every((question) => question.nickname.startsWith("Demo guest #"))).toBe(true);
+
+    const difficulty = await SELF.fetch("https://example.com/api/demo/zh/difficulty", {
       method: "POST",
       headers: jsonHeaders,
       body: JSON.stringify({ score: 4, voterId }),
     });
     expect(difficulty.status).toBe(200);
-    const state = await SELF.fetch("https://example.com/api/demo/state").then((response) =>
-      response.json<{ difficulty: { counts: number[]; total: number } }>(),
+    const state = await SELF.fetch("https://example.com/api/demo/zh/state").then((response) =>
+      response.json<{ difficulty: { counts: number[]; total: number }; questions: unknown[] }>(),
     );
-    expect(state.difficulty.total).toBe(1);
-    expect(state.difficulty.counts[3]).toBe(1);
+    expect(state.difficulty.total).toBe(46);
+    expect(state.difficulty.counts[3]).toBe(8);
+    expect(state.questions).toHaveLength(6);
 
-    const reaction = await SELF.fetch("https://example.com/api/demo/reaction", {
+    const reaction = await SELF.fetch("https://example.com/api/demo/zh/reaction", {
       method: "POST",
       headers: jsonHeaders,
       body: JSON.stringify({ kind: "applause", voterId }),
     });
     expect(reaction.status).toBe(200);
 
-    const qr = await SELF.fetch("https://example.com/api/demo/qr.svg?locale=zh-Hant-TW");
+    const participant = await SELF.fetch("https://example.com/api/demo/zh/participant", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ alias: "真人測試", cocVersion: zhConfig.moderation.codeOfConduct.version, voterId }),
+    });
+    expect(participant.status).toBe(200);
+    const question = await SELF.fetch("https://example.com/api/demo/zh/question", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ text: "這是真人新增的問題嗎？", lens: "clarify", difficulty: 4, voterId }),
+    });
+    expect(question.status).toBe(200);
+    expect((await question.json<{ submission: { text: string } }>()).submission.text).toBe("這是真人新增的問題嗎？");
+
+    const qr = await SELF.fetch("https://example.com/api/demo/zh/qr.svg");
     expect(qr.status).toBe(200);
     expect(qr.headers.get("content-type")).toContain("image/svg+xml");
     expect(await qr.text()).toContain("<svg");

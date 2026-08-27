@@ -5,12 +5,71 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#f7f7fb" />
     <link rel="icon" type="image/svg+xml" href="/brand/call-in-mark.svg" />
-    <meta name="description" content="Call-in 簡單叩應，讓線上分享即時收到觀眾的理解、提問與反應。上傳 PDF 或貼上簡報網址，一分鐘開始。" />
+    <link rel="apple-touch-icon" href="/brand/call-in-mark-light.png" />
+    <meta name="description" content="Call-in 簡單叩應，讓線上簡報即時收到觀眾的理解難度、提問與反應。上傳 PDF 或貼上簡報網址，一分鐘取得講者頁、觀眾 QR Code 與主持連結。" />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <link rel="canonical" href="https://call-in.mashbean.net/" />
     <link rel="alternate" hreflang="zh-Hant-TW" href="https://call-in.mashbean.net/" />
     <link rel="alternate" hreflang="en" href="https://call-in.mashbean.net/en/" />
-    <title>Call-in 簡單叩應｜讓你的分享，可以即時叩應</title>
+    <link rel="alternate" hreflang="x-default" href="https://call-in.mashbean.net/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Call-in" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" content="https://call-in.mashbean.net/" />
+    <meta property="og:title" content="Call-in 簡單叩應｜讓簡報即時收到觀眾回應" />
+    <meta property="og:description" content="上傳 PDF 或貼上簡報網址，一分鐘取得講者頁、觀眾 QR Code 與主持連結。" />
+    <meta property="og:image" content="https://call-in.mashbean.net/brand/call-in-social-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Call-in 鐘型曲線 Logo" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Call-in 簡單叩應｜讓簡報即時收到觀眾回應" />
+    <meta name="twitter:description" content="上傳 PDF 或貼上簡報網址，一分鐘開始觀眾即時叩應。" />
+    <meta name="twitter:image" content="https://call-in.mashbean.net/brand/call-in-social-card.png" />
+    <title>Call-in 簡單叩應｜PDF 簡報即時互動與觀眾 QR Code</title>
     <link rel="stylesheet" href="/landing/landing.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://call-in.mashbean.net/#website",
+            "url": "https://call-in.mashbean.net/",
+            "name": "Call-in",
+            "alternateName": "簡單叩應",
+            "inLanguage": ["zh-Hant-TW", "en"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://call-in.mashbean.net/#software",
+            "name": "Call-in",
+            "url": "https://call-in.mashbean.net/",
+            "image": "https://call-in.mashbean.net/brand/call-in-social-card.png",
+            "description": "把既有 PDF 或網頁簡報與觀眾理解難度、即時反應、提問和主持工具放在同一個講者畫面。",
+            "applicationCategory": "PresentationApplication",
+            "operatingSystem": "Web",
+            "isAccessibleForFree": true,
+            "inLanguage": ["zh-Hant-TW", "en"],
+            "featureList": ["PDF 簡報上傳", "觀眾 QR Code", "即時理解難度", "即時反應", "觀眾提問", "主持與內容管理"],
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "sameAs": ["https://github.com/mashbean/call-in"]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://call-in.mashbean.net/#faq",
+            "mainEntity": [
+              { "@type": "Question", "name": "觀眾需要安裝 App 嗎？", "acceptedAnswer": { "@type": "Answer", "text": "不用。觀眾用手機瀏覽器掃描 QR Code，就能回報理解難度、送出反應和提問。" } },
+              { "@type": "Question", "name": "可以沿用原本的簡報嗎？", "acceptedAnswer": { "@type": "Answer", "text": "可以。上傳 20MB 以內的 PDF，或貼上公開的 Google Slides、Canva 與網頁簡報網址即可。" } },
+              { "@type": "Question", "name": "Call-in 會保存簡報與回應多久？", "acceptedAnswer": { "@type": "Answer", "text": "透過託管服務建立的活動、PDF 與匿名群眾回應會在七天後一起刪除；公開 Demo 則每日重置。" } },
+              { "@type": "Question", "name": "Call-in 可以自己託管嗎？", "acceptedAnswer": { "@type": "Answer", "text": "可以。Call-in 是 Apache-2.0 授權的開源軟體，可從 GitHub 部署到自己的 Cloudflare 帳號。" } }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <header class="site-header">
@@ -83,10 +142,13 @@
             </div>
           </div>
 
-          <div class="demo-launch"><div><span>手邊沒有簡報？</span><strong>先進入常駐 Demo，直接看看完整講者畫面。</strong><p>範例簡報與回應都是展示資料，不會建立活動，也不會記錄你的操作。</p></div><a class="button demo-launch-button" href="/demo/" target="_blank" rel="noreferrer">直接進 Demo <span aria-hidden="true">↗</span></a></div>
+          <div class="demo-launch">
+            <div class="demo-launch-copy"><span>手邊沒有簡報？</span><strong>進入真的互動現場，不只是看靜態預覽。</strong><p>Demo 預先放入示範資料；你掃 QR 後送出的難度、反應與留言也會即時加入，並於每日重置。</p><ul class="demo-launch-stats" aria-label="Demo 基準資料"><li><b>45</b> 筆難度</li><li><b>6</b> 筆示範留言</li><li>真人互動會保留到每日重置</li></ul></div>
+            <a class="button demo-launch-button" href="/demo/" target="_blank" rel="noreferrer">直接進 Demo <span aria-hidden="true">↗</span></a>
+          </div>
 
           <section class="creator-shell" id="create" data-create-panel hidden>
-            <div class="creator-topline"><div><span>換上你的簡報</span><h3>建立一場叩應</h3><p>不用註冊，也不用離開這個頁面。</p></div><button class="quiet-button" type="button" data-close-creator>返回 Demo</button></div>
+            <div class="creator-topline"><div><span>換上你的簡報</span><h3>建立一場叩應</h3><p>不用註冊，也不用離開這個頁面。</p><button class="quiet-button" type="button" data-close-creator>← 回到上方簡報預覽</button></div></div>
             <form data-create-form>
               <input type="hidden" name="locale" value="zh-Hant-TW" />
               <label>活動名稱<input name="title" maxlength="160" required placeholder="例如：AI 與公共參與" autocomplete="off" /></label>
@@ -131,6 +193,16 @@
           <article class="principle principle-host"><div class="icon" aria-hidden="true">⌂</div><div class="host-copy"><h3>也可以完全自己託管</h3><p>從開源程式部署獨立服務，讓簡報與回應只經過你自己的 Cloudflare 帳號。</p></div><div class="host-actions"><a class="button source-button" href="https://github.com/mashbean/call-in" target="_blank" rel="noreferrer">查看原始碼 <span aria-hidden="true">↗</span></a><details class="host-prompt" data-copy-scope><summary>交給 Agent 部署 <span aria-hidden="true">＋</span></summary><div class="host-prompt-body"><code data-copy-value>請從 https://github.com/mashbean/call-in 取得原始碼，閱讀 README 與 wrangler.jsonc，將一套獨立的 Call-in 服務部署到我的 Cloudflare 帳號。請不要覆寫既有 Worker、Durable Objects 或網域；先執行測試，部署後回傳公開網址、必要設定與日後更新方式。若需要登入、建立 API Token 或綁定自訂網域，請停下來清楚告訴我需要完成的步驟。</code><button class="button small" type="button" data-copy-text data-copied="已複製自架 Prompt" data-failed="請選取 Prompt 複製">複製 Prompt</button></div></details></div></article>
         </div>
         <aside class="use-policy" id="acceptable-use"><strong>使用規則</strong><p>若上傳的簡報或提供的網址涉及違法、侵害著作權或隱私、詐騙、仇恨或騷擾、冒用、惡意程式，或其他可能傷害他人與服務安全的內容，mashbean 有權不經事前通知，直接刪除該簡報、活動與互動頁面。</p></aside>
+      </section>
+
+      <section class="section faq-section" id="faq">
+        <div class="section-header"><div><div class="eyebrow">常見問題</div><h2>開始之前，<br />你可能會想問。</h2></div><p>Call-in 不取代你的簡報軟體，只替既有簡報加上一層即時觀眾回應。</p></div>
+        <div class="faq-list">
+          <details open><summary>觀眾需要安裝 App 嗎？</summary><p>不用。觀眾用手機瀏覽器掃描 QR Code，就能回報理解難度、送出反應和提問。</p></details>
+          <details><summary>可以沿用原本的簡報嗎？</summary><p>可以。上傳 20MB 以內的 PDF，或貼上公開的 Google Slides、Canva 與網頁簡報網址即可。</p></details>
+          <details><summary>Call-in 會保存簡報與回應多久？</summary><p>透過託管服務建立的活動、PDF 與匿名群眾回應會在七天後一起刪除；公開 Demo 則每日重置。</p></details>
+          <details><summary>Call-in 可以自己託管嗎？</summary><p>可以。Call-in 是 Apache-2.0 授權的開源軟體，可從 GitHub 部署到自己的 Cloudflare 帳號。</p></details>
+        </div>
       </section>
 
       <section class="section support" id="support">

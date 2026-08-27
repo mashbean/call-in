@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Call-in</title>
+  <desc id="desc">Call-in bell curve logo on a dark gradient background</desc>
+  <defs>
+    <radialGradient id="background" cx="0" cy="0" r="1" gradientTransform="translate(600 315) rotate(90) scale(520 790)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#182456" />
+      <stop offset="0.55" stop-color="#0a1027" />
+      <stop offset="1" stop-color="#050914" />
+    </radialGradient>
+    <linearGradient id="curve" x1="290" y1="402" x2="910" y2="402" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8c35ff" />
+      <stop offset="0.5" stop-color="#4c50ff" />
+      <stop offset="1" stop-color="#00cbe8" />
+    </linearGradient>
+    <filter id="glow" x="150" y="30" width="900" height="570" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="24" result="blur" />
+      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" rx="54" fill="url(#background)" />
+  <path d="M290 420C421 420 445 188 600 188s179 232 310 232" fill="none" stroke="#4937ff" stroke-opacity="0.34" stroke-width="92" stroke-linecap="round" filter="url(#glow)" />
+  <path d="M290 420C421 420 445 188 600 188s179 232 310 232" fill="none" stroke="url(#curve)" stroke-width="72" stroke-linecap="round" />
+</svg>

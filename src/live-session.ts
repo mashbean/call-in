@@ -410,25 +410,106 @@ export class LiveSession extends DurableObject<Env> {
   async ensureDemoSession(
     value: unknown,
     now: number,
-    resetAfterMs: number,
+    resetAt: number,
+    seedVersion: string,
   ): Promise<{ resetAt: number }> {
     const config = validateEventConfig(value);
     if (config.eventId !== EVENT_CONFIG.eventId) throw new Error("invalid demo eventId");
-    if (!Number.isInteger(now) || !Number.isInteger(resetAfterMs) || resetAfterMs < 60_000) {
-      throw new Error("invalid demo reset interval");
+    if (
+      !Number.isInteger(now) ||
+      !Number.isInteger(resetAt) ||
+      resetAt <= now ||
+      resetAt > now + 2 * 24 * 60 * 60 * 1000
+    ) {
+      throw new Error("invalid demo reset time");
     }
+    if (!/^[a-z0-9-]{4,64}$/i.test(seedVersion)) throw new Error("invalid demo seed version");
 
     const current = this.getEventConfig();
     if (JSON.stringify(current) !== JSON.stringify(config)) await this.updateEventConfig(config);
 
-    let resetAt = await this.ctx.storage.get<number>("demoResetAt");
-    if (!resetAt || resetAt <= now) {
+    const storedResetAt = await this.ctx.storage.get<number>("demoResetAt");
+    const storedSeedVersion = await this.ctx.storage.get<string>("demoSeedVersion");
+    if (!storedResetAt || storedResetAt <= now || storedSeedVersion !== seedVersion) {
       await this.reset();
-      resetAt = now + resetAfterMs;
+      await this.seedDemoBaseline(config, now);
       await this.ctx.storage.put("demoResetAt", resetAt);
+      await this.ctx.storage.put("demoSeedVersion", seedVersion);
       await this.scheduleNextAlarm();
+      return { resetAt };
     }
-    return { resetAt };
+    return { resetAt: storedResetAt };
+  }
+
+  private async seedDemoBaseline(config: PublicEventConfig, now: number): Promise<void> {
+    const difficultyCounts = [2, 5, 29, 7, 2];
+    let difficultyIndex = 0;
+    for (let score = 1; score <= difficultyCounts.length; score += 1) {
+      for (let count = 0; count < (difficultyCounts[score - 1] ?? 0); count += 1) {
+        this.ctx.storage.sql.exec(
+          "INSERT INTO difficulty_votes (voter_id, score, updated_at) VALUES (?, ?, ?)",
+          crypto.randomUUID(),
+          score,
+          now - (45 - difficultyIndex) * 13_000,
+        );
+        difficultyIndex += 1;
+      }
+    }
+
+    const english = config.locale.toLowerCase().startsWith("en");
+    const questions: Array<{
+      text: string;
+      lens: QuestionLens;
+      difficulty: number;
+      upvotes: number;
+    }> = english
+      ? [
+          { text: "Does the audience need to install an app to join from a phone?", lens: "clarify", difficulty: 2, upvotes: 8 },
+          { text: "Will the PDF and audience responses both disappear after seven days?", lens: "keeper", difficulty: 3, upvotes: 6 },
+          { text: "Can I hand the moderator link to another person on the event team?", lens: "clarify", difficulty: 3, upvotes: 5 },
+          { text: "What happens to responses when the venue connection is unstable?", lens: "keeper", difficulty: 4, upvotes: 4 },
+          { text: "Would this also work for a classroom or an in-person workshop?", lens: "bridge", difficulty: 2, upvotes: 7 },
+          { text: "Can audience members ask questions without showing their real names?", lens: "chorus", difficulty: 3, upvotes: 5 },
+        ]
+      : [
+          { text: "觀眾只用手機加入時，需要另外安裝 App 嗎？", lens: "clarify", difficulty: 2, upvotes: 8 },
+          { text: "PDF 與觀眾回應會在七天後一起刪除嗎？", lens: "keeper", difficulty: 3, upvotes: 6 },
+          { text: "可以把主持私密連結交給活動團隊的另一個人嗎？", lens: "clarify", difficulty: 3, upvotes: 5 },
+          { text: "現場網路不穩時，觀眾送出的回應會怎麼處理？", lens: "keeper", difficulty: 4, upvotes: 4 },
+          { text: "除了線上演講，也適合實體教室或工作坊嗎？", lens: "bridge", difficulty: 2, upvotes: 7 },
+          { text: "觀眾可以不用真名、以活動暱稱提問嗎？", lens: "chorus", difficulty: 3, upvotes: 5 },
+        ];
+
+    questions.forEach((question, index) => {
+      const questionId = crypto.randomUUID();
+      const voterId = crypto.randomUUID();
+      const createdAt = now - (questions.length - index) * 4 * 60_000;
+      const nickname = english ? `Demo guest #${index + 1}` : `示範聽眾 #${index + 1}`;
+      this.ctx.storage.sql.exec(
+        `INSERT INTO questions
+          (id, voter_id, text, nickname, lens, difficulty, created_at, visibility,
+           publish_at, moderation_reason, moderated_at, moderated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'public', NULL, NULL, NULL, NULL)`,
+        questionId,
+        voterId,
+        question.text,
+        nickname,
+        question.lens,
+        question.difficulty,
+        createdAt,
+      );
+      for (let vote = 0; vote < question.upvotes; vote += 1) {
+        this.ctx.storage.sql.exec(
+          "INSERT INTO question_votes (question_id, voter_id, created_at) VALUES (?, ?, ?)",
+          questionId,
+          crypto.randomUUID(),
+          createdAt + vote * 1_000,
+        );
+      }
+    });
+
+    this.snapshotCache = null;
+    await this.broadcastSnapshot(await this.snapshot());
   }
 
   async snapshot(): Promise<SessionSnapshot> {
@@ -1117,8 +1198,10 @@ export class LiveSession extends DurableObject<Env> {
     const now = Date.now();
     const demoResetAt = await this.ctx.storage.get<number>("demoResetAt");
     if (demoResetAt && demoResetAt <= now) {
+      const config = this.getEventConfig();
       await this.reset();
-      await this.ctx.storage.put("demoResetAt", now + 60 * 60 * 1000);
+      await this.seedDemoBaseline(config, now);
+      await this.ctx.storage.put("demoResetAt", nextTaipeiMidnight(now));
       await this.scheduleNextAlarm();
       return;
     }
@@ -1494,6 +1577,12 @@ export class LiveSession extends DurableObject<Env> {
     }
     return currentSnapshot;
   }
+}
+
+function nextTaipeiMidnight(now: number): number {
+  const taipeiOffsetMs = 8 * 60 * 60 * 1000;
+  const dayMs = 24 * 60 * 60 * 1000;
+  return (Math.floor((now + taipeiOffsetMs) / dayMs) + 1) * dayMs - taipeiOffsetMs;
 }
 
 function shortBadge(voterId: string): string {

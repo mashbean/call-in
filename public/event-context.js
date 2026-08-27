@@ -9,7 +9,11 @@ export const eventContext = {
   demoEnglish,
   eventId: hostedMatch?.[1] || (demoMatch ? "permanent-demo" : null),
   eventBase: hostedMatch ? `/e/${hostedMatch[1]}` : demoBase,
-  apiBase: hostedMatch ? `/api/events/${hostedMatch[1]}` : demoMatch ? "/api/demo" : "/api",
+  apiBase: hostedMatch
+    ? `/api/events/${hostedMatch[1]}`
+    : demoMatch
+      ? `/api/demo/${demoEnglish ? "en" : "zh"}`
+      : "/api",
 };
 
 export function eventPage(path = "/") {
@@ -20,9 +24,7 @@ export function eventPage(path = "/") {
 
 export function eventApi(path = "/") {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  const endpoint = `${eventContext.apiBase}${normalized}`;
-  if (!eventContext.demo || !["/config", "/qr.svg"].includes(normalized)) return endpoint;
-  return `${endpoint}?locale=${eventContext.demoEnglish ? "en" : "zh-Hant-TW"}`;
+  return `${eventContext.apiBase}${normalized}`;
 }
 
 export function accessTokenKey(role) {

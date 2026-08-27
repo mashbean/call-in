@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import test from "node:test";
 
 const setupHtml = await readFile(new URL("../public/setup/index.html", import.meta.url), "utf8");
@@ -23,6 +23,11 @@ const demoHtml = await readFile(new URL("../public/demo/index.html", import.meta
 const englishDemoHtml = await readFile(new URL("../public/en/demo/index.html", import.meta.url), "utf8");
 const demoJs = await readFile(new URL("../public/demo/demo.js", import.meta.url), "utf8");
 const demoCss = await readFile(new URL("../public/demo/demo.css", import.meta.url), "utf8");
+const robotsTxt = await readFile(new URL("../public/robots.txt", import.meta.url), "utf8");
+const sitemapXml = await readFile(new URL("../public/sitemap.xml", import.meta.url), "utf8");
+const llmsTxt = await readFile(new URL("../public/llms.txt", import.meta.url), "utf8");
+const fundingYaml = await readFile(new URL("../.github/FUNDING.yml", import.meta.url), "utf8");
+const socialCard = await stat(new URL("../public/brand/call-in-social-card.png", import.meta.url));
 
 test("setup wizard keeps the admin token session-scoped and writes protected config", () => {
   assert.match(setupHtml, /lang="zh-Hant-TW"/);
@@ -99,6 +104,9 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.match(landingHtml, /請作者喝杯咖啡/);
   assert.match(landingHtml, /href="\/demo\/"/);
   assert.match(landingHtml, /直接進 Demo/);
+  assert.match(landingHtml, /<b>45<\/b> 筆難度/);
+  assert.match(landingHtml, /<b>6<\/b> 筆示範留言/);
+  assert.match(landingHtml, /回到上方簡報預覽/);
   assert.doesNotMatch(landingHtml, /複製範例網址/);
   assert.match(landingHtml, /https:\/\/github\.com\/mashbean\/call-in/);
   assert.match(landingHtml, /交給 Agent 部署/);
@@ -108,6 +116,10 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.match(englishLandingHtml, /Buy me a coffee/);
   assert.match(englishLandingHtml, /href="\/en\/demo\/"/);
   assert.match(englishLandingHtml, /Enter demo/);
+  assert.match(englishLandingHtml, /<b>45<\/b> difficulty ratings/);
+  assert.match(englishLandingHtml, /<b>6<\/b> demo questions/);
+  assert.match(englishLandingHtml, /Back to the slide preview/);
+  assert.doesNotMatch(englishLandingHtml, /actions are not recorded/);
   assert.doesNotMatch(englishLandingHtml, /Copy sample URL/);
   assert.match(englishLandingHtml, /Ask an agent to deploy/);
   assert.match(englishLandingHtml, /immediately and without prior notice/);
@@ -127,15 +139,36 @@ test("hosted creator replaces the landing-page demo and returns public and priva
   assert.match(landingCss, /\.principle-host \{ grid-column:1 \/ -1;/);
   assert.match(landingCss, /\.demo-launch/);
   assert.match(demoHtml, /https:\/\/mashbean\.net\/decks\/isf-0427\//);
-  assert.match(demoHtml, /公開 Demo・每小時重置/);
+  assert.match(demoHtml, /公開 Demo・每日重置/);
   assert.match(demoHtml, /src="\/demo\/dashboard\/"/);
-  assert.match(englishDemoHtml, /Public demo · resets hourly/);
+  assert.match(englishDemoHtml, /Public demo · resets daily/);
   assert.match(englishDemoHtml, /src="\/en\/demo\/dashboard\/"/);
   assert.doesNotMatch(demoHtml, /只會在這個分頁增加|本機展示/);
   assert.doesNotMatch(demoJs, /data-difficulty|data-reaction/);
-  assert.match(eventContextJs, /apiBase: hostedMatch \? `\/api\/events/);
-  assert.match(eventContextJs, /demoMatch \? "\/api\/demo"/);
+  assert.match(eventContextJs, /apiBase: hostedMatch\s*\? `\/api\/events/);
+  assert.match(eventContextJs, /`\/api\/demo\/\$\{demoEnglish \? "en" : "zh"\}`/);
   assert.match(eventContextJs, /demoBase}\/audience\//);
   assert.match(demoCss, /\.demo-layout/);
   assert.match(demoCss, /display:inline-flex; align-items:center; justify-content:center/);
+});
+
+test("landing pages expose crawlable product answers and a shareable logo card", () => {
+  for (const html of [landingHtml, englishLandingHtml]) {
+    assert.match(html, /rel="canonical"/);
+    assert.match(html, /hreflang="zh-Hant-TW"/);
+    assert.match(html, /hreflang="en"/);
+    assert.match(html, /property="og:image" content="https:\/\/call-in\.mashbean\.net\/brand\/call-in-social-card\.png"/);
+    assert.match(html, /name="twitter:card" content="summary_large_image"/);
+    const structuredData = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
+    assert.ok(structuredData);
+    const graph = JSON.parse(structuredData)["@graph"];
+    assert.ok(graph.some((entry) => entry["@type"] === "SoftwareApplication"));
+    assert.equal(graph.find((entry) => entry["@type"] === "FAQPage").mainEntity.length, 4);
+  }
+  assert.match(robotsTxt, /Sitemap: https:\/\/call-in\.mashbean\.net\/sitemap\.xml/);
+  assert.match(sitemapXml, /hreflang="zh-Hant-TW"/);
+  assert.match(sitemapXml, /hreflang="en"/);
+  assert.match(llmsTxt, /45 seeded difficulty ratings and 6 labeled sample questions/);
+  assert.equal(fundingYaml.trim(), "buy_me_a_coffee: mashbean");
+  assert.ok(socialCard.size > 10_000);
 });

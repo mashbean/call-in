@@ -5,12 +5,71 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#f7f7fb" />
     <link rel="icon" type="image/svg+xml" href="/brand/call-in-mark.svg" />
-    <meta name="description" content="Call-in brings live audience understanding, questions, and reactions into your online talk. Upload a PDF or paste a deck URL and start in one minute." />
+    <link rel="apple-touch-icon" href="/brand/call-in-mark-light.png" />
+    <meta name="description" content="Call-in adds live audience understanding, questions, and reactions to an existing slide deck. Upload a PDF or paste a deck URL and get a presenter view, audience QR code, and moderator link in one minute." />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <link rel="canonical" href="https://call-in.mashbean.net/en/" />
     <link rel="alternate" hreflang="zh-Hant-TW" href="https://call-in.mashbean.net/" />
     <link rel="alternate" hreflang="en" href="https://call-in.mashbean.net/en/" />
-    <title>Call-in for your slides | Live audience response</title>
+    <link rel="alternate" hreflang="x-default" href="https://call-in.mashbean.net/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Call-in" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="zh_TW" />
+    <meta property="og:url" content="https://call-in.mashbean.net/en/" />
+    <meta property="og:title" content="Call-in for your slides | Live audience response" />
+    <meta property="og:description" content="Upload a PDF or paste a deck URL. Get a presenter view, audience QR code, and moderator link in one minute." />
+    <meta property="og:image" content="https://call-in.mashbean.net/brand/call-in-social-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Call-in bell curve logo" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Call-in for your slides | Live audience response" />
+    <meta name="twitter:description" content="Upload a PDF or paste a deck URL and start a live call-in in one minute." />
+    <meta name="twitter:image" content="https://call-in.mashbean.net/brand/call-in-social-card.png" />
+    <title>Call-in for your slides | Audience QR code and live response</title>
     <link rel="stylesheet" href="/landing/landing.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://call-in.mashbean.net/#website",
+            "url": "https://call-in.mashbean.net/",
+            "name": "Call-in",
+            "alternateName": "Call-in for your slides",
+            "inLanguage": ["zh-Hant-TW", "en"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://call-in.mashbean.net/#software",
+            "name": "Call-in",
+            "url": "https://call-in.mashbean.net/en/",
+            "image": "https://call-in.mashbean.net/brand/call-in-social-card.png",
+            "description": "A live audience response layer for existing PDF and web slide decks, with understanding signals, reactions, questions, and moderation in one presenter view.",
+            "applicationCategory": "PresentationApplication",
+            "operatingSystem": "Web",
+            "isAccessibleForFree": true,
+            "inLanguage": ["zh-Hant-TW", "en"],
+            "featureList": ["PDF upload", "Audience QR code", "Live understanding difficulty", "Live reactions", "Audience questions", "Moderation tools"],
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "sameAs": ["https://github.com/mashbean/call-in"]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://call-in.mashbean.net/en/#faq",
+            "mainEntity": [
+              { "@type": "Question", "name": "Does the audience need to install an app?", "acceptedAnswer": { "@type": "Answer", "text": "No. Audience members scan the QR code in a phone browser to report understanding, react, and ask questions." } },
+              { "@type": "Question", "name": "Can I keep using my existing slides?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Upload a PDF up to 20 MB or paste a public Google Slides, Canva, or web-deck URL." } },
+              { "@type": "Question", "name": "How long does Call-in keep slides and responses?", "acceptedAnswer": { "@type": "Answer", "text": "Hosted events, uploaded PDFs, and anonymous audience responses are deleted together after seven days. The public demo resets daily." } },
+              { "@type": "Question", "name": "Can I self-host Call-in?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Call-in is open-source under Apache-2.0 and can be deployed from GitHub to your own Cloudflare account." } }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <header class="site-header">
@@ -81,10 +140,13 @@
             </div>
           </div>
 
-          <div class="demo-launch"><div><span>No deck at hand?</span><strong>Open the permanent demo and see the complete presenter view.</strong><p>The sample deck and responses are display data. No event is created and your actions are not recorded.</p></div><a class="button demo-launch-button" href="/en/demo/" target="_blank" rel="noreferrer">Enter demo <span aria-hidden="true">↗</span></a></div>
+          <div class="demo-launch">
+            <div class="demo-launch-copy"><span>No deck at hand?</span><strong>Enter a real interactive room, not another static preview.</strong><p>The demo starts with labeled sample data. Difficulty, reactions, and questions submitted through its QR code are added live and retained until the daily reset.</p><ul class="demo-launch-stats" aria-label="Demo baseline data"><li><b>45</b> difficulty ratings</li><li><b>6</b> demo questions</li><li>Real interactions stay until the daily reset</li></ul></div>
+            <a class="button demo-launch-button" href="/en/demo/" target="_blank" rel="noreferrer">Enter demo <span aria-hidden="true">↗</span></a>
+          </div>
 
           <section class="creator-shell" id="create" data-create-panel hidden>
-            <div class="creator-topline"><div><span>Use your own slides</span><h3>Start a call-in</h3><p>No account and no page change.</p></div><button class="quiet-button" type="button" data-close-creator>Back to demo</button></div>
+            <div class="creator-topline"><div><span>Use your own slides</span><h3>Start a call-in</h3><p>No account and no page change.</p><button class="quiet-button" type="button" data-close-creator>← Back to the slide preview</button></div></div>
             <form data-create-form>
               <input type="hidden" name="locale" value="en" />
               <label>Event title<input name="title" maxlength="160" required placeholder="For example: AI and public participation" autocomplete="off" /></label>
@@ -129,6 +191,16 @@
           <article class="principle principle-host"><div class="icon" aria-hidden="true">⌂</div><div class="host-copy"><h3>Or host it yourself</h3><p>Deploy the open-source service in your own Cloudflare account, so decks and responses pass only through infrastructure you control.</p></div><div class="host-actions"><a class="button source-button" href="https://github.com/mashbean/call-in" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a><details class="host-prompt" data-copy-scope><summary>Ask an agent to deploy <span aria-hidden="true">＋</span></summary><div class="host-prompt-body"><code data-copy-value>Get the source from https://github.com/mashbean/call-in, read the README and wrangler.jsonc, and deploy an independent Call-in service to my Cloudflare account. Do not overwrite any existing Worker, Durable Object, or domain. Run the tests first, then return the public URL, required configuration, and update process. If login, API-token creation, or custom-domain changes require my action, stop and tell me exactly what I need to do.</code><button class="button small" type="button" data-copy-text data-copied="Self-host prompt copied" data-failed="Select the prompt to copy">Copy prompt</button></div></details></div></article>
         </div>
         <aside class="use-policy" id="acceptable-use"><strong>Acceptable use</strong><p>If an uploaded deck or supplied URL is illegal, infringes copyright or privacy, enables fraud, hate or harassment, impersonation, malware, or otherwise threatens people or service security, mashbean may remove the deck, event, and interaction page immediately and without prior notice.</p></aside>
+      </section>
+
+      <section class="section faq-section" id="faq">
+        <div class="section-header"><div><div class="eyebrow">Frequently asked</div><h2>Before you start,<br />you may be wondering.</h2></div><p>Call-in does not replace your slide software. It adds a live audience response layer to the deck you already use.</p></div>
+        <div class="faq-list">
+          <details open><summary>Does the audience need to install an app?</summary><p>No. Audience members scan the QR code in a phone browser to report understanding, react, and ask questions.</p></details>
+          <details><summary>Can I keep using my existing slides?</summary><p>Yes. Upload a PDF up to 20 MB or paste a public Google Slides, Canva, or web-deck URL.</p></details>
+          <details><summary>How long does Call-in keep slides and responses?</summary><p>Hosted events, uploaded PDFs, and anonymous audience responses are deleted together after seven days. The public demo resets daily.</p></details>
+          <details><summary>Can I self-host Call-in?</summary><p>Yes. Call-in is open-source under Apache-2.0 and can be deployed from GitHub to your own Cloudflare account.</p></details>
+        </div>
       </section>
 
       <section class="section support" id="support">
