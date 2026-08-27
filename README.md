@@ -6,7 +6,7 @@
 
 **Call-in for your slides. 讓你的分享，可以即時叩應。**
 
-[Start a hosted event](https://call-in.mashbean.net/#create) · [English](https://call-in.mashbean.net/en/) · [Source](https://github.com/mashbean/call-in)
+[Start a hosted event](https://call-in.mashbean.net/#create) · [English](https://call-in.mashbean.net/en/) · [Source](https://github.com/mashbean/call-in) · [☕ Sponsor on Buy Me a Coffee](https://buymeacoffee.com/mashbean)
 
 Call-in adds a live audience layer beside an existing slide deck. A speaker uploads a PDF (up to 20MB) or pastes a browser-playable deck URL, then immediately receives:
 
