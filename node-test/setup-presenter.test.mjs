@@ -46,6 +46,9 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentHtml, /lang="zh-Hant-TW"/);
   assert.match(presentHtml, /data-deck-frame/);
   assert.match(presentHtml, /data-dashboard-toggle/);
+  assert.match(presentHtml, /class="dashboard-toggle"/);
+  assert.match(presentHtml, /aria-controls="present-dashboard"/);
+  assert.doesNotMatch(presentHtml, /<nav[^>]*>[\s\S]*data-dashboard-toggle[\s\S]*<\/nav>/);
   assert.match(presentHtml, /data-toolbar-toggle/);
   assert.match(presentHtml, /data-toolbar-peek/);
   assert.match(presentHtml, /data-toolbar-peek-label/);
@@ -59,8 +62,11 @@ test("presenter view loads a safe deck URL and exposes responsive dashboard cont
   assert.match(presentJs, /call-in:pdf-page/);
   assert.match(presentJs, /parsed\.pathname === `\$\{eventContext\.apiBase\}\/deck\.pdf`/);
   assert.match(presentJs, /new ResizeObserver\(syncToolbarPeekPosition\)/);
+  assert.match(presentJs, /dashboardToggleLabel\.textContent = nextLabel/);
   assert.match(presentJs, /toolbar-collapsed/);
   assert.match(presentCss, /--dashboard-pane-width/);
+  assert.match(presentCss, /\.dashboard-toggle \{ position:fixed/);
+  assert.match(presentCss, /right:calc\(var\(--dashboard-pane-width/);
   assert.doesNotMatch(presentCss, /left:50%/);
   assert.match(presentCss, /font-family:inherit; font-size:11px; font-weight:800; line-height:1/);
   assert.doesNotMatch(presentCss, /font:\s*800 11px\/1 inherit/);

@@ -11,6 +11,7 @@ const deckFrame = document.querySelector("[data-deck-frame]");
 const openDeck = document.querySelector("[data-open-deck]");
 const status = document.querySelector("[data-present-status]");
 const toggle = document.querySelector("[data-dashboard-toggle]");
+const dashboardToggleLabel = document.querySelector("[data-dashboard-toggle-label]");
 const toolbarToggle = document.querySelector("[data-toolbar-toggle]");
 const toolbarPeek = document.querySelector("[data-toolbar-peek]");
 const toolbarPeekLabel = document.querySelector("[data-toolbar-peek-label]");
@@ -37,7 +38,8 @@ status.textContent = labels.loading;
 openDeck.textContent = labels.open;
 document.querySelector("[data-audience-link]").textContent = labels.audience;
 document.querySelector("[data-moderator-link]").textContent = labels.moderate;
-toggle.textContent = labels.hideDashboard;
+dashboardToggleLabel.textContent = labels.hideDashboard;
+toggle.title = labels.hideDashboard;
 document.querySelector("[data-fullscreen]").textContent = labels.fullscreen;
 toolbarToggle.textContent = labels.hideToolbar;
 toolbarPeek.setAttribute("aria-label", labels.showToolbar);
@@ -61,8 +63,10 @@ window.addEventListener("message", (event) => {
 
 toggle.addEventListener("click", () => {
   const collapsed = document.body.classList.toggle("dashboard-collapsed");
-  toggle.textContent = collapsed ? labels.showDashboard : labels.hideDashboard;
-  toggle.setAttribute("aria-pressed", String(collapsed));
+  const nextLabel = collapsed ? labels.showDashboard : labels.hideDashboard;
+  dashboardToggleLabel.textContent = nextLabel;
+  toggle.title = nextLabel;
+  toggle.setAttribute("aria-expanded", String(!collapsed));
 });
 
 toolbarToggle.addEventListener("click", () => setToolbarCollapsed(true, true));

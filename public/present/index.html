@@ -16,18 +16,18 @@
         <a data-open-deck href="#" target="_blank" rel="noreferrer">另開簡報</a>
         <a data-audience-link href="/" target="_blank" rel="noreferrer">觀眾頁</a>
         <a data-moderator-link href="/moderate/" target="_blank" rel="noreferrer">管理</a>
-        <button type="button" data-dashboard-toggle>隱藏互動</button>
         <button type="button" data-fullscreen>全螢幕</button>
         <button type="button" data-toolbar-toggle aria-expanded="true">收起工具列</button>
       </nav>
     </header>
     <button class="toolbar-peek" type="button" data-toolbar-peek aria-label="顯示講者工具列" title="顯示講者工具列"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="m3.5 5.75 4.5 4.5 4.5-4.5" /></svg><span data-toolbar-peek-label>工具列</span></button>
+    <button class="dashboard-toggle" type="button" data-dashboard-toggle aria-controls="present-dashboard" aria-expanded="true"><span data-dashboard-toggle-label>隱藏互動</span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="m6 3 5 5-5 5" /></svg></button>
     <main class="present-stage">
       <section class="deck-pane" aria-label="簡報">
         <iframe data-deck-frame title="簡報" allow="fullscreen; autoplay; clipboard-write" allowfullscreen sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation" referrerpolicy="strict-origin-when-cross-origin"></iframe>
         <p class="embed-note" data-embed-note>簡報區若保持空白，原網站可能禁止內嵌；請使用上方「另開簡報」。</p>
       </section>
-      <section class="dashboard-pane" aria-label="現場互動">
+      <section class="dashboard-pane" id="present-dashboard" aria-label="現場互動">
         <iframe data-dashboard-frame src="/dashboard/" title="現場互動 dashboard" allow="clipboard-write"></iframe>
       </section>
     </main>
