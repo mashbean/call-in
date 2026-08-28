@@ -1,4 +1,5 @@
 import { GlobalWorkerOptions, getDocument } from "/vendor/pdfjs/pdf.mjs";
+import { resolvePdfDestinationPage } from "./pdf-links.js";
 
 GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.mjs";
 
@@ -196,9 +197,8 @@ function externalLink(url) {
 
 async function internalLink(dest) {
   try {
-    const explicit = typeof dest === "string" ? await pdf.getDestination(dest) : dest;
-    if (!Array.isArray(explicit) || !explicit[0]) return null;
-    const targetPage = (await pdf.getPageIndex(explicit[0])) + 1;
+    const targetPage = await resolvePdfDestinationPage(pdf, dest);
+    if (!targetPage) return null;
     const anchor = document.createElement("a");
     anchor.href = "#";
     anchor.title = labels.internalLink(targetPage);
