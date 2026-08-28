@@ -10,7 +10,10 @@
   <body>
     <main class="pdf-viewer" data-pdf-viewer>
       <div class="pdf-stage" data-pdf-stage tabindex="0" aria-label="PDF 簡報">
-        <canvas data-pdf-canvas hidden></canvas>
+        <div class="pdf-canvas-wrap" data-pdf-canvas-wrap hidden>
+          <canvas data-pdf-canvas></canvas>
+          <div class="pdf-link-layer" data-pdf-links></div>
+        </div>
         <div class="pdf-status" data-pdf-status role="status" aria-live="polite">正在準備簡報…</div>
       </div>
       <nav class="pdf-controls" aria-label="PDF 翻頁工具" data-pdf-controls hidden>
