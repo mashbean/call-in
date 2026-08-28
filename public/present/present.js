@@ -48,6 +48,10 @@ toolbarToggle.textContent = labels.hideToolbar;
 toolbarPeek.setAttribute("aria-label", labels.showToolbar);
 toolbarPeek.title = labels.showToolbar;
 toolbarPeekLabel.textContent = labels.toolbar;
+// The same-origin PDF viewer opens deck links in new tabs; without this flag the
+// sandboxed frame would trap those tabs in the sandbox. External decks keep the
+// strict sandbox from the HTML attribute.
+if (hostedPdf) deckFrame.sandbox.add("allow-popups-to-escape-sandbox");
 deckFrame.src = hostedPdf
   ? `/present/pdf-viewer?file=${encodeURIComponent(deckUrl)}&lang=${english ? "en" : "zh"}`
   : deckUrl;
