@@ -39,14 +39,18 @@
     "typecheck": "tsc --noEmit",
     "types": "wrangler types",
     "test": "vitest run && node --test node-test/*.test.mjs",
-    "check": "npm run typecheck && npm test && npm run deploy:dry",
+    "check": "npm run typecheck && npm test && npm run deploy:dry && npm run deploy:dry:production",
     "integrate": "node scripts/cli.mjs integrate",
     "doctor": "node scripts/cli.mjs doctor",
     "admin-token": "node scripts/cli.mjs admin-token",
     "moderator-token": "node scripts/cli.mjs moderator-token",
     "install-skill": "node scripts/cli.mjs install-skill",
     "uncommon-ground": "node scripts/cli.mjs uncommon-ground",
-    "seed-demo": "node scripts/seed-demo.mjs"
+    "seed-demo": "node scripts/seed-demo.mjs",
+    "predeploy:production": "npm run vendor:pdfjs",
+    "deploy:production": "wrangler deploy --env production",
+    "predeploy:dry:production": "npm run vendor:pdfjs",
+    "deploy:dry:production": "wrangler deploy --dry-run --env production"
   },
   "dependencies": {
     "pdfjs-dist": "6.2.108",
@@ -62,5 +66,24 @@
   },
   "engines": {
     "node": ">=22.13"
+  },
+  "cloudflare": {
+    "bindings": {
+      "ASSETS": {
+        "description": "Static presenter, audience and setup pages."
+      },
+      "ROOM_ID": {
+        "description": "Optional legacy single-room identifier. Leave as 'default' for hosted events."
+      },
+      "ALLOWED_ORIGINS": {
+        "description": "Optional comma-separated list of origins allowed to embed the web component. Leave empty to allow only this Worker's own origin."
+      },
+      "ADMIN_TOKEN_SHA256": {
+        "description": "Optional SHA-256 hex of an admin token for the legacy single-room mode. Leave empty; hosted events mint their own tokens."
+      },
+      "MODERATOR_TOKEN_SHA256": {
+        "description": "Optional SHA-256 hex of a moderator token for the legacy single-room mode. Leave empty; hosted events mint their own tokens."
+      }
+    }
   }
 }

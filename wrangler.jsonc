@@ -5,12 +5,6 @@
   "compatibility_date": "2026-08-11",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
-  "routes": [
-    {
-      "pattern": "call-in.mashbean.net",
-      "custom_domain": true
-    }
-  ],
   "preview_urls": true,
   "assets": {
     "directory": "./public",
@@ -45,6 +39,34 @@
     "traces": {
       "enabled": true,
       "head_sampling_rate": 0.01
+    }
+  },
+  // 正式網域只放在 env.production：Deploy Button 的複製者跑預設環境，不會搶走
+  // call-in.mashbean.net。production 必須維持相同 Worker 名稱（live-deck-kit），
+  // 才會沿用同一個 Durable Object namespace；改名等同切到一套空白資料。
+  "env": {
+    "production": {
+      "name": "live-deck-kit",
+      "vars": {
+        "ROOM_ID": "default",
+        "ALLOWED_ORIGINS": "",
+        "ADMIN_TOKEN_SHA256": "",
+        "MODERATOR_TOKEN_SHA256": ""
+      },
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "LIVE_SESSION",
+            "class_name": "LiveSession"
+          }
+        ]
+      },
+      "routes": [
+        {
+          "pattern": "call-in.mashbean.net",
+          "custom_domain": true
+        }
+      ]
     }
   }
 }

@@ -64,7 +64,7 @@ npm run check
 npm run deploy
 ```
 
-Self-hosters should change or remove the `call-in.mashbean.net` custom-domain route in `wrangler.jsonc` before deploying. The Worker service name remains `live-deck-kit` for production Durable Object continuity; it is an internal deployment identifier, not the product name.
+The default environment has no custom domain, so the Deploy button and `npm run deploy` land on your own `workers.dev` URL without touching `call-in.mashbean.net`. The official host deploys with `npm run deploy:production`, which is the only environment bound to that domain. The Worker service name remains `live-deck-kit` for production Durable Object continuity; it is an internal deployment identifier, not the product name.
 
 Or give a coding agent this prompt:
 

@@ -1,0 +1,6 @@
+# Optional legacy single-room configuration. Hosted events (the default path)
+# mint their own tokens, so a Deploy-button install can leave all of these empty.
+ROOM_ID=default
+ALLOWED_ORIGINS=
+ADMIN_TOKEN_SHA256=
+MODERATOR_TOKEN_SHA256=
