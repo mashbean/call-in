@@ -512,6 +512,30 @@ export class LiveSession extends DurableObject<Env> {
     await this.broadcastSnapshot(await this.snapshot());
   }
 
+  /**
+   * Talk to the City 匯入格式（id,interview,comment）。只含已公開的問題，和 /state 是同一份公開資料，
+   * 但不設 100 則上限、依提出順序排列；interview 用公開顯示名稱加鏡頭標記，不含 voter_id。
+   */
+  async exportTttcCsv(): Promise<string> {
+    const cell = (value: string) => `"${value.replaceAll('"', '""')}"`;
+    const rows = this.ctx.storage.sql
+      .exec<QuestionRow>(`
+        SELECT
+          q.id, q.voter_id, q.text, q.nickname, q.lens, q.difficulty, q.created_at,
+          q.visibility, q.publish_at, q.moderation_reason, q.moderated_at,
+          COUNT(qv.question_id) AS upvotes
+        FROM questions q
+        LEFT JOIN question_votes qv ON qv.question_id = q.id
+        WHERE q.visibility = 'public'
+        GROUP BY q.id
+        ORDER BY q.created_at ASC
+      `)
+      .toArray()
+      .map(toAudienceQuestion);
+    const lines = rows.map((q) => [`question-${q.id}`, cell(`${q.nickname} · ${q.lens}`), cell(q.text)].join(","));
+    return ["id,interview,comment", ...lines].join("\n") + "\n";
+  }
+
   async snapshot(): Promise<SessionSnapshot> {
     if (this.snapshotCache) return this.snapshotCache;
 

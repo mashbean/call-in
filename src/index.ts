@@ -244,6 +244,22 @@ async function handleSessionApi(
     return withCors(Response.json(await stub.snapshot()), request, env);
   }
 
+  // Talk to the City 匯入格式：與 /state 同一份公開問題，無需權杖
+  if (path === "/export/tttc.csv" && request.method === "GET") {
+    return withCors(
+      noStore(
+        new Response(await stub.exportTttcCsv(), {
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition": 'attachment; filename="tttc.csv"',
+          },
+        }),
+      ),
+      request,
+      env,
+    );
+  }
+
   if (path === "/moderator/state" && request.method === "GET") {
     if (!(await isRoleAuthorized(request, env, context, "moderator"))) return jsonError("not found", 404);
     return noStore(Response.json(await stub.moderatorSnapshot()));

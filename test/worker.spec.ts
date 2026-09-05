@@ -305,6 +305,19 @@ describe("Call-in Worker", () => {
     expect(state.questions).toHaveLength(2);
     expect(state.questions[0]?.text).toBe("Second test question");
     expect(state.questions[0]?.difficulty).toBe(5);
+
+    // Talk to the City 匯入格式：與 /state 同一份公開問題，無需權杖，依提出順序
+    const csvResponse = await SELF.fetch("https://example.com/api/export/tttc.csv");
+    expect(csvResponse.status).toBe(200);
+    expect(csvResponse.headers.get("content-type")).toContain("text/csv");
+    expect(csvResponse.headers.get("cache-control")).toBe("no-store");
+    const csv = await csvResponse.text();
+    const lines = csv.trimEnd().split("\n");
+    expect(lines[0]).toBe("id,interview,comment");
+    expect(lines).toHaveLength(3);
+    expect(lines[2]).toContain('"Second test question"');
+    expect(lines[1]).toMatch(/^question-[^,]+,"[^"]+ · (clarify|chorus|bridge|keeper)",/);
+    expect(csv).not.toContain("voter");
   });
 
   it("does not let an author upvote their own question", async () => {
